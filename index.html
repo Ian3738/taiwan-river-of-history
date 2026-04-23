@@ -461,7 +461,7 @@ body.chat-open #chat-panel{transform:translateX(0)}
   <h2 id="ip-title"></h2>
   <div class="mt" id="ip-text"></div>
   <div id="ai-block">
-    <div class="ai-ttl">MYTHOS × GEMINI 重構 <span class="badge">LATENT NARRATIVE</span></div>
+    <div class="ai-ttl">歷史敘述 <span class="badge">HISTORICAL NARRATIVE</span></div>
     <div class="narrative" id="ai-narrative">尚未觸發 — 捏合手勢或切換年代即可啟動</div>
     <div class="ai-body" id="ai-body"></div>
     <div class="ai-meta" id="ai-meta"></div>
@@ -605,33 +605,33 @@ void main(){vec2 c=gl_PointCoord-vec2(.5);float d=length(c);if(d>.5)discard;gl_F
 // ------------------------------------------------------------
 var DATA=[
  {era:'~4000 BCE',name:'南島語族的起源',shape:'canoe',color:'#9CB4A0',
-  text:'考古學家在大坌坑遺址找到南島語族的原型文化。這座島嶼是太平洋上一場語言與航海大遷徙的起點,獨木舟把語言播向夏威夷、紐西蘭、馬達加斯加。'},
+  text:'距今約六千年前的史前台灣,具備農耕與精湛航海技術的先民,以台灣為起點,乘獨木舟展開跨越太平洋與印度洋的擴張,台灣被廣泛認定為「南島語族」的發源地,在人類海洋遷徙史上具備核心的歷史地位。'},
  {era:'1624',name:'大航海的交會',shape:'ship',color:'#8E9775',
-  text:'荷蘭人登陸大員,開啟了台灣與世界貿易網體系的接軌。這是一場關於海洋、香料與紅毛城的記憶。'},
+  text:'西元 1624 年荷蘭東印度公司於大員(今台南安平)建立熱蘭遮城,標誌著台灣正式捲入大航海時代的全球化貿易網,此時代的台灣成為東亞鹿皮、蔗糖等物資的國際轉運樞紐,並首次出現由羅馬拼音書寫的「新港文書」。'},
  {era:'1661',name:'鄭氏東寧的孤光',shape:'castle',color:'#B5895A',
-  text:'鄭成功率軍渡海,九個月圍城後荷蘭人退出熱蘭遮城。台灣首次成為漢人政權所在,以一座島嶼承載著明朝最後的火種。'},
+  text:'西元 1661 年鄭成功率軍擊退荷蘭政權,建立台灣史上首個漢人政權「東寧王國」,此階段的歷史重心在於軍隊屯田開墾與漢人典章制度的引入,全台首學的設立正式將儒家思想與傳統宗族文化深植於台灣社會。'},
  {era:'1887',name:'鐵路與電光之初',shape:'train',color:'#E28E8E',
-  text:'劉銘傳設台灣省,並在台北大稻埕亮起了第一盞電燈、鋪設鐵路。現代化的輪廓,開始在這座島嶼的邊緣浮現。'},
+  text:'西元 1887 年清法戰爭後台灣建省,首任巡撫劉銘傳啟動近代化建設,開始基隆至新竹鐵路的修築,以及電報線與電燈的架設,這是台灣從傳統農業社會步入近代工業化與基礎設施建設的啟蒙階段。'},
  {era:'1895',name:'乙未割讓的斷柱',shape:'pillar',color:'#7A6E78',
-  text:'《馬關條約》將台灣割讓予日本。從唐景崧的台灣民主國到客家義軍的乙未戰爭,島嶼用血淚寫下殖民時代的開場白。'},
+  text:'西元 1895 年甲午戰爭後《馬關條約》將台灣割讓予日本,引發台灣人民強烈的武裝抵抗(乙未戰爭),隨後展開的五十年日本殖民時期,總督府實行高壓統治與同化政策,同時也建立了現代化的戶政、公衛與水利等基礎設施。'},
  {era:'1921',name:'文化覺醒的年代',shape:'book',color:'#6D8299',
-  text:'蔣渭水等人成立台灣文化協會。這是一個關於『臨床講義』、知識啟蒙與本土自覺的黃金年代,思考開始在土地紮根。'},
+  text:'西元 1921 年面對殖民體制,台灣知識份子林獻堂、蔣渭水等人成立「台灣文化協會」,歷史路線從武裝抗日轉向體制內的政治與文化啟蒙,透過發行報刊與舉辦講座,促成台灣現代公民意識與民族主體性的首次大規模覺醒。'},
  {era:'1947',name:'二二八的裂縫',shape:'tablet',color:'#9C6B6B',
-  text:'從一根私菸引爆的衝突,蔓延成島嶼的集體創傷。沉默的歷史像一塊碎裂的石碑,直到數十年後才被重新拼回、被誠實談論。'},
+  text:'西元 1947 年因戰後國民政府接管初期的施政失當與族群摩擦,爆發了全台性的「二二八事件」及隨後的武力鎮壓,這段沉痛的歷史造成大量本土菁英傷亡,並成為後續實施長達 38 年戒嚴與白色恐怖統治的開端。'},
  {era:'1980',name:'矽島的崛起',shape:'chip',color:'#D4A373',
-  text:'新竹科學園區成立。從竹東的茶葉、樟腦,轉型為全球半導體的神經中樞。我們在微小的晶片上,構築了通往未來的路。'},
+  text:'西元 1980 年面對國際外交與經濟危機,台灣政府設立「新竹科學工業園區」,此時期歷史重點為經濟結構的重大轉型,藉由海外技術引進與人才回流,台灣開始發展半導體與資訊產業,奠定全球高科技代工重鎮的基礎。'},
  {era:'1987',name:'解嚴後的綻放',shape:'dawn',color:'#C9B26B',
-  text:'長達 38 年的戒嚴解除,黨禁、報禁相繼鬆綁。社會運動、文學、電影、流行音樂同時爆發,島嶼在自由的陽光下重新長出枝葉。'},
+  text:'西元 1987 年 7 月 15 日台灣正式解除長達 38 年的戒嚴令,黨禁與報禁的解除促使社會壓抑的能量全面釋放,各類社會運動蓬勃發展,政治反對勢力合法化,標誌著台灣正式邁入自由化與民主化的進程。'},
  {era:'1996',name:'首次總統直選',shape:'ballot',color:'#7AA0B8',
-  text:'人民第一次直接投票選出國家元首。即便導彈在海峽試射,選票仍如雪片般落下。民主從一個抽象詞,化為一張一張被親手蓋下的選票。'},
+  text:'西元 1996 年台灣舉行史上首次總統直接選舉,儘管面臨第三次台海飛彈危機的外部軍事威嚇,大選依然順利完成,此歷史事件徹底落實了主權在民的民主原則,是台灣政治體制民主化完成的關鍵里程碑。'},
  {era:'1999',name:'九二一的搖晃',shape:'quake',color:'#8C7A6B',
-  text:'凌晨 1 點 47 分,規模 7.3 的地震撕裂中部地表。斷層、倒塌的校舍、徹夜的搜救燈光,讓這座島嶼第一次以全民之姿,學會了什麼叫做災後重建與相互扶持。'},
+  text:'西元 1999 年 9 月 21 日台灣中部發生芮氏規模 7.3 強震,造成慘重傷亡與破壞,此事件的歷史意義不僅在於地理與社會的創傷,更在於災後展現的強大民間互助動能,促成國家級災難防救體系與建築防震法規的全面翻新。'},
  {era:'2014',name:'太陽花的春天',shape:'sunflower',color:'#E8C76C',
-  text:'學生佔領立法院議場,公民從街頭重新定義民主。一朵朵向日葵在議場內外綻放,網路直播讓世界看見一個新的台灣世代如何以行動參與政治。'},
+  text:'西元 2014 年春季因反對立法院草率通過《海峽兩岸服務貿易協議》,爆發青年學生佔領立法院的「太陽花學運」,此時代背景反映了年輕世代對兩岸經貿過度依賴的疑慮,並深刻影響了隨後的政治版圖與公民參與模式。'},
  {era:'2020',name:'護國神山與口罩外交',shape:'guardian',color:'#9AC5D6',
-  text:'COVID-19 席捲全球,台灣以口罩、紓困與精密數位防疫成為國際模範。同時台積電以 5 奈米製程登上世界舞台,半導體成為地緣政治的新核心。'},
+  text:'西元 2020 年面對全球 COVID-19 疫情,台灣成功執行邊境管控並向國際輸出醫療物資,同時全球供應鏈的晶片短缺危機,讓國際社會強烈意識到台灣半導體產業在經濟與地緣政治上的戰略高度與不可替代性。'},
  {era:'2026',name:'AI 與共創時代',shape:'neural',color:'#A3B18A',
-  text:'當 AI 走進教室,人類與機器共同書寫知識。歷史不再只是過去,而是透過開放架構,持續進化的生命體。'}
+  text:'西元 2026 年生成式人工智慧全面普及,台灣憑藉先進製程晶片與強大的 AI 伺服器硬體生態系,成為全球算力網絡的核心支柱,此時期的歷史定位在於硬體製造與新興科技的深度融合,台灣持續以科技實力驅動全球的創新發展。'}
 ];
 var NUM_NODES=DATA.length;
 // 自動偵測:本地開發用 localhost,部署站點用 HF Space
@@ -1443,25 +1443,11 @@ function renderAi(idx){
 }
 
 function callMythos(idx){
-  // 已有成功結果 (同一 n_loops) → 不重送
-  if(aiCache[idx]&&!aiCache[idx].pending&&aiCache[idx].n_loops===nLoops&&!aiCache[idx].error)return;
-  // 正在 fetch → 擋重入,避免 Gemini 被轟炸
-  if(aiCache[idx]&&aiCache[idx].pending)return;
-  // 啟動新請求前先停掉任何正在播放的舊語音
+  // 已有資料就不重設 (保留 spoken 狀態,避免同一段重複朗讀)
+  if(aiCache[idx])return;
   stopSpeak();
-  var d=DATA[idx];
-  aiCache[idx]={pending:true,n_loops:nLoops};renderAi(idx);
-  fetch(MYTHOS_URL+'/narrate',{method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({era:d.era,name:d.name,description:d.text,n_loops:nLoops})
-  }).then(function(r){return r.json().then(function(j){if(!r.ok)throw new Error(j.detail||'unknown');return j})})
-  .then(function(d){
-    // spoken:false — 讓 renderAi 知道這是「新結果」,該念一次
-    aiCache[idx]={narrative:d.narrative,mythos:d.mythos,gemini_elapsed:d.gemini_elapsed,n_loops:d.mythos.n_loops,spoken:false};
-    if(S.node===idx)renderAi(idx);
-  }).catch(function(e){
-    aiCache[idx]={error:'Mythos × Gemini 連線失敗:'+e.message};
-    if(S.node===idx)renderAi(idx);
-  });
+  aiCache[idx]={narrative:DATA[idx].text,spoken:false};
+  renderAi(idx);
 }
 
 // ------------------------------------------------------------
@@ -1470,7 +1456,8 @@ function callMythos(idx){
 function showInfo(idx){var d=DATA[idx];
   document.getElementById('ip-era').textContent=d.era;
   document.getElementById('ip-title').textContent=d.name;
-  document.getElementById('ip-text').textContent=d.text;
+  // 文字改由 ai-narrative 以打字機效果呈現,這裡清空避免重複
+  document.getElementById('ip-text').textContent='';
   document.getElementById('infopanel').classList.add('show');
   renderAi(idx);
 }
