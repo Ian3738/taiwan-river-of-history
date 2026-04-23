@@ -1447,6 +1447,8 @@ function callMythos(idx){
   if(aiCache[idx]&&!aiCache[idx].pending&&aiCache[idx].n_loops===nLoops&&!aiCache[idx].error)return;
   // 正在 fetch → 擋重入,避免 Gemini 被轟炸
   if(aiCache[idx]&&aiCache[idx].pending)return;
+  // 啟動新請求前先停掉任何正在播放的舊語音
+  stopSpeak();
   var d=DATA[idx];
   aiCache[idx]={pending:true,n_loops:nLoops};renderAi(idx);
   fetch(MYTHOS_URL+'/narrate',{method:'POST',headers:{'Content-Type':'application/json'},
@@ -2236,7 +2238,12 @@ renderAi=function(idx){
   // 只有「剛收到新結果」才念一次 — 用 r.spoken 標記避免重複
   if(voiceMode&&r&&!r.pending&&!r.error&&r.narrative&&!r.spoken){
     r.spoken=true;
-    setTimeout(function(){if(S.node===idx)speak(r.narrative)},400);
+    setTimeout(function(){
+      // 保護:若 cache 已被替換 (使用者捏合/切年代),不念舊敘事
+      if(S.node===idx&&aiCache[idx]===r){
+        speak(r.narrative);
+      }
+    },400);
   }
 };
 
