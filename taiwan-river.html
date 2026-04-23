@@ -1,0 +1,2449 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>台灣歷史長河 · River of Formosa × Mythos AI</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+TC:wght@300;400;500;700&family=Noto+Serif+TC:wght@400;700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+body{overflow:hidden;background:#030308;font-family:'Noto Sans TC',sans-serif;color:#fff;cursor:crosshair;-webkit-user-select:none;user-select:none}
+canvas#c{display:block;position:fixed;inset:0;z-index:1}
+#vid{position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;opacity:0}
+#fx{position:fixed;inset:0;z-index:2;pointer-events:none;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.02) 2px,rgba(0,0,0,.02) 4px)}
+#vig{position:fixed;inset:0;z-index:2;pointer-events:none;background:radial-gradient(ellipse at center,transparent 55%,rgba(3,3,8,.55) 100%)}
+.cn{position:fixed;width:28px;height:28px;z-index:6;pointer-events:none}.cn::before,.cn::after{content:'';position:absolute;background:rgba(0,229,255,.1)}
+.tl{top:8px;left:8px}.tl::before{width:28px;height:1px}.tl::after{width:1px;height:28px}
+.tr{top:8px;right:8px}.tr::before{right:0;width:28px;height:1px}.tr::after{right:0;width:1px;height:28px}
+.bl{bottom:8px;left:8px}.bl::before{bottom:0;width:28px;height:1px}.bl::after{bottom:0;width:1px;height:28px}
+.br{bottom:8px;right:8px}.br::before{bottom:0;right:0;width:28px;height:1px}.br::after{bottom:0;right:0;width:1px;height:28px}
+
+#warp{position:fixed;inset:0;z-index:7;pointer-events:none;opacity:0;transition:opacity .15s}
+#warp.left,#warp.right{opacity:1}
+#warp .streak{position:absolute;top:0;height:100%;width:200%;background:linear-gradient(90deg,transparent 0%,rgba(0,229,255,.03) 20%,rgba(0,229,255,.15) 45%,rgba(255,255,255,.4) 50%,rgba(0,229,255,.15) 55%,rgba(0,229,255,.03) 80%,transparent 100%)}
+#warp.right .streak{animation:warpR .55s cubic-bezier(.2,0,.3,1) forwards}
+#warp.left .streak{animation:warpL .55s cubic-bezier(.2,0,.3,1) forwards}
+@keyframes warpR{0%{transform:translateX(-100%)}100%{transform:translateX(50%)}}
+@keyframes warpL{0%{transform:translateX(50%)}100%{transform:translateX(-100%)}}
+#warp .glow{position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(0,229,255,.08) 0%,transparent 70%);animation:glowPulse .5s ease-out}
+@keyframes glowPulse{0%{opacity:0;transform:scale(.8)}30%{opacity:1}100%{opacity:0;transform:scale(1.3)}}
+
+#era-flash{position:fixed;top:42%;left:50%;transform:translate(-50%,-50%);z-index:8;pointer-events:none;
+  font-family:'Noto Serif TC',serif;font-size:clamp(1.5rem,5vw,2.8rem);font-weight:700;
+  background:linear-gradient(135deg,#00e5ff,#e0a030);-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  opacity:0;transition:opacity .3s;filter:drop-shadow(0 0 20px rgba(0,229,255,.5));letter-spacing:4px}
+#era-flash.show{opacity:1;animation:eraIn .8s ease-out}
+@keyframes eraIn{0%{opacity:0;transform:translate(-50%,-50%) scale(1.3)}30%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-50%) scale(.95)}}
+
+#hud{position:fixed;inset:0;z-index:4;pointer-events:none}
+#title{position:absolute;top:14px;left:16px}
+#title h1{font-family:'Orbitron',monospace;font-size:clamp(.7rem,2.2vw,1.1rem);font-weight:900;letter-spacing:3px;background:linear-gradient(135deg,#00e5ff,#e0a030,#ff4081);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+#status{font-size:.58rem;color:#334;margin-top:2px;letter-spacing:.5px;transition:color .3s}#status.on{color:#00e5ff}
+#hands-display{position:absolute;top:48px;left:16px;display:flex;gap:12px}
+.hand-group{display:flex;align-items:center;gap:3px}
+.hand-group .label{font-family:'Orbitron',monospace;font-size:.35rem;color:rgba(255,255,255,.15);margin-right:2px}
+.hd{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);transition:all .15s}
+.hd.up{background:#00e5ff;border-color:#00e5ff;box-shadow:0 0 4px rgba(0,229,255,.4)}
+.hd.up2{background:#e0a030;border-color:#e0a030;box-shadow:0 0 4px rgba(224,160,48,.4)}
+#gs{position:absolute;top:72px;left:16px;font-family:'Orbitron',monospace;font-size:.44rem;letter-spacing:1px;opacity:0;transition:opacity .2s;color:rgba(0,229,255,.5)}
+#gs.show{opacity:1}#gs.fist{color:rgba(255,64,129,.4)}
+
+/* Mythos Health HUD (top-right) */
+#mythos-hud{position:absolute;top:14px;right:16px;display:flex;align-items:center;gap:10px;font-family:'Orbitron',monospace;font-size:.5rem;letter-spacing:2px;color:rgba(255,255,255,.4)}
+#mythos-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,64,129,.5);box-shadow:0 0 6px rgba(255,64,129,.4);transition:all .3s}
+#mythos-dot.on{background:#7cffa0;box-shadow:0 0 8px rgba(124,255,160,.6)}
+#mythos-hud .rho{color:rgba(0,229,255,.55)}
+#mythos-hud .params{color:rgba(224,160,48,.45)}
+#voice-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.15);transition:all .3s}
+#voice-dot.listening{background:#7cffa0;box-shadow:0 0 8px rgba(124,255,160,.7);animation:vp 1.4s ease-in-out infinite}
+#voice-dot.awake{background:#ff8fa3;box-shadow:0 0 12px rgba(255,143,163,.8);animation:vp 1s ease-in-out infinite}
+@keyframes vp{0%,100%{transform:scale(1)}50%{transform:scale(1.4)}}
+#voice-select{pointer-events:auto;background:rgba(8,8,24,.6);color:rgba(0,229,255,.7);border:1px solid rgba(0,229,255,.2);border-radius:6px;padding:1px 4px;font-family:'Orbitron',monospace;font-size:.42rem;letter-spacing:.5px;max-width:130px;cursor:pointer;outline:none}
+#voice-select option{background:#0a0a18;color:#eee;font-family:'Noto Sans TC',sans-serif}
+#voice-dot,#voice-label{cursor:pointer;pointer-events:auto}
+
+/* 島語對白泡 */
+#guide-bubble{position:fixed;bottom:88px;left:50%;transform:translateX(-50%) translateY(20px);z-index:6;pointer-events:none;
+  max-width:min(640px,82vw);padding:14px 22px;border-radius:22px;
+  background:rgba(8,8,24,.78);backdrop-filter:blur(14px);
+  border:1px solid rgba(0,229,255,.25);
+  box-shadow:0 0 30px rgba(0,229,255,.15);
+  font-family:'Noto Serif TC',serif;font-size:.95rem;line-height:1.7;color:rgba(255,255,255,.92);
+  letter-spacing:.5px;text-align:center;
+  opacity:0;transition:all .5s cubic-bezier(.4,0,.2,1)}
+#guide-bubble.show{opacity:1;transform:translateX(-50%) translateY(0)}
+/* 開場時對話框置於螢幕上方,不擋按鈕 */
+body:not(.entered) #guide-bubble{bottom:auto;top:8%}
+
+/* 即時聽到的字 — 右下角小條 */
+#heard{position:fixed;bottom:14px;right:14px;z-index:9;
+  font-family:'Orbitron',monospace;font-size:.55rem;letter-spacing:1px;
+  padding:5px 10px;border-radius:10px;
+  background:rgba(8,8,24,.65);border:1px solid rgba(0,229,255,.15);
+  color:rgba(0,229,255,.55);max-width:280px;
+  opacity:0;transition:opacity .25s;pointer-events:none}
+#heard.show{opacity:1}
+#heard.final{color:rgba(124,255,160,.85);border-color:rgba(124,255,160,.3)}
+
+/* =========================================================
+   響應式設計 — 平板與手機
+   ========================================================= */
+
+/* === 平板 (≤ 1024px) === */
+@media (max-width: 1024px){
+  #title h1{font-size:.8rem;letter-spacing:2px}
+  #status{font-size:.5rem}
+  #gg{width:120px;padding:8px 6px}
+  .gi{margin-bottom:5px;padding-bottom:4px}
+  .gi .gd{font-size:.45rem}
+  #infopanel{width:clamp(180px,28vw,260px)}
+  .tn{min-width:75px;padding:6px 6px}
+  .tn .nm{font-size:.55rem}
+  .tn .yr{font-size:.42rem}
+}
+
+/* === 手機 (≤ 768px) === */
+@media (max-width: 768px){
+  /* HUD 大幅簡化 */
+  #title{top:10px;left:10px}
+  #title h1{font-size:.65rem;letter-spacing:1.5px}
+  #status{font-size:.45rem}
+  #hands-display{display:none}        /* 手機沒有手勢辨識 */
+  #gs{display:none}
+  #gg{display:none}                    /* 手勢圖例完全隱藏 */
+
+  #mythos-hud{top:10px;right:10px;font-size:.42rem;letter-spacing:1.5px;gap:6px;flex-wrap:wrap;justify-content:flex-end;max-width:60vw}
+  #voice-select{max-width:90px;font-size:.36rem}
+  #m-params{display:none}
+  #m-rho{font-size:.42rem}
+
+  /* n_loops 滑桿 */
+  #loops-wrap{padding:5px 12px;gap:7px;top:48px}
+  #loops-wrap input[type=range]{width:90px}
+  #loops-val{font-size:.6rem}
+  #loops-wrap .lbl{font-size:.36rem}
+
+  /* 時間軸 */
+  #timeline{padding:0 4px 8px}
+  .tn{min-width:60px;padding:4px 4px;border-radius:6px}
+  .tn .yr{font-size:.36rem}
+  .tn .nm{font-size:.48rem;max-width:54px;line-height:1.15}
+  .tn .dt{margin-top:3px;width:4px;height:4px}
+
+  /* 資訊卡 — 改成下方滑入式抽屜 */
+  #infopanel{width:calc(100vw - 16px);left:8px;right:8px;top:auto;bottom:80px;
+    max-height:42vh;padding:14px 14px;border-radius:18px}
+  #infopanel.show.zoomed{width:calc(100vw - 12px);max-height:75vh;
+    top:50%;bottom:auto;left:50%;padding:24px 18px}
+  #infopanel h2{font-size:.85rem;margin-bottom:6px}
+  #infopanel .mt{font-size:.7rem;line-height:1.7;margin-bottom:8px}
+  #infopanel.show.zoomed h2{font-size:1.3rem}
+  #infopanel.show.zoomed .mt{font-size:.85rem}
+  #infopanel.show.zoomed #ai-block .narrative{font-size:.85rem}
+  #ai-block .narrative{font-size:.7rem;line-height:1.85}
+
+  /* 對話框 */
+  #guide-bubble{max-width:calc(100vw - 24px);font-size:.78rem;padding:10px 16px;line-height:1.65;bottom:74px}
+  body:not(.entered) #guide-bubble{top:14%}
+
+  /* 鏡頭縮成小圖 */
+  body:not(.entered) #vid+div,body:not(.entered) #vid{display:none}
+  /* 鏡頭按鈕和狀態:容器內元素 — 在進入後才有,移到右上 */
+  /* (在 JS 中已用 document.querySelector 操作,此處不便修改 DOM 結構) */
+
+  /* 開場面板 */
+  #start{padding:18px 18px 30px;justify-content:flex-end}
+  #start h2{font-size:1.2rem;letter-spacing:3px}
+  #start .sub{font-size:.7rem;margin-bottom:4px}
+  #start .subsub{font-size:.42rem;margin-bottom:14px}
+  #start .desc{font-size:.65rem;line-height:1.7;max-width:320px;margin-bottom:18px}
+  #go{font-size:.7rem;padding:11px 28px;letter-spacing:2px}
+  #nohand{font-size:.55rem;padding:6px 14px}
+
+  /* 手勢游標在觸控裝置毫無意義 */
+  #finger-cursor{display:none}
+
+  /* 河流按鈕在資訊卡上方 */
+  #river-btn{bottom:auto;top:80px;font-size:.5rem;padding:4px 10px}
+
+  /* 即時聽到字 */
+  #heard{font-size:.5rem;max-width:60vw;bottom:8px;right:8px}
+}
+
+/* === 小手機 (≤ 480px) — 進一步縮放 === */
+@media (max-width: 480px){
+  #title h1{font-size:.55rem}
+  #status{display:none}
+  #mythos-hud{font-size:.38rem;max-width:50vw}
+  #voice-select{display:none}
+  .tn{min-width:48px;padding:3px 3px}
+  .tn .nm{font-size:.42rem;max-width:42px}
+  #loops-wrap input[type=range]{width:60px}
+  #loops-wrap .lbl{display:none}
+}
+
+/* === 純觸控裝置 — 隱藏滑鼠/食指特有 UI === */
+@media (hover: none) and (pointer: coarse){
+  #finger-cursor{display:none}
+  #zoom-hint{font-size:.5rem;color:rgba(0,229,255,.5)}
+  #infopanel:hover{background:rgba(5,5,18,.78)}  /* 觸控不會 hover */
+}
+
+/* === 直立手機橫排時 === */
+@media (max-height: 480px) and (orientation:landscape){
+  #infopanel{max-height:56vh}
+  #start .desc{margin-bottom:10px}
+}
+#guide-bubble::before{content:'島語';position:absolute;top:-9px;left:50%;transform:translateX(-50%);
+  font-family:'Orbitron',monospace;font-size:.42rem;letter-spacing:3px;color:#00e5ff;
+  background:rgba(8,8,24,.95);padding:2px 10px;border-radius:8px;border:1px solid rgba(0,229,255,.3)}
+
+/* n_loops slider (top-center) */
+#loops-wrap{position:absolute;top:14px;left:50%;transform:translateX(-50%);z-index:5;pointer-events:all;display:flex;align-items:center;gap:10px;background:rgba(8,8,24,.4);backdrop-filter:blur(8px);border:1px solid rgba(0,229,255,.08);border-radius:18px;padding:6px 16px;cursor:help}
+#loops-wrap .lbl{font-family:'Noto Serif TC',serif;font-size:.72rem;letter-spacing:1.5px;color:rgba(0,229,255,.7)}
+#loops-wrap .hint{font-family:'Noto Sans TC',sans-serif;font-size:.55rem;color:rgba(255,255,255,.35);margin-left:-4px}
+#loops-wrap input[type=range]{-webkit-appearance:none;appearance:none;width:160px;height:2px;background:rgba(0,229,255,.15);outline:none;border-radius:2px}
+#loops-wrap input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:12px;height:12px;border-radius:50%;background:#00e5ff;box-shadow:0 0 8px rgba(0,229,255,.6);cursor:pointer}
+#loops-val{font-family:'Orbitron',monospace;font-size:.72rem;color:#e0a030;min-width:22px;text-align:right}
+
+#infopanel{position:fixed;top:90px;left:14px;z-index:5;width:clamp(215px,23vw,290px);max-height:calc(100vh - 180px);overflow-y:auto;background:rgba(5,5,18,.72);backdrop-filter:blur(14px);border:1px solid rgba(0,229,255,.08);border-radius:14px;padding:18px 16px;opacity:0;transform:translateX(-20px);transition:all .55s cubic-bezier(.4,0,.2,1);pointer-events:none;scrollbar-width:thin;scrollbar-color:rgba(0,229,255,.15) transparent;cursor:pointer}
+#infopanel.show.zoomed{top:50%;left:50%;width:min(640px,80vw);max-height:75vh;padding:40px 44px;transform:translate(-50%,-50%);border-color:rgba(0,229,255,.28);box-shadow:0 0 80px rgba(0,229,255,.08),0 40px 100px -40px rgba(0,0,0,.8);background:rgba(5,5,18,.88)}
+#infopanel.show.zoomed .era{font-size:.62rem;margin-bottom:8px}
+#infopanel.show.zoomed h2{font-size:1.8rem;margin-bottom:18px}
+#infopanel.show.zoomed .mt{font-size:.92rem;line-height:2;margin-bottom:20px}
+#infopanel.show.zoomed #ai-block .ai-ttl{font-size:.54rem}
+#infopanel.show.zoomed #ai-block .ai-body{font-size:.92rem;line-height:1.9}
+#infopanel.show.zoomed #ai-block .ai-meta{font-size:.5rem;margin-top:8px}
+#zoom-hint{position:absolute;top:10px;right:14px;font-family:'Orbitron',monospace;font-size:.42rem;letter-spacing:2px;color:rgba(0,229,255,.35);pointer-events:none}
+
+/* 食指游標 + 停留環 */
+#finger-cursor{position:fixed;top:0;left:0;width:26px;height:26px;transform:translate(-50%,-50%);pointer-events:none;z-index:9;opacity:0;transition:opacity .3s}
+#finger-cursor.on{opacity:1}
+#finger-cursor .dot{position:absolute;inset:9px;border-radius:50%;background:#00e5ff;box-shadow:0 0 10px rgba(0,229,255,.7)}
+#finger-cursor svg{position:absolute;inset:0;transform:rotate(-90deg)}
+#finger-cursor circle.ring{fill:none;stroke:rgba(0,229,255,.25);stroke-width:2}
+#finger-cursor circle.prog{fill:none;stroke:#00e5ff;stroke-width:2;stroke-dasharray:75.4;stroke-dashoffset:75.4;transition:stroke-dashoffset .12s linear;filter:drop-shadow(0 0 4px rgba(0,229,255,.6))}
+#infopanel.dwell{border-color:rgba(0,229,255,.4);box-shadow:0 0 24px rgba(0,229,255,.15)}
+#infopanel::-webkit-scrollbar{width:3px}#infopanel::-webkit-scrollbar-thumb{background:rgba(0,229,255,.15);border-radius:2px}
+#infopanel.show{opacity:1;transform:translateX(0);pointer-events:all}
+#infopanel .era{font-family:'Orbitron',monospace;font-size:.46rem;letter-spacing:2px;color:rgba(0,229,255,.5);margin-bottom:4px}
+#infopanel h2{font-family:'Noto Serif TC',serif;font-size:1rem;font-weight:700;margin-bottom:10px;background:linear-gradient(135deg,#00e5ff,#e0a030);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+#infopanel .mt{font-size:.72rem;line-height:1.8;color:rgba(255,255,255,.55);margin-bottom:12px}
+
+/* AI Readout */
+#ai-block{margin-top:10px;padding-top:10px;border-top:1px solid rgba(0,229,255,.1)}
+#ai-block .ai-ttl{font-family:'Orbitron',monospace;font-size:.42rem;letter-spacing:2px;color:rgba(224,160,48,.55);margin-bottom:6px;display:flex;align-items:center;gap:6px}
+#ai-block .ai-ttl .badge{font-size:.36rem;padding:1px 5px;border:1px solid rgba(224,160,48,.4);border-radius:8px;color:rgba(224,160,48,.65)}
+#ai-block .narrative{font-family:'Noto Serif TC',serif;font-size:.74rem;line-height:1.95;color:rgba(255,255,255,.78);margin-bottom:10px;letter-spacing:.5px;min-height:1em}
+#infopanel.show.zoomed #ai-block .narrative{font-size:1rem;line-height:2.1}
+#ai-block .narrative .cursor{display:inline-block;width:6px;height:1em;background:#00e5ff;vertical-align:text-bottom;margin-left:2px;animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+#ai-block .ai-body{font-family:'Orbitron',monospace;font-size:.5rem;line-height:1.7;color:rgba(255,255,255,.42);letter-spacing:.5px}
+#ai-block .ai-body .v{color:#00e5ff;font-weight:700}
+#ai-block .ai-body .vb{color:#e0a030}
+#ai-block.loading .narrative::after{content:'  正在召喚 Mythos × Gemini …';color:rgba(0,229,255,.5);font-size:.7rem;animation:dots 1.4s infinite}
+@keyframes dots{0%,20%{opacity:.3}50%{opacity:1}100%{opacity:.3}}
+#ai-block .ai-meta{font-family:'Orbitron',monospace;font-size:.36rem;letter-spacing:1.5px;color:rgba(255,255,255,.2);margin-top:4px}
+
+#gg{position:fixed;top:50%;right:10px;transform:translateY(-50%);z-index:5;background:rgba(5,5,18,.5);backdrop-filter:blur(10px);border:1px solid rgba(0,229,255,.05);border-radius:11px;padding:10px 8px;width:clamp(130px,13vw,160px);pointer-events:none}
+#gg .gt{font-family:'Orbitron',monospace;font-size:.4rem;letter-spacing:2px;color:rgba(0,229,255,.3);text-align:center;margin-bottom:7px}
+.gi{display:flex;align-items:flex-start;gap:5px;margin-bottom:7px;padding-bottom:6px;border-bottom:1px solid rgba(255,255,255,.015)}
+.gi:last-child{margin-bottom:0;padding-bottom:0;border-bottom:none}
+.gi .ic{font-size:.85rem;flex-shrink:0;width:17px;text-align:center}.gi .gd{font-size:.5rem;color:rgba(255,255,255,.3);line-height:1.45}
+.gi .gd b{color:rgba(0,229,255,.5);font-weight:500;display:block}
+
+#river-btn{position:fixed;bottom:88px;left:50%;transform:translateX(-50%);z-index:5;pointer-events:all;background:rgba(8,8,24,.4);backdrop-filter:blur(8px);border:1px solid rgba(224,160,48,.1);border-radius:18px;padding:5px 14px;font-size:.54rem;color:rgba(224,160,48,.4);cursor:pointer;font-family:'Orbitron',monospace;letter-spacing:1.5px;transition:all .3s}
+#river-btn.active{border-color:rgba(224,160,48,.45);color:#e0a030}
+
+#timeline{position:fixed;bottom:0;left:0;right:0;z-index:5;pointer-events:all;padding:0 8px 12px;overflow-x:auto;overflow-y:hidden;white-space:nowrap;scrollbar-width:none}
+#timeline::-webkit-scrollbar{display:none}
+#tl-inner{display:inline-flex;gap:8px;padding:6px 2px;justify-content:center;width:100%}
+.tn{display:inline-flex;flex-direction:column;align-items:center;min-width:92px;padding:7px 8px;background:rgba(8,8,24,.45);border:1px solid rgba(100,160,255,.05);border-radius:9px;cursor:pointer;transition:all .3s;text-align:center;flex-shrink:0}
+.tn:hover{border-color:rgba(0,229,255,.2)}.tn.active{border-color:rgba(0,229,255,.45);background:rgba(0,229,255,.06);box-shadow:0 0 14px rgba(0,229,255,.08)}
+.tn .yr{font-family:'Orbitron',monospace;font-size:.5rem;color:rgba(255,255,255,.2);letter-spacing:1px;margin-bottom:3px}
+.tn.active .yr{color:rgba(0,229,255,.65)}
+.tn .nm{font-size:.64rem;color:rgba(255,255,255,.35);white-space:normal;line-height:1.25}.tn.active .nm{color:#00e5ff}
+.tn .dt{width:5px;height:5px;border-radius:50%;margin-top:5px;background:rgba(255,255,255,.06)}.tn.active .dt{background:#00e5ff;box-shadow:0 0 6px rgba(0,229,255,.5)}
+
+#start{position:fixed;inset:0;z-index:50;background:linear-gradient(to bottom,rgba(3,3,8,0) 0%,rgba(3,3,8,0) 55%,rgba(3,3,8,.55) 80%,rgba(3,3,8,.85) 100%);display:flex;flex-direction:column;align-items:center;justify-content:flex-end;text-align:center;padding:28px 28px 50px;transition:opacity .8s}
+/* 進入前隱藏所有探索 UI,僅留台灣島嶼 + 開場面板 + 對白泡 */
+body:not(.entered) #hud,
+body:not(.entered) #timeline,
+body:not(.entered) #gg,
+body:not(.entered) #river-btn,
+body:not(.entered) #loops-wrap,
+body:not(.entered) #infopanel,
+body:not(.entered) #finger-cursor{visibility:hidden}
+#start.gone{opacity:0;pointer-events:none}
+#start h2{font-family:'Orbitron',monospace;font-size:clamp(1rem,3.5vw,1.6rem);font-weight:900;letter-spacing:4px;background:linear-gradient(135deg,#00e5ff,#e0a030,#ff4081);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:4px}
+#start .sub{font-family:'Noto Serif TC',serif;font-size:.85rem;color:rgba(255,255,255,.28);margin-bottom:8px}
+#start .subsub{font-family:'Orbitron',monospace;font-size:.5rem;letter-spacing:3px;color:rgba(224,160,48,.4);margin-bottom:22px}
+#start .desc{color:rgba(255,255,255,.2);font-size:.7rem;line-height:1.8;max-width:420px;margin-bottom:22px}
+#go{background:transparent;border:2px solid rgba(0,229,255,.4);color:#00e5ff;font-family:'Orbitron',monospace;font-size:.78rem;letter-spacing:3px;padding:13px 34px;border-radius:50px;cursor:pointer;transition:all .3s;overflow:hidden;position:relative}
+#go:hover{background:rgba(0,229,255,.05);box-shadow:0 0 25px rgba(0,229,255,.1)}
+#go::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(0,229,255,.05),transparent);animation:sh 2.5s infinite}
+@keyframes sh{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+#nohand{margin-top:11px;background:transparent;border:1px solid rgba(255,255,255,.06);color:rgba(255,255,255,.2);font-size:.62rem;padding:7px 18px;border-radius:22px;cursor:pointer}
+#go:disabled,#nohand:disabled{opacity:.25;cursor:not-allowed;border-color:rgba(255,255,255,.08)}
+body.named #go,body.named #nohand{opacity:1;cursor:pointer}
+body.named #go{border-color:rgba(0,229,255,.55);color:#00e5ff}
+
+/* 打字逃生口 (取名失敗 3 次才出現) */
+#name-typebox{display:none;margin-top:18px;padding:14px 18px;background:rgba(8,8,24,.6);
+  border:1px solid rgba(0,229,255,.18);border-radius:14px;backdrop-filter:blur(10px);
+  flex-direction:column;align-items:center;gap:8px;max-width:340px}
+#name-typebox.show{display:flex;animation:fadeIn .6s ease-out}
+#name-typebox label{font-family:'Noto Serif TC',serif;font-size:.65rem;color:rgba(255,255,255,.55)}
+#name-typebox input{background:rgba(255,255,255,.06);border:1px solid rgba(0,229,255,.2);
+  color:#fff;font-family:'Noto Serif TC',serif;font-size:.85rem;letter-spacing:2px;
+  padding:8px 14px;border-radius:8px;outline:none;text-align:center;width:200px}
+#name-typebox input:focus{border-color:rgba(0,229,255,.6);background:rgba(0,229,255,.05)}
+#name-typebox button{background:rgba(0,229,255,.12);border:1px solid rgba(0,229,255,.4);
+  color:#00e5ff;font-family:'Orbitron',monospace;font-size:.55rem;letter-spacing:2px;
+  padding:6px 18px;border-radius:14px;cursor:pointer}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* ========== 對話面板 ========== */
+#chat-fab{position:fixed;right:18px;bottom:80px;z-index:9;
+  width:56px;height:56px;border-radius:50%;border:1px solid rgba(0,229,255,.4);
+  background:rgba(8,8,24,.85);backdrop-filter:blur(10px);
+  color:#00e5ff;font-size:1.4rem;cursor:pointer;display:none;
+  box-shadow:0 0 20px rgba(0,229,255,.25),inset 0 0 12px rgba(0,229,255,.08);
+  transition:all .25s}
+#chat-fab:hover{transform:scale(1.08);box-shadow:0 0 30px rgba(0,229,255,.45)}
+body.entered #chat-fab{display:block}
+body.chat-open #chat-fab{display:none}
+
+#chat-panel{position:fixed;right:0;top:0;bottom:0;z-index:40;
+  width:min(440px,90vw);background:rgba(5,5,18,.92);backdrop-filter:blur(20px) saturate(140%);
+  border-left:1px solid rgba(0,229,255,.18);box-shadow:-30px 0 60px rgba(0,0,0,.55);
+  transform:translateX(105%);transition:transform .45s cubic-bezier(.4,0,.2,1);
+  display:flex;flex-direction:column}
+body.chat-open #chat-panel{transform:translateX(0)}
+
+.chat-head{padding:18px 20px;display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid rgba(0,229,255,.1)}
+.chat-title{font-family:'Noto Serif TC',serif;font-size:1.05rem;color:#00e5ff;
+  display:flex;align-items:center;gap:10px;letter-spacing:1.5px}
+.chat-title .dot{width:8px;height:8px;border-radius:50%;background:#00e5ff;
+  box-shadow:0 0 10px rgba(0,229,255,.7);animation:vp 2s ease-in-out infinite}
+.chat-close{background:transparent;border:none;color:rgba(255,255,255,.5);
+  font-size:1.6rem;cursor:pointer;line-height:1;padding:0 6px}
+.chat-close:hover{color:#fff}
+
+.chat-log{flex:1;overflow-y:auto;padding:18px 20px;display:flex;flex-direction:column;gap:14px;
+  scrollbar-width:thin;scrollbar-color:rgba(0,229,255,.2) transparent}
+.chat-log::-webkit-scrollbar{width:4px}
+.chat-log::-webkit-scrollbar-thumb{background:rgba(0,229,255,.2);border-radius:2px}
+
+.msg{max-width:85%;padding:12px 16px;border-radius:14px;font-family:'Noto Serif TC',serif;
+  font-size:.85rem;line-height:1.75;letter-spacing:.4px;animation:fadeIn .4s ease-out}
+.msg.user{align-self:flex-end;background:rgba(0,229,255,.12);color:#fff;
+  border:1px solid rgba(0,229,255,.25);border-bottom-right-radius:4px}
+.msg.guide{align-self:flex-start;background:rgba(255,255,255,.05);color:rgba(255,255,255,.92);
+  border:1px solid rgba(224,160,48,.15);border-bottom-left-radius:4px}
+.msg.guide::before{content:'島語';display:block;font-family:'Orbitron',monospace;
+  font-size:.42rem;letter-spacing:2px;color:rgba(224,160,48,.55);margin-bottom:5px}
+.msg.user::before{content:'你';display:block;font-family:'Orbitron',monospace;
+  font-size:.42rem;letter-spacing:2px;color:rgba(0,229,255,.65);margin-bottom:5px;text-align:right}
+.msg.thinking{color:rgba(0,229,255,.6);font-style:italic}
+.msg.thinking::after{content:' …';animation:dots 1.4s infinite}
+
+.chat-bottom{padding:14px 16px;border-top:1px solid rgba(0,229,255,.1);
+  background:rgba(3,3,8,.6)}
+.chat-status{font-family:'Orbitron',monospace;font-size:.42rem;letter-spacing:2px;
+  color:rgba(0,229,255,.45);margin-bottom:8px;text-align:center;min-height:14px}
+.chat-status.listen{color:#7cffa0}
+.chat-input-row{display:flex;gap:8px;align-items:center}
+#chat-mic{flex-shrink:0;width:42px;height:42px;border-radius:50%;
+  background:rgba(0,229,255,.1);border:1px solid rgba(0,229,255,.3);color:#00e5ff;
+  font-size:1rem;cursor:pointer;transition:all .2s}
+#chat-mic:hover{background:rgba(0,229,255,.2)}
+#chat-mic.recording{background:rgba(255,143,163,.2);border-color:#ff8fa3;color:#ff8fa3;
+  animation:vp 1.2s ease-in-out infinite}
+#chat-input{flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(0,229,255,.18);
+  color:#fff;font-family:'Noto Serif TC',serif;font-size:.78rem;padding:10px 14px;
+  border-radius:18px;outline:none}
+#chat-input:focus{border-color:rgba(0,229,255,.5)}
+#chat-send{flex-shrink:0;background:rgba(0,229,255,.15);border:1px solid rgba(0,229,255,.4);
+  color:#00e5ff;font-family:'Noto Sans TC',sans-serif;font-size:.7rem;padding:10px 16px;
+  border-radius:18px;cursor:pointer;letter-spacing:1.5px}
+#chat-send:hover{background:rgba(0,229,255,.25)}
+
+/* 手機版面 */
+@media (max-width: 768px){
+  #chat-panel{width:100vw}
+  #chat-fab{right:12px;bottom:88px;width:48px;height:48px;font-size:1.2rem}
+  .msg{font-size:.8rem;max-width:90%}
+}
+#errmsg{display:none;margin-top:14px;color:rgba(255,100,100,.55);font-size:.62rem;max-width:360px;line-height:1.6}
+</style>
+</head>
+<body>
+<div id="fx"></div><div id="vig"></div>
+<div class="cn tl"></div><div class="cn tr"></div><div class="cn bl"></div><div class="cn br"></div>
+
+<div id="warp"><div class="streak"></div><div class="glow"></div></div>
+<div id="era-flash"></div>
+
+<div id="start">
+  <h2>島語 · DAO YU</h2>
+  <div class="sub">台灣歷史長河 · 你的 AI 導覽員</div>
+  <div class="subsub">RIVER OF FORMOSA × OPENMYTHOS</div>
+  <div class="desc">這是台灣 — 你眼前由 12,000 顆粒子凝聚而成的島嶼。<br>我是島語,將陪你穿越六千年的記憶。<br><br>👆 點任一處讓我先說兩句 · 🎤 然後對我說「開始探索」 · 或直接按下方按鈕</div>
+  <button id="go" disabled>啟動探索 ✦</button>
+  <button id="nohand" disabled>僅用滑鼠 / 鍵盤</button>
+  <div id="name-typebox">
+    <label>島語沒聽清楚?直接打你的稱呼:</label>
+    <input id="name-input" type="text" maxlength="8" placeholder="輸入綽號…" autocomplete="off">
+    <button id="name-submit">確認</button>
+  </div>
+  <div id="errmsg"></div>
+</div>
+
+<div id="hud">
+  <div id="title"><h1>RIVER OF FORMOSA</h1><div id="status">等待啟動...</div></div>
+  <div id="hands-display">
+    <div class="hand-group"><span class="label">L</span><div class="hd hl"></div><div class="hd hl"></div><div class="hd hl"></div><div class="hd hl"></div><div class="hd hl"></div></div>
+    <div class="hand-group"><span class="label">R</span><div class="hd hr"></div><div class="hd hr"></div><div class="hd hr"></div><div class="hd hr"></div><div class="hd hr"></div></div>
+  </div>
+  <div id="gs"></div>
+
+  <div id="mythos-hud">
+    <span id="voice-dot" title="語音狀態"></span>
+    <span id="voice-label">VOICE OFF</span>
+    <span style="opacity:.3;margin:0 6px">·</span>
+    <span id="mythos-dot"></span>
+    <span>MYTHOS</span>
+    <span class="params" id="m-params">— params</span>
+    <span class="rho" id="m-rho">ρ —</span>
+  </div>
+</div>
+
+<!-- 島語訊息泡 (對白) -->
+<div id="guide-bubble"></div>
+
+<!-- 即時聽到的字 (語音 debug) -->
+<div id="heard"></div>
+
+<!-- 與島語對話面板 -->
+<div id="chat-panel">
+  <div class="chat-head">
+    <div class="chat-title"><span class="dot"></span> 與島語對話</div>
+    <button class="chat-close" id="chat-close">×</button>
+  </div>
+  <div class="chat-log" id="chat-log"></div>
+  <div class="chat-bottom">
+    <div class="chat-status" id="chat-status">說話讓島語聽見</div>
+    <div class="chat-input-row">
+      <button id="chat-mic" title="按住或點擊用語音說">🎙</button>
+      <input id="chat-input" type="text" placeholder="或在這裡打字…" maxlength="200">
+      <button id="chat-send">送出</button>
+    </div>
+  </div>
+</div>
+
+<!-- 開啟對話的浮動按鈕 (進入長河後顯示) -->
+<button id="chat-fab" title="與島語對話">💬</button>
+
+<div id="loops-wrap" title="拖曳調整島語為這段歷史思考的深度。深度越高,故事越富層次,但運算時間也會略長。">
+  <span class="lbl">島語的思考深度</span>
+  <input id="loops" type="range" min="1" max="32" value="4">
+  <span id="loops-val">4</span>
+  <span class="hint">層</span>
+</div>
+
+<button id="river-btn" class="active">◆ 時間長河</button>
+
+<div id="infopanel">
+  <div id="zoom-hint">HOVER TO ZOOM</div>
+  <div class="era" id="ip-era"></div>
+  <h2 id="ip-title"></h2>
+  <div class="mt" id="ip-text"></div>
+  <div id="ai-block">
+    <div class="ai-ttl">MYTHOS × GEMINI 重構 <span class="badge">LATENT NARRATIVE</span></div>
+    <div class="narrative" id="ai-narrative">尚未觸發 — 捏合手勢或切換年代即可啟動</div>
+    <div class="ai-body" id="ai-body"></div>
+    <div class="ai-meta" id="ai-meta"></div>
+  </div>
+</div>
+
+<div id="gg">
+  <div class="gt">雙手操控</div>
+  <div class="gi"><div class="ic">👉</div><div class="gd"><b>撥右</b>下一個年代</div></div>
+  <div class="gi"><div class="ic">👈</div><div class="gd"><b>撥左</b>上一個年代</div></div>
+  <div class="gi"><div class="ic">🤏</div><div class="gd"><b>捏合</b>觸發 Mythos</div></div>
+  <div class="gi"><div class="ic">☝</div><div class="gd"><b>食指指向滑動</b>旋轉圖形</div></div>
+  <div class="gi"><div class="ic">⊙</div><div class="gd"><b>指尖懸停資訊卡 1 秒</b>放大/縮小</div></div>
+  <div class="gi"><div class="ic">🤲</div><div class="gd"><b>雙手拉開</b>縮放場景</div></div>
+  <div class="gi"><div class="ic">✊</div><div class="gd"><b>握拳 1 秒</b>回到長河</div></div>
+  <div class="gi"><div class="ic">⌨️</div><div class="gd"><b>← →</b>鍵切換</div></div>
+</div>
+
+<div id="finger-cursor">
+  <svg viewBox="0 0 26 26"><circle class="ring" cx="13" cy="13" r="12"/><circle class="prog" cx="13" cy="13" r="12"/></svg>
+  <div class="dot"></div>
+</div>
+<div id="timeline"><div id="tl-inner"></div></div>
+<video id="vid" autoplay playsinline muted></video>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/hands.js" crossorigin="anonymous"></script>
+
+<!-- 🔥 Firebase 初始化 (匿名登入 + Firestore) -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+  import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+  import { getFirestore, doc, setDoc, addDoc, collection, serverTimestamp, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCSy_3ouSo5bWndt4ohXsognLH2ISwS8W0",
+    authDomain: "island-guide-9a9c5.firebaseapp.com",
+    projectId: "island-guide-9a9c5",
+    storageBucket: "island-guide-9a9c5.firebasestorage.app",
+    messagingSenderId: "994147306661",
+    appId: "1:994147306661:web:cee4dca1dc338f5334514c",
+    measurementId: "G-40GX1QTYX7"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  let resolveReady;
+  window.fbReady = new Promise(r => resolveReady = r);
+
+  signInAnonymously(auth).catch(e => {
+    console.warn('[Firebase] 匿名登入失敗:', e.message);
+    resolveReady(null);
+  });
+
+  onAuthStateChanged(auth, async user => {
+    if (!user) return;
+    console.log('[Firebase] 已登入,uid =', user.uid);
+    // 讀取現有 profile (跨裝置同步暱稱)
+    let storedProfile = null;
+    try {
+      const snap = await getDoc(doc(db, 'users', user.uid));
+      if (snap.exists()) storedProfile = snap.data();
+    } catch (e) { console.warn(e); }
+
+    window.fb = {
+      uid: user.uid,
+      profile: storedProfile,
+      async saveProfile(nickname) {
+        await setDoc(doc(db, 'users', user.uid), {
+          nickname,
+          lastSeen: serverTimestamp(),
+          createdAt: storedProfile?.createdAt || serverTimestamp()
+        }, { merge: true });
+      },
+      async saveMessage(sessionId, role, text, era) {
+        await addDoc(collection(db, 'users', user.uid, 'sessions', sessionId, 'messages'), {
+          role, text, era: era || null, timestamp: serverTimestamp()
+        });
+        // 同時更新 session metadata
+        await setDoc(doc(db, 'users', user.uid, 'sessions', sessionId), {
+          lastActive: serverTimestamp(),
+          lastEra: era || null
+        }, { merge: true });
+      },
+      async logEraVisit(sessionId, eraId, eraName) {
+        await addDoc(collection(db, 'users', user.uid, 'eraVisits'), {
+          sessionId, eraId, eraName, timestamp: serverTimestamp()
+        });
+      },
+      async ensureSession(sessionId) {
+        await setDoc(doc(db, 'users', user.uid, 'sessions', sessionId), {
+          startedAt: serverTimestamp(),
+          lastActive: serverTimestamp()
+        }, { merge: true });
+      }
+    };
+    resolveReady(window.fb);
+  });
+</script>
+
+<script id="vs" type="x-shader/x-vertex">
+uniform float uTime,uProgress,uScale,uTiltX,uTiltY,uSpin,uBurst;
+uniform vec3 uAccent;
+attribute vec3 aTarget,aRandom;attribute float aSize;
+varying vec3 vColor;varying float vAlpha;
+#define PI 3.14159265359
+vec3 rot(vec3 v,vec3 ax,float a){return mix(dot(ax,v)*ax,v,cos(a))+cross(ax,v)*sin(a);}
+vec3 hsl(vec3 c){vec3 r=clamp(abs(mod(c.x*6.+vec3(0,4,2),6.)-3.)-1.,0.,1.);return c.z+c.y*(r-.5)*(1.-abs(2.*c.z-1.));}
+float hash(float n){return fract(sin(n)*43758.5453);}
+float noise(vec3 x){vec3 p=floor(x);vec3 f=fract(x);f=f*f*(3.-2.*f);float n=p.x+p.y*57.+p.z*113.;return mix(mix(mix(hash(n),hash(n+1.),f.x),mix(hash(n+57.),hash(n+58.),f.x),f.y),mix(mix(hash(n+113.),hash(n+114.),f.x),mix(hash(n+170.),hash(n+171.),f.x),f.y),f.z);}
+void main(){float t=uTime;
+  float rx=aRandom.x*60.,fX=rx+t*4.,fM=mod(fX+30.,60.)-30.;
+  float ny=noise(vec3(aRandom.x*3.+t*.3,aRandom.y*2.,aRandom.z*2.))*2.-1.;
+  float nz=noise(vec3(aRandom.z*3.,aRandom.x*2.+t*.2,aRandom.y*2.))*2.-1.;
+  vec3 rP=vec3(fM,aRandom.y*6.+ny*6.,aRandom.z*8.+nz*4.);
+  vec3 sP=aTarget+vec3(sin(t*.5+aRandom.x*5.)*.3,cos(t*.4+aRandom.y*5.)*.3,sin(t*.6+aRandom.z*5.)*.2);
+  vec3 burstOffset=normalize(aRandom)*uBurst*15.;
+  float pr=smoothstep(0.,1.,uProgress);vec3 p=mix(rP,sP,pr)+burstOffset;
+  p*=uScale;
+  p=rot(p,vec3(1,0,0),uTiltY*.35);p=rot(p,vec3(0,1,0),uTiltX*.35+uSpin+t*.06);
+  float h=mix(fract(.55+fM*.008+t*.02),fract(aRandom.x*.3+length(sP)*.012+t*.03),pr);
+  float burstGlow=uBurst*2.;
+  vec3 baseCol=hsl(vec3(h,.65+.3*sin(t+aRandom.y*5.),.45+.2*sin(aRandom.z*8.+t)+.1*pr+burstGlow));
+  vColor=mix(baseCol,uAccent,pr*.55);
+  vAlpha=.7+.3*pr;
+  vec4 mv=modelViewMatrix*vec4(p,1.);gl_Position=projectionMatrix*mv;gl_PointSize=max((3.8*aSize*uScale*(1.+uBurst*2.))*(35./-mv.z),.5);}
+</script>
+<script id="fs" type="x-shader/x-fragment">
+varying vec3 vColor;varying float vAlpha;
+void main(){vec2 c=gl_PointCoord-vec2(.5);float d=length(c);if(d>.5)discard;gl_FragColor=vec4(vColor,(pow(1.-d*2.,1.6)+exp(-d*5.)*.35)*vAlpha*.82);}
+</script>
+
+<script>
+(function(){
+'use strict';
+
+// ------------------------------------------------------------
+// 台灣歷史節點
+// ------------------------------------------------------------
+var DATA=[
+ {era:'~4000 BCE',name:'南島語族的起源',shape:'canoe',color:'#9CB4A0',
+  text:'考古學家在大坌坑遺址找到南島語族的原型文化。這座島嶼是太平洋上一場語言與航海大遷徙的起點,獨木舟把語言播向夏威夷、紐西蘭、馬達加斯加。'},
+ {era:'1624',name:'大航海的交會',shape:'ship',color:'#8E9775',
+  text:'荷蘭人登陸大員,開啟了台灣與世界貿易網體系的接軌。這是一場關於海洋、香料與紅毛城的記憶。'},
+ {era:'1661',name:'鄭氏東寧的孤光',shape:'castle',color:'#B5895A',
+  text:'鄭成功率軍渡海,九個月圍城後荷蘭人退出熱蘭遮城。台灣首次成為漢人政權所在,以一座島嶼承載著明朝最後的火種。'},
+ {era:'1887',name:'鐵路與電光之初',shape:'train',color:'#E28E8E',
+  text:'劉銘傳設台灣省,並在台北大稻埕亮起了第一盞電燈、鋪設鐵路。現代化的輪廓,開始在這座島嶼的邊緣浮現。'},
+ {era:'1895',name:'乙未割讓的斷柱',shape:'pillar',color:'#7A6E78',
+  text:'《馬關條約》將台灣割讓予日本。從唐景崧的台灣民主國到客家義軍的乙未戰爭,島嶼用血淚寫下殖民時代的開場白。'},
+ {era:'1921',name:'文化覺醒的年代',shape:'book',color:'#6D8299',
+  text:'蔣渭水等人成立台灣文化協會。這是一個關於『臨床講義』、知識啟蒙與本土自覺的黃金年代,思考開始在土地紮根。'},
+ {era:'1947',name:'二二八的裂縫',shape:'tablet',color:'#9C6B6B',
+  text:'從一根私菸引爆的衝突,蔓延成島嶼的集體創傷。沉默的歷史像一塊碎裂的石碑,直到數十年後才被重新拼回、被誠實談論。'},
+ {era:'1980',name:'矽島的崛起',shape:'chip',color:'#D4A373',
+  text:'新竹科學園區成立。從竹東的茶葉、樟腦,轉型為全球半導體的神經中樞。我們在微小的晶片上,構築了通往未來的路。'},
+ {era:'1987',name:'解嚴後的綻放',shape:'dawn',color:'#C9B26B',
+  text:'長達 38 年的戒嚴解除,黨禁、報禁相繼鬆綁。社會運動、文學、電影、流行音樂同時爆發,島嶼在自由的陽光下重新長出枝葉。'},
+ {era:'1996',name:'首次總統直選',shape:'ballot',color:'#7AA0B8',
+  text:'人民第一次直接投票選出國家元首。即便導彈在海峽試射,選票仍如雪片般落下。民主從一個抽象詞,化為一張一張被親手蓋下的選票。'},
+ {era:'1999',name:'九二一的搖晃',shape:'quake',color:'#8C7A6B',
+  text:'凌晨 1 點 47 分,規模 7.3 的地震撕裂中部地表。斷層、倒塌的校舍、徹夜的搜救燈光,讓這座島嶼第一次以全民之姿,學會了什麼叫做災後重建與相互扶持。'},
+ {era:'2014',name:'太陽花的春天',shape:'sunflower',color:'#E8C76C',
+  text:'學生佔領立法院議場,公民從街頭重新定義民主。一朵朵向日葵在議場內外綻放,網路直播讓世界看見一個新的台灣世代如何以行動參與政治。'},
+ {era:'2020',name:'護國神山與口罩外交',shape:'guardian',color:'#9AC5D6',
+  text:'COVID-19 席捲全球,台灣以口罩、紓困與精密數位防疫成為國際模範。同時台積電以 5 奈米製程登上世界舞台,半導體成為地緣政治的新核心。'},
+ {era:'2026',name:'AI 與共創時代',shape:'neural',color:'#A3B18A',
+  text:'當 AI 走進教室,人類與機器共同書寫知識。歷史不再只是過去,而是透過開放架構,持續進化的生命體。'}
+];
+var NUM_NODES=DATA.length;
+var MYTHOS_URL='http://localhost:8000';
+
+// ------------------------------------------------------------
+// Shape generators (from epic-river-of-time, only the 5 needed)
+// ------------------------------------------------------------
+// 響應式:手機/平板降低粒子數 (避免 GPU 燒)
+var IS_TOUCH=('ontouchstart' in window)||navigator.maxTouchPoints>0;
+var IS_MOBILE=window.matchMedia('(max-width: 900px)').matches;
+var N=IS_MOBILE?6000:12000;
+function gB(n){var a=new Float32Array(n*3);for(var i=0;i<n;i++){var t=Math.random()*Math.PI*2,p=Math.acos(2*Math.random()-1),R=10+2.5*Math.sin(t*5)*Math.sin(p*7)+1.5*Math.sin(t*3+p*5);a[i*3]=R*Math.sin(p)*Math.cos(t);a[i*3+1]=R*Math.sin(p)*Math.sin(t);a[i*3+2]=R*Math.cos(p)}return a}
+function gW(n){var a=new Float32Array(n*3);for(var i=0;i<n;i++){var t=Math.random(),r=7*(1-t)+Math.random()*.8,h=Math.random()*Math.PI*2;a[i*3]=Math.cos(h)*r;a[i*3+1]=t*22-6;a[i*3+2]=Math.sin(h)*r}return a}
+function gT(n){var a=new Float32Array(n*3);for(var i=0;i<n;i++){if(Math.random()>.7){var s=Math.floor(Math.random()*4),t=Math.random();a[i*3]=s<2?(s===0?-8:8):t*16-8;a[i*3+1]=s<2?t*14-7:(s===2?-7:7);a[i*3+2]=(Math.random()-.5)*1.5}else{a[i*3]=(Math.random()-.5)*16;a[i*3+1]=(Math.random()-.5)*14;a[i*3+2]=(Math.random()-.5)*.6}}return a}
+function gSc(n){var a=new Float32Array(n*3);for(var i=0;i<n;i++){var sd=Math.random()>.5?1:-1,t=Math.random()*Math.PI;a[i*3]=sd*6+Math.cos(t*1.5)*3*sd;a[i*3+1]=(Math.random()-.5)*16;a[i*3+2]=Math.sin(t*1.5)*3}return a}
+function gA(n){var a=new Float32Array(n*3);for(var i=0;i<n;i++){var p=Math.random();if(p<.4){var g=Math.random()*Math.PI,r=8+(Math.random()-.5)*1.5;a[i*3]=Math.cos(g)*r;a[i*3+1]=Math.sin(g)*r;a[i*3+2]=(Math.random()-.5)*3}else{var sx=p<.7?-1:1;a[i*3]=sx*8+(Math.random()-.5)*1.5;a[i*3+1]=Math.random()*-8;a[i*3+2]=(Math.random()-.5)*3}}return a}
+function gM(n){var a=new Float32Array(n*3);for(var i=0;i<n;i++){var t=Math.random()*Math.PI*2,p=Math.acos(2*Math.random()-1),R=9+3*Math.sin(t*6)*Math.sin(p*6)+2*Math.cos(t*3+p*4);a[i*3]=R*Math.sin(p)*Math.cos(t);a[i*3+1]=R*Math.sin(p)*Math.sin(t);a[i*3+2]=R*Math.cos(p)}return a}
+function gP(n){var a=new Float32Array(n*3);for(var i=0;i<n;i++){var p=Math.random(),g=Math.random()*Math.PI*2;if(p<.15){var r=5+(Math.random()-.5);a[i*3]=Math.cos(g)*r;a[i*3+1]=10+(Math.random()-.5)*1.5;a[i*3+2]=Math.sin(g)*r}else if(p<.3){var r2=5+(Math.random()-.5);a[i*3]=Math.cos(g)*r2;a[i*3+1]=-10+(Math.random()-.5)*1.5;a[i*3+2]=Math.sin(g)*r2}else{var r3=3.5+(Math.random()-.5)*.8,fl=1+.3*Math.sin(g*12);a[i*3]=Math.cos(g)*r3*fl;a[i*3+1]=(Math.random()-.5)*20;a[i*3+2]=Math.sin(g)*r3*fl}}return a}
+function gC(n){var a=new Float32Array(n*3);for(var i=0;i<n;i++){var r=Math.random();if(r<.35){var g=Math.random()*Math.PI*2,R=10+(Math.random()-.5);a[i*3]=Math.cos(g)*R;a[i*3+1]=Math.sin(g)*R;a[i*3+2]=(Math.random()-.5)*.8}else if(r<.65){var g2=Math.random()*Math.PI*2,R2=10+(Math.random()-.5);a[i*3]=(Math.random()-.5)*.8;a[i*3+1]=Math.cos(g2)*R2;a[i*3+2]=Math.sin(g2)*R2}else{var g3=Math.random()*Math.PI*2,sp=Math.random()*10;a[i*3]=Math.cos(g3)*sp;a[i*3+1]=Math.sin(g3)*sp;a[i*3+2]=(Math.random()-.5)*.5}}return a}
+function gG(n){var a=new Float32Array(n*3);var gs=[{x:-6,y:0,r:5,t:10},{x:6,y:0,r:5,t:10},{x:0,y:9,r:4,t:8}];for(var i=0;i<n;i++){var g=gs[Math.floor(Math.random()*3)],ag=Math.random()*Math.PI*2,R=g.r+1.2*Math.max(0,Math.cos(ag*g.t)),rr=R*(.85+Math.random()*.3);a[i*3]=g.x+Math.cos(ag)*rr;a[i*3+1]=g.y+Math.sin(ag)*rr;a[i*3+2]=(Math.random()-.5)*2.5}return a}
+function gAt(n){var a=new Float32Array(n*3);for(var i=0;i<n;i++){if(Math.random()<.25){var t=Math.random()*Math.PI*2,p=Math.acos(2*Math.random()-1),R=3+Math.random()*.5;a[i*3]=R*Math.sin(p)*Math.cos(t);a[i*3+1]=R*Math.sin(p)*Math.sin(t);a[i*3+2]=R*Math.cos(p)}else{var o=Math.floor(Math.random()*3),ag=Math.random()*Math.PI*2,R2=10+(Math.random()-.5),x=Math.cos(ag)*R2,y=Math.sin(ag)*R2,z=(Math.random()-.5)*.4;if(o>0){var an=o===1?1.05:-1.05,c=Math.cos(an),s=Math.sin(an),ny=y*c-z*s;z=y*s+z*c;y=ny}a[i*3]=x;a[i*3+1]=y;a[i*3+2]=z}}return a}
+function gAs(n){var a=new Float32Array(n*3);for(var i=0;i<n;i++){var ri=Math.floor(Math.random()*5),R=4+ri*2.5,g=Math.random()*Math.PI*2,tl=ri*.4-.8,x=Math.cos(g)*R,y=Math.sin(g)*R;a[i*3]=x;a[i*3+1]=y*Math.cos(tl);a[i*3+2]=y*Math.sin(tl)+(Math.random()-.5)*.3}return a}
+
+// ⛵ 3D 三桅大帆船:橢圓船身 + 立體桅桿 + 鼓帆 + 海浪殼 (1624)
+function gShip(n){var a=new Float32Array(n*3);
+var masts=[-4.5,0,4.5];
+var SHIP_BEAM=2.4; // 船寬 (z 方向)
+for(var i=0;i<n;i++){
+  var p=Math.random(),x=0,y=0,z=0;
+  if(p<.20){// 船身殼 (橢球底部:x 長 14, y 深 2.5, z 寬 SHIP_BEAM)
+    var st=Math.random()*Math.PI*2,sp=Math.acos(2*Math.random()-1);
+    var sx=7*Math.sin(sp)*Math.cos(st);
+    var sy=-3-Math.abs(Math.sin(sp)*Math.sin(st))*2.2;
+    var sz=SHIP_BEAM*Math.cos(sp);
+    x=sx;y=sy;z=sz;
+  } else if(p<.26){// 甲板 (橢圓平面)
+    var dt=Math.random()*Math.PI*2,dr=Math.sqrt(Math.random());
+    x=Math.cos(dt)*dr*7;y=-1.3+(Math.random()-.5)*.2;z=Math.sin(dt)*dr*SHIP_BEAM;
+  } else if(p<.36){// 三根桅桿 (3D 圓柱)
+    var m=masts[Math.floor(Math.random()*3)];
+    var mt=Math.random()*Math.PI*2;
+    x=m+Math.cos(mt)*.22;y=-1+Math.random()*9;z=Math.sin(mt)*.22;
+  } else if(p<.55){// 主帆 (鼓起的帆,曲面 — 中段往前凸)
+    var layer=Math.random()>.5?1:0;
+    var sw=layer?2.6:3.3,sh=layer?2.0:2.6,base=layer?5.2:1.8;
+    var u=(Math.random()-.5)*2; // -1~1 沿帆寬
+    var v=Math.random();         // 0~1 沿帆高
+    var bulge=(1-u*u)*v*(1-v)*4; // 帆面凸起量
+    x=u*sw;y=base+v*sh;z=bulge+(Math.random()-.5)*.2;
+  } else if(p<.70){// 前桅帆 (兩層)
+    var lay2=Math.random()>.5?1:0;
+    var sw2=lay2?2.0:2.6,sh2=lay2?1.7:2.2,b2=lay2?4.6:1.6;
+    var u2=(Math.random()-.5)*2,v2=Math.random();
+    var bulge2=(1-u2*u2)*v2*(1-v2)*3.5;
+    x=-4.5+u2*sw2;y=b2+v2*sh2;z=bulge2+(Math.random()-.5)*.2;
+  } else if(p<.83){// 後桅帆
+    var lay3=Math.random()>.5?1:0;
+    var sw3=lay3?2.0:2.6,sh3=lay3?1.7:2.2,b3=lay3?4.6:1.6;
+    var u3=(Math.random()-.5)*2,v3=Math.random();
+    var bulge3=(1-u3*u3)*v3*(1-v3)*3.5;
+    x=4.5+u3*sw3;y=b3+v3*sh3;z=bulge3+(Math.random()-.5)*.2;
+  } else if(p<.86){// 船首斜桅 (3D 圓柱)
+    var bt=Math.random(),bsT=Math.random()*Math.PI*2;
+    x=-7-bt*2.5+Math.cos(bsT)*.15;
+    y=-1+bt*1.5+Math.sin(bsT)*.15;
+    z=(Math.random()-.5)*.3;
+  } else if(p<.90){// 桅頂旗 (略為飄起的曲面)
+    var fl=Math.random();
+    x=fl*1.5;y=8.2+Math.sin(fl*4)*.3;z=fl*.5+(Math.random()-.5)*.2;
+  } else if(p<.94){// 索具 (從桅頂到船首/船尾的對角線)
+    var rope=Math.random();
+    x=-7+rope*14;y=8-rope*9+(Math.random()-.5)*.3;z=(Math.random()-.5)*.4;
+  } else{// 海浪 (3D 殼,有寬度)
+    var wt=Math.random()*Math.PI*2,wr=4+Math.random()*5;
+    x=Math.cos(wt)*wr;y=-6-Math.abs(Math.sin(wt*3))*.4;z=Math.sin(wt)*wr*.6;
+  }
+  a[i*3]=x;a[i*3+1]=y;a[i*3+2]=z;
+}return a}
+
+// 🚂 3D 蒸汽火車:鍋爐圓柱 + 立體駕駛艙 + 左右兩排車輪 + 雙鐵軌 + 立體煙霧 (1887)
+function gTrain(n){var a=new Float32Array(n*3);
+var TRAIN_DEPTH=2; // z 半厚度(車身寬度)
+for(var i=0;i<n;i++){
+  var p=Math.random(),x=0,y=0,z=0;
+  if(p<.18){// 鍋爐:沿 x 軸的完整 3D 圓柱
+    var t=Math.random()*Math.PI*2,r=1.9,lx=-5+Math.random()*6.5;
+    x=lx;y=.6+Math.sin(t)*r;z=Math.cos(t)*r;
+  } else if(p<.20){// 鍋爐前蓋 (圓盤)
+    var ft=Math.random()*Math.PI*2,fr=Math.sqrt(Math.random())*1.9;
+    x=-5;y=.6+Math.sin(ft)*fr;z=Math.cos(ft)*fr;
+  } else if(p<.30){// 駕駛艙:3D 立方體 (六面殼)
+    var face=Math.floor(Math.random()*5);
+    var u=(Math.random()-.5)*3.5,v=(Math.random()-.5)*4.5,w=(Math.random()-.5)*TRAIN_DEPTH*2;
+    if(face===0){x=1.5+Math.random()*3.5;y=-1+Math.random()*4.5;z=TRAIN_DEPTH*(Math.random()<.5?1:-1)+(Math.random()-.5)*.15} // 左右側面
+    else if(face===1){x=1.5+Math.random()*3.5;y=Math.random()<.5?-1:3.5;z=(Math.random()-.5)*TRAIN_DEPTH*2}        // 上下
+    else if(face===2){x=Math.random()<.5?1.5:5;y=-1+Math.random()*4.5;z=(Math.random()-.5)*TRAIN_DEPTH*2}            // 前後
+    else{x=1.5+Math.random()*3.5;y=-1+Math.random()*4.5;z=(Math.random()-.5)*TRAIN_DEPTH*1.4}                       // 內部薄填充
+  } else if(p<.34){// 駕駛艙屋頂 (3D 板)
+    x=1.3+Math.random()*3.9;y=3.7+(Math.random()-.5)*.3;z=(Math.random()-.5)*TRAIN_DEPTH*2.2;
+  } else if(p<.42){// 煙囪:垂直 3D 圓柱
+    var ct=Math.random()*Math.PI*2,cr=.65;
+    x=-3.6+Math.cos(ct)*cr;y=2.5+Math.random()*2.5;z=Math.sin(ct)*cr;
+  } else if(p<.45){// 煙囪頂帽 (扁圓盤)
+    var ct2=Math.random()*Math.PI*2,cr2=.6+Math.random()*.5;
+    x=-3.6+Math.cos(ct2)*cr2;y=5+(Math.random()-.5)*.3;z=Math.sin(ct2)*cr2;
+  } else if(p<.48){// 蒸汽閥圓帽 (鍋爐上方 3D 球體)
+    var dvT=Math.random()*Math.PI*2,dvP=Math.acos(2*Math.random()-1),dr=.45*Math.sqrt(Math.random());
+    x=-.8+dr*Math.sin(dvP)*Math.cos(dvT);
+    y=2.6+dr*Math.sin(dvP)*Math.sin(dvT);
+    z=dr*Math.cos(dvP);
+  } else if(p<.66){// 左右各 3 個車輪 (共 6 個 disc,垂直於 z 軸)
+    var which=Math.floor(Math.random()*3),cx=[-3.2,.2,3.4][which];
+    var sideZ=Math.random()<.5?TRAIN_DEPTH:-TRAIN_DEPTH;
+    var wt=Math.random()*Math.PI*2;
+    var wr=Math.random()<.65?1.5:Math.sqrt(Math.random())*1.5; // 多在外環
+    x=cx+Math.cos(wt)*wr;y=-3+Math.sin(wt)*wr;z=sideZ+(Math.random()-.5)*.2;
+  } else if(p<.70){// 車軸 (橫穿 z 軸的圓桿)
+    var which2=Math.floor(Math.random()*3),cx2=[-3.2,.2,3.4][which2];
+    var at=Math.random()*Math.PI*2,ar=.18;
+    x=cx2+Math.cos(at)*ar;y=-3+Math.sin(at)*ar;z=(Math.random()-.5)*TRAIN_DEPTH*2;
+  } else if(p<.74){// 連桿 (左右兩根,連接三輪)
+    var sideZ2=Math.random()<.5?TRAIN_DEPTH+.15:-TRAIN_DEPTH-.15;
+    x=-3.5+Math.random()*7;y=-3+(Math.random()-.5)*.2;z=sideZ2+(Math.random()-.5)*.1;
+  } else if(p<.78){// 排障器 (3D 楔形)
+    var u2=Math.random(),v2=Math.random();if(u2+v2>1){u2=1-u2;v2=1-v2}
+    x=-5-u2*1.3;y=-2.7+v2*2.5;z=(Math.random()-.5)*TRAIN_DEPTH*1.8;
+  } else if(p<.81){// 前燈 (3D 球)
+    var lt=Math.random()*Math.PI*2,lp=Math.acos(2*Math.random()-1),lr=.55*Math.sqrt(Math.random());
+    x=-4.3+lr*Math.sin(lp)*Math.cos(lt);
+    y=1+lr*Math.sin(lp)*Math.sin(lt);
+    z=lr*Math.cos(lp);
+  } else if(p<.89){// 煙霧:3D 雲團 (沿 x 向後散,在 z 上有真實厚度)
+    var st=Math.random();
+    var puff=Math.random()*Math.PI*2,pr=.6+Math.random()*1.4;
+    x=-3.6-st*3+Math.cos(puff)*pr;
+    y=5.6+st*3.8+Math.sin(puff)*pr*.6;
+    z=Math.sin(puff*1.3)*pr+(Math.random()-.5)*1.5;
+  } else if(p<.97){// 雙鐵軌 (z 軸兩側兩條,延伸到畫面外)
+    var rail=Math.random()<.5?TRAIN_DEPTH+.2:-TRAIN_DEPTH-.2;
+    var rt=Math.random()*Math.PI*2;
+    x=(Math.random()-.5)*22;
+    y=-4.7+Math.sin(rt)*.18;
+    z=rail+Math.cos(rt)*.18; // 軌道為小圓柱有厚度
+  } else{// 枕木 (橫貫 z 的木條)
+    var sleeperX=Math.floor(Math.random()*15)-7;
+    x=sleeperX*1.5+(Math.random()-.5)*.3;
+    y=-5+(Math.random()-.5)*.2;
+    z=(Math.random()-.5)*(TRAIN_DEPTH*2+1);
+  }
+  a[i*3]=x;a[i*3+1]=y;a[i*3+2]=z;
+}return a}
+
+// 💾 3D 半導體晶圓:有厚度的圓盤 + 真實 3D die 立方塊矩陣 + 高聳中央 die (1980)
+function gChip(n){var a=new Float32Array(n*3),R=8,WAFER_T=.6;
+for(var i=0;i<n;i++){
+  var p=Math.random(),x=0,y=0,z=0;
+  if(p<.20){// 晶圓上下盤面
+    var t=Math.random()*Math.PI*2,rr=Math.sqrt(Math.random())*R;
+    x=Math.cos(t)*rr;z=Math.sin(t)*rr;
+    y=Math.random()<.5?-WAFER_T:WAFER_T+(Math.random()-.5)*.1;
+  } else if(p<.32){// 晶圓側面 (圓柱外環)
+    var et=Math.random()*Math.PI*2;
+    if(Math.abs(et+Math.PI/2)<.22)et+=.6; // notch
+    x=Math.cos(et)*R;z=Math.sin(et)*R;y=(Math.random()-.5)*WAFER_T*2;
+  } else if(p<.78){// die 矩陣 (3D 方塊,高度 1.5 從晶圓上方突起)
+    var tries=0,ok=false,cx=0,cz=0;
+    while(tries<8&&!ok){
+      var gx=Math.floor(Math.random()*9)-4,gz=Math.floor(Math.random()*9)-4;
+      cx=gx*1.6;cz=gz*1.6;
+      if(Math.hypot(cx,cz)<R-.7){ok=true}
+      tries++;
+    }
+    var u=(Math.random()-.5)*1.3,v=(Math.random()-.5)*1.3;
+    x=cx+u;z=cz+v;
+    y=WAFER_T+Math.random()*1.5;
+  } else if(p<.84){// die 框線 (邊緣強化)
+    var bgx=Math.floor(Math.random()*9)-4,bgz=Math.floor(Math.random()*9)-4;
+    var bcx=bgx*1.6,bcz=bgz*1.6;
+    if(Math.hypot(bcx,bcz)<R-.7){
+      var bSide=Math.random();
+      if(bSide<.5){x=bcx+(Math.random()<.5?-.7:.7);z=bcz+(Math.random()-.5)*1.4}
+      else{x=bcx+(Math.random()-.5)*1.4;z=bcz+(Math.random()<.5?-.7:.7)}
+      y=WAFER_T+1.5+(Math.random()-.5)*.2;
+    } else{x=bcx;z=bcz;y=WAFER_T}
+  } else if(p<.93){// 中央高亮 die (高聳立方體 3.5 高)
+    x=(Math.random()-.5)*1.4;z=(Math.random()-.5)*1.4;
+    y=WAFER_T+Math.random()*3.5;
+  } else{// 金線 (從中央 die 頂部向外散)
+    var wt=Math.random()*Math.PI*2,wl=Math.random()*R*.9;
+    x=Math.cos(wt)*wl;z=Math.sin(wt)*wl;
+    y=WAFER_T+3.5-Math.random()*4;
+  }
+  a[i*3]=x;a[i*3+1]=y;a[i*3+2]=z;
+}return a}
+
+// 🗳 3D 投票箱:六面立方體外殼 + 上方投票口 + 飄落的票卡 (1996)
+function gBallot(n){var a=new Float32Array(n*3);
+var BOX=5; // 半邊長
+for(var i=0;i<n;i++){
+  var p=Math.random(),x=0,y=0,z=0;
+  if(p<.65){// 六面殼
+    var face=Math.floor(Math.random()*6);
+    var u=(Math.random()-.5)*BOX*2,v=(Math.random()-.5)*BOX*2;
+    if(face===0){x=u;y=v;z=BOX} // 前
+    else if(face===1){x=u;y=v;z=-BOX} // 後
+    else if(face===2){x=-BOX;y=u;z=v} // 左
+    else if(face===3){x=BOX;y=u;z=v} // 右
+    else if(face===4){// 頂面 (中間挖出投票口)
+      if(Math.abs(u)<2&&Math.abs(v)<.7){i--;continue} // 跳過投票口位置
+      x=u;y=BOX;z=v;
+    }
+    else{x=u;y=-BOX;z=v} // 底
+  } else if(p<.72){// 投票口邊緣 (狹長矩形框)
+    var sl=Math.floor(Math.random()*4),slt=(Math.random()-.5);
+    if(sl===0){x=slt*4;y=BOX;z=.7}
+    else if(sl===1){x=slt*4;y=BOX;z=-.7}
+    else if(sl===2){x=-2;y=BOX;z=slt*1.4}
+    else{x=2;y=BOX;z=slt*1.4}
+  } else if(p<.95){// 飄落的票卡 (3D 矩形飛在空中)
+    var ballot=Math.floor(Math.random()*4); // 4 張飄落的票
+    var bx=[-3,-1,1.5,3.5][ballot];
+    var by=BOX+1.5+ballot*1.4+(Math.random()-.5)*.6;
+    var bw=.8,bh=.5;
+    var bu=(Math.random()-.5)*bw,bv=(Math.random()-.5)*bh;
+    var rot=ballot*.4;
+    x=bx+bu*Math.cos(rot);y=by+bv;z=bu*Math.sin(rot)+(Math.random()-.5)*.15;
+  } else{// 票卡上的勾號
+    var ck=Math.random();
+    x=-1+ck*3;y=BOX+2.5+ck*2;z=(Math.random()-.5)*.2;
+  }
+  a[i*3]=x;a[i*3+1]=y;a[i*3+2]=z;
+}return a}
+
+// 🌋 3D 九二一:立體山脈稜線 + 中央 3D 裂縫 + 半球狀震波 (1999)
+function gQuake(n){var a=new Float32Array(n*3);
+function ridgeH(x,z){return Math.abs(Math.sin(x*.4)+Math.sin(x*.75+1.2)+Math.cos(z*.5))*2.5-3.8}
+for(var i=0;i<n;i++){
+  var p=Math.random(),x=0,y=0,z=0;
+  if(p<.50){// 3D 山脈 (在 x-z 平面延伸,有立體深度)
+    x=(Math.random()-.5)*16;
+    z=(Math.random()-.5)*8;
+    var rh=ridgeH(x,z);
+    y=-4+Math.random()*(rh+4);
+    if(rh<-3.5){i--;continue}
+  } else if(p<.68){// 中央斷層裂縫 (3D 裂面 — x 窄, y 高, z 深)
+    x=(Math.random()-.5)*.8;
+    y=(Math.random()-.5)*9;
+    z=(Math.random()-.5)*8;
+  } else if(p<.78){// 裂縫底部碎石塊
+    x=(Math.random()-.5)*1.4;
+    y=-4+Math.random()*1;
+    z=(Math.random()-.5)*8;
+  } else if(p<.92){// 同心震波圓 (3D 半球波紋)
+    var ring=Math.floor(Math.random()*4),R=4+ring*2;
+    var rt=Math.random()*Math.PI*2;
+    var rp=Math.random()*Math.PI*.4; // 只取上半球
+    x=R*Math.sin(rp)*Math.cos(rt);
+    y=R*Math.cos(rp)+1;
+    z=R*Math.sin(rp)*Math.sin(rt);
+  } else{// 飛散碎屑
+    var ft=Math.random()*Math.PI*2,fp=Math.acos(2*Math.random()-1),fr=4+Math.random()*4;
+    x=fr*Math.sin(fp)*Math.cos(ft);
+    y=fr*Math.sin(fp)*Math.sin(ft)+1;
+    z=fr*Math.cos(fp);
+  }
+  a[i*3]=x;a[i*3+1]=y;a[i*3+2]=z;
+}return a}
+
+// 🌻 3D 向日葵:圓頂種子盤 (有厚度) + 16 片向後彎曲花瓣 + 3D 莖 + 葉片 (2014)
+function gSunflower(n){var a=new Float32Array(n*3);
+var phi=Math.PI*(3-Math.sqrt(5));
+for(var i=0;i<n;i++){
+  var p=Math.random(),x=0,y=0,z=0;
+  if(p<.22){// 種子盤 (費氏螺線 + 中央微凸成圓頂)
+    var k=Math.random()*200,r=.18*Math.sqrt(k),an=k*phi;
+    var dome=Math.cos(r/2.5*Math.PI/2)*.8;
+    x=Math.cos(an)*r;y=Math.sin(an)*r+2;z=dome+(Math.random()-.5)*.2;
+  } else if(p<.30){// 花盤外圍深環 (3D 圓環)
+    var dt=Math.random()*Math.PI*2,dr=2.4+Math.random()*.4;
+    x=Math.cos(dt)*dr;y=Math.sin(dt)*dr+2;z=(Math.random()-.5)*.5;
+  } else if(p<.78){// 16 片花瓣 (3D 微凹曲面,花瓣末端往觀者方向揚起)
+    var petal=Math.floor(Math.random()*16),ang=petal*Math.PI*2/16;
+    var u=Math.random();
+    var len=2.8+u*4.2;
+    var width=Math.sin(u*Math.PI)*1.4*(1-u*.3);
+    var vv=(Math.random()*2-1)*width;
+    var curve=Math.sin(u*Math.PI)*.9; // 花瓣中段往前拱
+    x=Math.cos(ang)*len-Math.sin(ang)*vv;
+    y=Math.sin(ang)*len+Math.cos(ang)*vv+2;
+    z=curve+(Math.random()-.5)*.25;
+  } else if(p<.86){// 莖 (3D 圓柱)
+    var sy=Math.random();
+    var st=Math.random()*Math.PI*2,sr=.25;
+    x=Math.sin(sy*1.4)*.4+Math.cos(st)*sr;
+    y=-3-sy*5;
+    z=Math.sin(st)*sr;
+  } else{// 葉子 (3D 弧形葉片)
+    var leftRight=Math.random()>.5?1:-1;
+    var lu=Math.random();
+    var llen=lu*2.8;
+    var lw=Math.sin(lu*Math.PI)*1.3;
+    var lv=(Math.random()*2-1)*lw;
+    var lcurve=Math.sin(lu*Math.PI)*.6;
+    x=leftRight*(.4+llen)-leftRight*Math.abs(lv*.3);
+    y=-2-lu*1.8+lv*.4;
+    z=lcurve*leftRight+(Math.random()-.5)*.2;
+  }
+  a[i*3]=x;a[i*3+1]=y;a[i*3+2]=z;
+}return a}
+
+// ⛰ 3D 玉山:山高為 (x,z) 二維函數,粒子填滿整座立體山體 (2020)
+// 主峰、左副峰、右副峰皆為 3D 圓錐,山體有真實深度
+function mtH3D(x,z){
+  var main=Math.max(0,8-Math.hypot(x,z)*1.4);             // 主峰 (中央)
+  var left=Math.max(0,5.2-Math.hypot(x+5,z+1)*1.3);       // 左副峰 (前)
+  var right=Math.max(0,5.6-Math.hypot(x-4.2,z-1.2)*1.35); // 右副峰 (後)
+  var ridge=Math.sin(x*.9)*Math.cos(z*.7)*.3;
+  return Math.max(main,left,right)+ridge;
+}
+function gGuardian(n){var a=new Float32Array(n*3);for(var i=0;i<n;i++){
+  var p=Math.random(),x=0,y=0,z=0;
+  if(p<.55){// 山體 (從基底向上填充立體)
+    x=(Math.random()-.5)*14;z=(Math.random()-.5)*8;
+    var h=mtH3D(x,z);
+    if(h<.2){i--;continue} // 跳過山外的點 (重抽)
+    y=-3+Math.random()*(h+3.2);
+  } else if(p<.65){// 山稜線 (山頂表面強化)
+    x=(Math.random()-.5)*14;z=(Math.random()-.5)*8;
+    var h2=mtH3D(x,z);
+    if(h2<.2){i--;continue}
+    y=h2-3-Math.random()*.4;
+  } else if(p<.74){// 雪冠 (三峰頂)
+    var pick=Math.random(),px,pz;
+    if(pick<.6){px=(Math.random()-.5)*1.3;pz=(Math.random()-.5)*1.3}
+    else if(pick<.8){px=-5+(Math.random()-.5)*1.2;pz=-1+(Math.random()-.5)*1.2}
+    else{px=4.2+(Math.random()-.5)*1.2;pz=1.2+(Math.random()-.5)*1.2}
+    var ph=mtH3D(px,pz);
+    if(ph<.2){i--;continue}
+    x=px;y=ph-3-Math.random()*.7;z=pz;
+  } else if(p<.82){// 環繞雲海 (山腰水平環)
+    var ct=Math.random()*Math.PI*2,cr=4+Math.random()*5;
+    x=Math.cos(ct)*cr;z=Math.sin(ct)*cr;
+    y=-1+(Math.random()-.5)*.7;
+  } else if(p<.88){// 主峰頂飄雲 (3D 球團)
+    var st=Math.random()*Math.PI*2,sp=Math.acos(2*Math.random()-1),sr=Math.random()*3;
+    x=sr*Math.sin(sp)*Math.cos(st);
+    y=6.5+sr*Math.sin(sp)*Math.sin(st)*.4;
+    z=sr*Math.cos(sp);
+  } else if(p<.96){// 晶圓基座 (3D 圓盤,有厚度)
+    var bt=Math.random()*Math.PI*2,br=Math.sqrt(Math.random())*8;
+    x=Math.cos(bt)*br;z=Math.sin(bt)*br;
+    y=-5.5+(Math.random()-.5)*.5;
+  } else{// die 立方塊
+    var ggx=Math.floor(Math.random()*9)-4,ggz=Math.floor(Math.random()*5)-2;
+    x=ggx*1.6+(Math.random()-.5)*.4;
+    z=ggz*1.6+(Math.random()-.5)*.4;
+    y=-5+Math.random()*.6;
+  }
+  a[i*3]=x;a[i*3+1]=y;a[i*3+2]=z;
+}return a}
+
+// 🧠 三層神經網絡:input / hidden / output 層 + 全連接邊 (2026 AI 共創)
+function gNeural(n){var a=new Float32Array(n*3);
+// 三層節點座標,每層 z 值不同形成立體感
+var layers=[
+  {x:-7,nodes:5,zs:[]}, // input 5
+  {x:0, nodes:7,zs:[]}, // hidden 7
+  {x:7, nodes:5,zs:[]}  // output 5
+];
+layers.forEach(function(L){
+  for(var k=0;k<L.nodes;k++){
+    var y=(k-(L.nodes-1)/2)*2.4;
+    var z=(k%2===0?1:-1)*.6;
+    L.zs.push([L.x,y,z]);
+  }
+});
+var allNodes=[].concat(layers[0].zs,layers[1].zs,layers[2].zs);
+
+for(var i=0;i<n;i++){
+  var p=Math.random(),x=0,y=0,z=0;
+  if(p<.28){// 節點實體 (球)
+    var nd=allNodes[Math.floor(Math.random()*allNodes.length)];
+    var t=Math.random()*Math.PI*2,ph=Math.acos(2*Math.random()-1),rr=.85*Math.random();
+    x=nd[0]+rr*Math.sin(ph)*Math.cos(t);
+    y=nd[1]+rr*Math.sin(ph)*Math.sin(t);
+    z=nd[2]+rr*Math.cos(ph);
+  } else if(p<.85){// 全連接邊 (input→hidden 或 hidden→output)
+    var fromHidden=Math.random()<.5;
+    var srcLayer=fromHidden?layers[0].zs:layers[1].zs;
+    var dstLayer=fromHidden?layers[1].zs:layers[2].zs;
+    var s=srcLayer[Math.floor(Math.random()*srcLayer.length)];
+    var d=dstLayer[Math.floor(Math.random()*dstLayer.length)];
+    var tt=Math.random();
+    x=s[0]+(d[0]-s[0])*tt;
+    y=s[1]+(d[1]-s[1])*tt;
+    z=s[2]+(d[2]-s[2])*tt;
+  } else if(p<.92){// 節點外發光暈
+    var nd2=allNodes[Math.floor(Math.random()*allNodes.length)];
+    var gt=Math.random()*Math.PI*2,gph=Math.acos(2*Math.random()-1),gr=.85+Math.random()*.4;
+    x=nd2[0]+gr*Math.sin(gph)*Math.cos(gt);
+    y=nd2[1]+gr*Math.sin(gph)*Math.sin(gt);
+    z=nd2[2]+gr*Math.cos(gph);
+  } else{// 資料流粒子 (沿著任意一條 hidden 軸線飄)
+    var hi=layers[1].zs[Math.floor(Math.random()*layers[1].zs.length)];
+    x=-9+Math.random()*18;
+    y=hi[1]+(Math.random()-.5)*.4;
+    z=(Math.random()-.5)*.4;
+  }
+  a[i*3]=x;a[i*3+1]=y;a[i*3+2]=z;
+}return a}
+
+// 🏰 3D 熱蘭遮城:方形城牆 (z 也是真城牆) + 四角圓塔 + 中央主堡立方體 + 旗桿 (1661)
+// 整座城堡在 x-z 平面是 14x10 方形,從上往下俯視也是城堡
+function gCastle(n){var a=new Float32Array(n*3);
+var corners=[[-7,-5],[7,-5],[-7,5],[7,5]]; // 四角稜堡 (x,z)
+for(var i=0;i<n;i++){
+  var p=Math.random(),x=0,y=0,z=0;
+  if(p<.30){// 四面城牆 (3D 矩形板)
+    var side=Math.floor(Math.random()*4);
+    var u=(Math.random()-.5);
+    var h=-3+Math.random()*7;
+    if(side===0){x=u*14;z=-5;y=h} // 前
+    else if(side===1){x=u*14;z=5;y=h} // 後
+    else if(side===2){x=-7;z=u*10;y=h} // 左
+    else{x=7;z=u*10;y=h} // 右
+    // 牆面有厚度
+    if(side<2)z+=(Math.random()-.5)*.5;
+    else x+=(Math.random()-.5)*.5;
+  } else if(p<.40){// 城垛 (上緣鋸齒) — 沿四面分佈
+    var s2=Math.floor(Math.random()*4);
+    var u2=(Math.random()-.5)*14;
+    var crenel=(Math.floor(u2*.7)%2===0)?.7:.15;
+    var h2=4+crenel;
+    if(s2===0){x=u2;z=-5+(Math.random()-.5)*.4;y=h2}
+    else if(s2===1){x=u2;z=5+(Math.random()-.5)*.4;y=h2}
+    else if(s2===2){z=u2*.7;x=-7+(Math.random()-.5)*.4;y=h2}
+    else{z=u2*.7;x=7+(Math.random()-.5)*.4;y=h2}
+  } else if(p<.65){// 四角稜堡 (3D 圓柱)
+    var c=corners[Math.floor(Math.random()*4)];
+    var t=Math.random()*Math.PI*2,r=Math.sqrt(Math.random())*1.7;
+    x=c[0]+Math.cos(t)*r;
+    y=-3+Math.random()*7.5;
+    z=c[1]+Math.sin(t)*r;
+  } else if(p<.70){// 稜堡屋頂 (圓錐)
+    var c2=corners[Math.floor(Math.random()*4)];
+    var t2=Math.random()*Math.PI*2,ru=Math.random(),rr2=(1-ru)*1.7;
+    x=c2[0]+Math.cos(t2)*rr2;
+    y=4.5+ru*1.8;
+    z=c2[1]+Math.sin(t2)*rr2;
+  } else if(p<.85){// 中央主堡 (3D 立方體)
+    x=(Math.random()-.5)*3.6;
+    y=-2+Math.random()*7;
+    z=(Math.random()-.5)*3.6;
+  } else if(p<.90){// 主堡尖頂 (金字塔)
+    var ru2=Math.random();
+    x=(Math.random()-.5)*3.6*(1-ru2);
+    y=5+ru2*2.4;
+    z=(Math.random()-.5)*3.6*(1-ru2);
+  } else if(p<.94){// 拱門 (底部前牆中央洞口輪廓)
+    var at=Math.random()*Math.PI;
+    x=Math.cos(at+Math.PI)*1.4;
+    y=-3+Math.sin(at)*2.5;
+    z=-5+(Math.random()-.5)*.5;
+  } else if(p<.97){// 中央旗桿
+    x=(Math.random()-.5)*.2;y=7+Math.random()*2.4;z=(Math.random()-.5)*.2;
+  } else{// 飄揚旗 (3D 帶曲)
+    var ft=Math.random();
+    x=ft*1.6+.2;y=8.6+Math.sin(ft*5)*.4;z=ft*.4+(Math.random()-.5)*.2;
+  }
+  a[i*3]=x;a[i*3+1]=y;a[i*3+2]=z;
+}return a}
+
+// 📖 3D 開書:兩個有厚度的書頁 V 形開合 + 立體書脊 + 3D 燈泡 (1921 文化覺醒)
+function gBook(n){var a=new Float32Array(n*3);for(var i=0;i<n;i++){
+  var p=Math.random(),x=0,y=0,z=0;
+  if(p<.55){// 兩頁書 (V 形傾斜面 + 厚度)
+    var side=Math.random()>.5?1:-1;
+    var u=Math.random(),v=Math.random();// u 沿頁長,v 沿頁高
+    var lean=.5;
+    var w=(Math.random()-.5)*.3; // 厚度
+    x=side*u*6;
+    y=-2+v*4-u*lean*4+w*.2;
+    z=u*lean*5*side+w*.6;
+  } else if(p<.65){// 書頁邊緣強化 (上下兩條 + 外緣)
+    var s2=Math.random()>.5?1:-1;
+    var pick=Math.floor(Math.random()*3);
+    var u2=Math.random();
+    if(pick===0){// 上緣
+      x=s2*u2*6;y=-2+4-u2*.5*4;z=u2*.5*5*s2;
+    } else if(pick===1){// 下緣
+      x=s2*u2*6;y=-2-u2*.5*4;z=u2*.5*5*s2;
+    } else{// 外緣 (頁尖端)
+      x=s2*6;y=-2+Math.random()*4-.5*4;z=.5*5*s2+(Math.random()-.5)*.4;
+    }
+  } else if(p<.72){// 書脊 (3D 圓柱)
+    var spt=Math.random()*Math.PI*2;
+    x=Math.cos(spt)*.3;
+    y=-2+Math.random()*4;
+    z=Math.sin(spt)*.3;
+  } else if(p<.95){// 燈泡 (3D 球)
+    var bt=Math.random()*Math.PI*2,bp=Math.acos(2*Math.random()-1),br=Math.sqrt(Math.random())*1.6;
+    x=br*Math.sin(bp)*Math.cos(bt);
+    y=5.5+br*Math.sin(bp)*Math.sin(bt);
+    z=br*Math.cos(bp);
+  } else{// 燈絲與燈頭
+    if(Math.random()<.5){// 燈絲 (W 形)
+      var ft=Math.random();
+      x=(ft-.5)*1.4;y=5+Math.sin(ft*Math.PI*3)*.3;z=(Math.random()-.5)*.2;
+    } else{// 燈座 (上方圓柱)
+      var st2=Math.random()*Math.PI*2,sr2=.4;
+      x=Math.cos(st2)*sr2;y=7.3+Math.random()*.5;z=Math.sin(st2)*sr2;
+    }
+  }
+  a[i*3]=x;a[i*3+1]=y;a[i*3+2]=z;
+}return a}
+
+// 🕊 3D 破曉飛鳥:盤狀地平線 + 半球太陽 + 圓錐光芒 + 立體飛鳥 + 起伏山脈 (1987)
+function gDawn(n){var a=new Float32Array(n*3);
+// 五隻鳥的 (x, y, z) 位置 — 散在天空各深度
+var birds=[[-6,3.5,2],[-3,5,-1.5],[0,6.2,1],[3,5.5,-2],[6,4,1.8]];
+for(var i=0;i<n;i++){
+  var p=Math.random(),x=0,y=0,z=0;
+  if(p<.16){// 地平線 (3D 圓盤帶,有 z 厚度)
+    var ht=Math.random()*Math.PI*2,hr=4+Math.random()*8;
+    x=Math.cos(ht)*hr;y=-2+(Math.random()-.5)*.3;z=Math.sin(ht)*hr*.55;
+  } else if(p<.26){// 太陽 (3D 上半球)
+    var st=Math.random()*Math.PI*2;
+    var sp=Math.acos(Math.random()); // 0~π/2 上半球
+    var sr=Math.sqrt(Math.random())*2.5;
+    x=sr*Math.sin(sp)*Math.cos(st);
+    y=-2+sr*Math.cos(sp);
+    z=sr*Math.sin(sp)*Math.sin(st);
+  } else if(p<.55){// 12 道立體光芒 (圓錐從太陽中心向外發散到上半空間)
+    var ray=Math.floor(Math.random()*12);
+    var ang=ray*Math.PI/11; // 0~π 上半圓 (x-y 平面方向)
+    var rl=2.8+Math.random()*5.5;
+    var thickness=(rl-2.8)*.18; // 越遠越粗 (圓錐)
+    var off=(Math.random()-.5)*thickness;
+    var offZ=(Math.random()-.5)*thickness;
+    x=Math.cos(ang)*rl+off;
+    y=-2+Math.sin(ang)*rl;
+    z=offZ;
+  } else if(p<.84){// 飛鳥 V 字翼 (3D — 翼面有 z 偏移)
+    var b=birds[Math.floor(Math.random()*5)];
+    var wing=Math.random()<.5?-1:1;
+    var t=Math.random();
+    x=b[0]+wing*t*1.2;
+    y=b[1]+t*.55+(Math.random()-.5)*.15;
+    z=b[2]+(Math.random()-.5)*.3-wing*t*.15; // 翼端微微往後
+  } else if(p<.90){// 鳥身 (3D 小球)
+    var b2=birds[Math.floor(Math.random()*5)];
+    var bt=Math.random()*Math.PI*2,bp=Math.acos(2*Math.random()-1),br=.25;
+    x=b2[0]+br*Math.sin(bp)*Math.cos(bt);
+    y=b2[1]+br*Math.sin(bp)*Math.sin(bt);
+    z=b2[2]+br*Math.cos(bp);
+  } else{// 遠山 (3D 弧形山脊)
+    var mx=(Math.random()-.5)*16;
+    var mz=(Math.random()-.5)*8;
+    var mh=Math.abs(Math.sin(mx*.4)+Math.sin(mz*.6+1))*1.2;
+    x=mx;y=-2-Math.random()*mh-.3;z=mz;
+  }
+  a[i*3]=x;a[i*3+1]=y;a[i*3+2]=z;
+}return a}
+
+// 🇹🇼 3D 台灣島嶼地圖:番薯形輪廓 + 中央山脈隆起 + 海岸線 + 離島
+// 整體放大為原本的 1.7 倍,讓首頁更清楚可見
+function gTaiwan(n){var a=new Float32Array(n*3);
+var SC=1.7; // 整體縮放
+function tw_w(y){
+  y=y/SC;
+  var w;
+  if(y>7)w=Math.max(0,1.6-(y-7)*1.1);
+  else if(y>2)w=2.6-(y-2)*.18;
+  else if(y>-3)w=2.9+Math.sin((y+3)/5*Math.PI)*.6;
+  else if(y>-7)w=2.4+(y+3)*.15;
+  else w=Math.max(0,1.0+(y+7)*.4);
+  return w*SC;
+}
+function tw_h(x,y){
+  var w=tw_w(y);if(w<=0)return 0;
+  var rel=x/w;
+  var lat=(y>-4*SC&&y<5*SC)?1:.5;
+  return Math.max(0,(1-rel*rel*1.4)*3.5*SC*.6*lat);
+}
+for(var i=0;i<n;i++){
+  var p=Math.random(),x=0,y=0,z=0;
+  if(p<.50){// 島嶼地表 + 中央山脈
+    var ty=-8*SC+Math.random()*16*SC;
+    var w=tw_w(ty);if(w<=0){i--;continue}
+    var tx=(Math.random()-.5)*2*w;
+    var elev=tw_h(tx,ty);
+    x=tx;y=ty;z=elev*Math.random()-.3;
+  } else if(p<.72){// 中央山脈高聳
+    var my=-4*SC+Math.random()*9*SC;
+    var mw=tw_w(my);if(mw<=0){i--;continue}
+    var mx=(Math.random()-.5)*mw*.5;
+    var melev=tw_h(mx,my);
+    x=mx;y=my;z=melev*(.4+Math.random()*.7);
+  } else if(p<.85){// 海岸線輪廓
+    var cy=-8*SC+Math.random()*16*SC;
+    var cw=tw_w(cy);if(cw<=0){i--;continue}
+    var side=Math.random()<.5?-1:1;
+    x=side*cw+(Math.random()-.5)*.4;
+    y=cy;
+    z=(Math.random()-.5)*.5;
+  } else if(p<.92){// 澎湖群島
+    var pt=Math.random()*Math.PI*2,pr=Math.random()*1.2*SC;
+    x=-6*SC+Math.cos(pt)*pr;y=-1*SC+Math.sin(pt)*pr*.7;z=(Math.random()-.5)*.4;
+  } else if(p<.96){// 蘭嶼/綠島
+    var ie=Math.random()<.5?[5.5*SC,-3.5*SC]:[5.8*SC,-5.2*SC];
+    var et=Math.random()*Math.PI*2,er=Math.random()*.5*SC;
+    x=ie[0]+Math.cos(et)*er;y=ie[1]+Math.sin(et)*er;z=(Math.random()-.5)*.3;
+  } else{// 周圍海洋粒子
+    var ot=Math.random()*Math.PI*2,or2=(6+Math.random()*4)*SC;
+    x=Math.cos(ot)*or2;y=Math.sin(ot)*or2*1.2;z=(Math.random()-.5)*.5;
+  }
+  a[i*3]=x;a[i*3+1]=y;a[i*3+2]=z;
+}return a}
+
+// 👤 3D 導覽員「島語」:頭 + 髮絲飄揚 + 脖子 + 圓錐長袍 + 雙臂歡迎張開 + 飄渺下擺
+function gGuide(n){var a=new Float32Array(n*3);for(var i=0;i<n;i++){
+  var p=Math.random(),x=0,y=0,z=0;
+  if(p<.20){// 頭部 (球)
+    var t=Math.random()*Math.PI*2,ph=Math.acos(2*Math.random()-1),r=1.7;
+    x=r*Math.sin(ph)*Math.cos(t);
+    y=4.5+r*Math.sin(ph)*Math.sin(t);
+    z=r*Math.cos(ph);
+  } else if(p<.27){// 髮絲 (頭頂飛揚)
+    var ht=Math.random()*Math.PI*2,hr=Math.random()*1.5,hh=Math.random()*1.3;
+    x=Math.cos(ht)*hr;y=6.0+hh;z=Math.sin(ht)*hr;
+  } else if(p<.34){// 脖子
+    var nt=Math.random()*Math.PI*2,nr=.5;
+    x=Math.cos(nt)*nr;y=2.4+Math.random()*.6;z=Math.sin(nt)*nr;
+  } else if(p<.62){// 軀幹 (上窄下寬的長袍 — 圓錐截面)
+    var tt=Math.random()*Math.PI*2;
+    var ty=-4+Math.random()*6;
+    var tr=1.4+(2-ty)*.28;
+    x=Math.cos(tt)*tr*(.7+Math.random()*.3);
+    y=ty;
+    z=Math.sin(tt)*tr*(.7+Math.random()*.3)*.65;
+  } else if(p<.84){// 雙臂張開歡迎 (兩條圓柱弧)
+    var armSide=Math.random()<.5?1:-1;
+    var u=Math.random();
+    var ax=armSide*(1.7+u*3);
+    var ay=1.4-u*1.4-u*u*.5;
+    var at2=Math.random()*Math.PI*2,ar=.42*(1-u*.4);
+    x=ax+Math.cos(at2)*ar;
+    y=ay+Math.sin(at2)*ar*.5;
+    z=Math.sin(at2)*ar+(Math.random()-.5)*.3;
+  } else if(p<.90){// 雙手 (張開的手心)
+    var hSide=Math.random()<.5?1:-1;
+    var hand_t=Math.random()*Math.PI*2,hand_r=Math.sqrt(Math.random())*.55;
+    x=hSide*4.7+Math.cos(hand_t)*hand_r;
+    y=-.2+Math.sin(hand_t)*hand_r;
+    z=(Math.random()-.5)*.4;
+  } else{// 飄渺下擺 (粒子在地板處散開)
+    var ht2=Math.random()*Math.PI*2,hr2=2+Math.random()*2.2;
+    x=Math.cos(ht2)*hr2;y=-4-Math.random()*2;z=Math.sin(ht2)*hr2*.6;
+  }
+  a[i*3]=x;a[i*3+1]=y;a[i*3+2]=z;
+}return a}
+
+// 🛶 3D 獨木舟:橢球船身 (上開口) + 立體桅桿 + 帆 + 同心海浪環 (~4000 BCE)
+function gCanoe(n){var a=new Float32Array(n*3);for(var i=0;i<n;i++){
+  var p=Math.random(),x=0,y=0,z=0;
+  if(p<.40){// 船身 (橢球底部 — 兩端尖,中間寬,有 z 深度)
+    var u=(Math.random()-.5)*2; // -1~1 沿船長
+    var bw=Math.cos(u*Math.PI/2); // 兩端尖,中間 1
+    var ct=Math.random()*Math.PI; // 0~π 下半圓
+    x=u*7;
+    y=-1-Math.sin(ct)*1.4*bw;
+    z=Math.cos(ct)*1.6*bw;
+  } else if(p<.48){// 船緣 (上口圓邊)
+    var eu=(Math.random()-.5)*2;
+    var ebw=Math.cos(eu*Math.PI/2);
+    var es=Math.random()<.5?1:-1;
+    x=eu*7;
+    y=-1+(Math.random()-.5)*.15;
+    z=es*1.6*ebw+(Math.random()-.5)*.15;
+  } else if(p<.55){// 桅桿 (3D 圓柱)
+    var mt=Math.random()*Math.PI*2,mr=.2;
+    x=Math.cos(mt)*mr;y=-1+Math.random()*5.5;z=Math.sin(mt)*mr;
+  } else if(p<.68){// 三角帆 (鼓起的曲面)
+    var u2=Math.random(),v2=Math.random();if(u2+v2>1){u2=1-u2;v2=1-v2}
+    var bulge=u2*v2*5;
+    x=u2*4;y=-.5+v2*5;z=bulge+(Math.random()-.5)*.3;
+  } else if(p<.78){// 槳 (船側兩根)
+    var pSide=Math.random()<.5?1:-1;
+    var pt=Math.random();
+    x=-3+Math.random()*6;
+    y=-.5-pt*2.5;
+    z=pSide*(2+pt*1.5);
+  } else{// 海浪 (3D 同心半球環,圍繞船身擴散)
+    var ring=Math.floor(Math.random()*5),R=3+ring*1.8;
+    var rt=Math.random()*Math.PI*2;
+    var rp=Math.random()*Math.PI*.3+Math.PI*.5; // 下半球波紋
+    x=R*Math.sin(rp)*Math.cos(rt);
+    y=R*Math.cos(rp)-2;
+    z=R*Math.sin(rp)*Math.sin(rt);
+  }
+  a[i*3]=x;a[i*3+1]=y;a[i*3+2]=z;
+}return a}
+function gN(n){var a=new Float32Array(n*3);var nds=[];for(var k=0;k<60;k++){var t=Math.random()*Math.PI*2,p=Math.acos(2*Math.random()-1);nds.push([11*Math.sin(p)*Math.cos(t),11*Math.sin(p)*Math.sin(t),11*Math.cos(p)])}for(var i=0;i<n;i++){if(Math.random()<.3){var nd=nds[Math.floor(Math.random()*nds.length)];a[i*3]=nd[0]+(Math.random()-.5)*1.5;a[i*3+1]=nd[1]+(Math.random()-.5)*1.5;a[i*3+2]=nd[2]+(Math.random()-.5)*1.5}else if(Math.random()<.5){var n1=nds[Math.floor(Math.random()*nds.length)],n2=nds[Math.floor(Math.random()*nds.length)],tt=Math.random();a[i*3]=n1[0]+(n2[0]-n1[0])*tt;a[i*3+1]=n1[1]+(n2[1]-n1[1])*tt;a[i*3+2]=n1[2]+(n2[2]-n1[2])*tt}else{var t2=Math.random()*Math.PI*2,p2=Math.acos(2*Math.random()-1),R=10.5+Math.random();a[i*3]=R*Math.sin(p2)*Math.cos(t2);a[i*3+1]=R*Math.sin(p2)*Math.sin(t2);a[i*3+2]=R*Math.cos(p2)}}return a}
+var GEN={compass:gC,gears:gG,scroll:gSc,atom:gAt,network:gN,brain:gB,wheat:gW,tablet:gT,arch:gA,mandala:gM,pillar:gP,astrolabe:gAs,
+  ship:gShip,train:gTrain,chip:gChip,ballot:gBallot,quake:gQuake,sunflower:gSunflower,guardian:gGuardian,neural:gNeural,castle:gCastle,book:gBook,canoe:gCanoe,dawn:gDawn,guide:gGuide,taiwan:gTaiwan};
+var SHAPES={};DATA.forEach(function(d){SHAPES[d.shape]=GEN[d.shape](N)});
+SHAPES['guide']=gGuide(N);
+SHAPES['taiwan']=gTaiwan(N);
+
+function hexToRgb(h){h=h.replace('#','');return[parseInt(h.slice(0,2),16)/255,parseInt(h.slice(2,4),16)/255,parseInt(h.slice(4,6),16)/255]}
+
+// ------------------------------------------------------------
+// Three.js
+// ------------------------------------------------------------
+var scene=new THREE.Scene();scene.fog=new THREE.FogExp2(0x030308,.006);
+var cam3=new THREE.PerspectiveCamera(70,innerWidth/innerHeight,.1,600);cam3.position.z=50;
+var ren=new THREE.WebGLRenderer({antialias:true});ren.setSize(innerWidth,innerHeight);ren.setPixelRatio(Math.min(devicePixelRatio,2));ren.setClearColor(0x030308);ren.domElement.id='c';document.body.appendChild(ren.domElement);
+
+var geo=new THREE.BufferGeometry(),pos=new Float32Array(N*3),tgt=new Float32Array(N*3),rnd=new Float32Array(N*3),sz=new Float32Array(N);
+for(var i=0;i<N;i++){rnd[i*3]=(Math.random()-.5)*2;rnd[i*3+1]=(Math.random()-.5)*2;rnd[i*3+2]=(Math.random()-.5)*2;sz[i]=.3+Math.random()*.7}
+geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
+geo.setAttribute('aTarget',new THREE.BufferAttribute(tgt,3));
+geo.setAttribute('aRandom',new THREE.BufferAttribute(rnd,3));
+geo.setAttribute('aSize',new THREE.BufferAttribute(sz,1));
+var mat=new THREE.ShaderMaterial({vertexShader:document.getElementById('vs').textContent,fragmentShader:document.getElementById('fs').textContent,
+  uniforms:{uTime:{value:0},uProgress:{value:0},uScale:{value:1},uTiltX:{value:0},uTiltY:{value:0},uSpin:{value:0},uBurst:{value:0},uAccent:{value:new THREE.Vector3(.55,.9,1)}},
+  transparent:true,depthWrite:false,blending:THREE.AdditiveBlending});
+scene.add(new THREE.Points(geo,mat));
+
+var sg=new THREE.BufferGeometry(),spp=new Float32Array(2000*3);
+for(var j=0;j<2000;j++){spp[j*3]=(Math.random()-.5)*400;spp[j*3+1]=(Math.random()-.5)*400;spp[j*3+2]=(Math.random()-.5)*400}
+sg.setAttribute('position',new THREE.BufferAttribute(spp,3));
+scene.add(new THREE.Points(sg,new THREE.PointsMaterial({size:.5,color:0x334466,transparent:true,opacity:.25,blending:THREE.AdditiveBlending})));
+
+// 開場:粒子立即凝聚成台灣島嶼地圖
+function setTgtImmediate(k){var d=SHAPES[k],at=geo.getAttribute('aTarget');for(var i=0;i<N*3;i++)at.array[i]=d?d[i]:0;at.needsUpdate=true}
+setTgtImmediate('taiwan');
+
+// ------------------------------------------------------------
+// State
+// ------------------------------------------------------------
+var S={prog:1,tProg:1,sc:1,tSc:1,tx:0,ttx:0,ty:0,tty:0,spin:0,spinVel:0,node:-1,burst:0};
+function lp(a,b,t){return a+(b-a)*t}
+function setTgt(k){var d=SHAPES[k],at=geo.getAttribute('aTarget');for(var i=0;i<N*3;i++)at.array[i]=d?d[i]:0;at.needsUpdate=true}
+
+var warpEl=document.getElementById('warp'),eraFlash=document.getElementById('era-flash');
+function sciFiTransition(dir,name,color){
+  warpEl.className=dir;
+  eraFlash.textContent=name;eraFlash.className='show';
+  if(color){eraFlash.style.background='linear-gradient(135deg,'+color+',#00e5ff)';eraFlash.style.webkitBackgroundClip='text';eraFlash.style.webkitTextFillColor='transparent'}
+  S.burst=.5;
+  setTimeout(function(){warpEl.className='';eraFlash.className=''},700);
+}
+
+// ------------------------------------------------------------
+// Mythos backend
+// ------------------------------------------------------------
+var aiCache={}; // {nodeIdx: {elapsed, shape, nLoops}}
+var aiInflight=null;
+var nLoops=4;
+var loopsEl=document.getElementById('loops'),loopsVal=document.getElementById('loops-val');
+loopsEl.addEventListener('input',function(){nLoops=+loopsEl.value;loopsVal.textContent=nLoops});
+
+function pingHealth(){
+  fetch(MYTHOS_URL+'/health').then(function(r){return r.json()}).then(function(d){
+    document.getElementById('mythos-dot').classList.add('on');
+    document.getElementById('m-params').textContent=(d.total_parameters/1e6).toFixed(2)+'M params';
+    document.getElementById('m-rho').textContent='ρ '+d.spectral_radius.toFixed(3);
+  }).catch(function(){
+    document.getElementById('mythos-dot').classList.remove('on');
+    document.getElementById('m-params').textContent='offline';
+    document.getElementById('m-rho').textContent='ρ —';
+  });
+}
+pingHealth();setInterval(pingHealth,6000);
+
+var typeTimer=null;
+function typewriter(el,text,speed){
+  clearInterval(typeTimer);el.innerHTML='';
+  var i=0;
+  typeTimer=setInterval(function(){
+    if(i>=text.length){clearInterval(typeTimer);el.innerHTML=text;return}
+    el.innerHTML=text.slice(0,++i)+'<span class="cursor"></span>';
+  },speed||28);
+}
+
+function renderAi(idx){
+  var block=document.getElementById('ai-block'),
+      narr=document.getElementById('ai-narrative'),
+      body=document.getElementById('ai-body'),
+      meta=document.getElementById('ai-meta');
+  var r=aiCache[idx];
+  if(!r){block.classList.remove('loading');clearInterval(typeTimer);
+    narr.textContent='尚未觸發 — 捏合手勢或切換年代即可啟動';body.innerHTML='';meta.textContent='';return}
+  if(r.pending){
+    block.classList.add('loading');clearInterval(typeTimer);
+    narr.textContent='Mythos 正在以 '+r.n_loops+' 次潛在空間迴圈沉思';
+    body.innerHTML='';meta.textContent='';return}
+  block.classList.remove('loading');
+  if(r.error){clearInterval(typeTimer);narr.textContent='⚠︎ '+r.error;body.innerHTML='';meta.textContent='';return}
+  // 打字機動畫
+  typewriter(narr,r.narrative,26);
+  // 隱藏技術細節 — 一般觀眾不需要看
+  body.innerHTML='';
+  meta.textContent='';
+}
+
+function callMythos(idx){
+  if(aiCache[idx]&&aiCache[idx].n_loops===nLoops&&!aiCache[idx].error)return;
+  var d=DATA[idx];
+  aiCache[idx]={pending:true,n_loops:nLoops};renderAi(idx);
+  fetch(MYTHOS_URL+'/narrate',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({era:d.era,name:d.name,description:d.text,n_loops:nLoops})
+  }).then(function(r){return r.json().then(function(j){if(!r.ok)throw new Error(j.detail||'unknown');return j})})
+  .then(function(d){
+    aiCache[idx]={narrative:d.narrative,mythos:d.mythos,gemini_elapsed:d.gemini_elapsed,n_loops:d.mythos.n_loops};
+    if(S.node===idx)renderAi(idx);
+  }).catch(function(e){
+    aiCache[idx]={error:'Mythos × Gemini 連線失敗:'+e.message};
+    if(S.node===idx)renderAi(idx);
+  });
+}
+
+// ------------------------------------------------------------
+// UI
+// ------------------------------------------------------------
+function showInfo(idx){var d=DATA[idx];
+  document.getElementById('ip-era').textContent=d.era;
+  document.getElementById('ip-title').textContent=d.name;
+  document.getElementById('ip-text').textContent=d.text;
+  document.getElementById('infopanel').classList.add('show');
+  renderAi(idx);
+}
+function stopSpeak(){
+  // 立即停止任何正在播放或排程的語音
+  abortIntro();
+  speechSynthesis.cancel();
+  if(currentAudio){currentAudio.pause();currentAudio=null}
+  speakGen++; // 讓任何 in-flight 的 TTS fetch 變成過期請求
+  bubbleEl.classList.remove('show');
+}
+
+function selectNode(idx,dir){
+  if(idx<0||idx>=NUM_NODES||idx===S.node)return;
+  stopSpeak();
+  // ☁️ 紀錄年代造訪
+  fbCall(function(fb){return fb.logEraVisit(SESSION_ID,DATA[idx].id||idx,DATA[idx].era+' '+DATA[idx].name)});
+  S.node=idx;S.tProg=1;setTgt(DATA[idx].shape);
+  var rgb=hexToRgb(DATA[idx].color);mat.uniforms.uAccent.value.set(rgb[0],rgb[1],rgb[2]);
+  sciFiTransition(dir||'right',DATA[idx].era+' · '+DATA[idx].name,DATA[idx].color);
+  document.querySelectorAll('.tn').forEach(function(e,i){e.classList.toggle('active',i===idx)});
+  document.getElementById('river-btn').classList.remove('active');
+  showInfo(idx);
+  callMythos(idx);
+  var tn=document.querySelectorAll('.tn')[idx];if(tn)tn.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});
+}
+function goRiver(){stopSpeak();S.node=-1;S.tProg=0;
+  document.querySelectorAll('.tn').forEach(function(e){e.classList.remove('active')});
+  document.getElementById('river-btn').classList.add('active');
+  document.getElementById('infopanel').classList.remove('show');
+}
+function nextN(){if(S.node<0)selectNode(0,'right');else if(S.node<NUM_NODES-1)selectNode(S.node+1,'right')}
+function prevN(){if(S.node>0)selectNode(S.node-1,'left');else if(S.node===0)goRiver()}
+
+var gsEl=document.getElementById('gs');
+var clk=new THREE.Clock();
+function animate(){requestAnimationFrame(animate);var t=clk.getElapsedTime();mat.uniforms.uTime.value=t;
+  S.prog=lp(S.prog,S.tProg,.025);S.sc=lp(S.sc,S.tSc,.06);S.tx=lp(S.tx,S.ttx,.04);S.ty=lp(S.ty,S.tty,.04);
+  S.spin+=S.spinVel;S.spinVel*=.95;S.burst=lp(S.burst,0,.08);
+  mat.uniforms.uProgress.value=S.prog;mat.uniforms.uScale.value=S.sc;
+  mat.uniforms.uTiltX.value=S.tx;mat.uniforms.uTiltY.value=S.ty;mat.uniforms.uSpin.value=S.spin;mat.uniforms.uBurst.value=S.burst;
+  ren.render(scene,cam3)}
+animate();
+
+DATA.forEach(function(d,i){var el=document.createElement('div');el.className='tn';
+  el.innerHTML='<div class="yr">'+d.era+'</div><div class="nm">'+d.name+'</div><div class="dt"></div>';
+  el.addEventListener('click',function(){selectNode(i,'right')});
+  document.getElementById('tl-inner').appendChild(el);
+});
+document.getElementById('river-btn').addEventListener('click',goRiver);
+
+// 點擊資訊卡片:放大/縮小切換
+var infoEl=document.getElementById('infopanel');
+infoEl.addEventListener('click',function(e){
+  infoEl.classList.toggle('zoomed');
+  var hint=document.getElementById('zoom-hint');
+  if(hint)hint.textContent=infoEl.classList.contains('zoomed')?'CLICK TO CLOSE':'CLICK TO ZOOM';
+});
+
+function enableMouse(){
+  addEventListener('mousemove',function(e){S.ttx=(e.clientX/innerWidth-.5)*.7;S.tty=(e.clientY/innerHeight-.5)*.4});
+  addEventListener('wheel',function(e){e.preventDefault();S.tSc=THREE.MathUtils.clamp(S.tSc-e.deltaY*.002,.4,3)},{passive:false});
+}
+
+// ------------------------------------------------------------
+// 🎯 Dual-hand gesture engine
+// ------------------------------------------------------------
+var vidEl=document.getElementById('vid'),mpH=null,proc=false;
+var hlDots=document.querySelectorAll('.hl'),hrDots=document.querySelectorAll('.hr');
+function ema(p,c,a){return p===null?c:a*c+(1-a)*p}
+function HandState(){this.wx=null;this.wy=null;this.prevWx=null;this.vel=0;this.fingers=[];this.cnt=0;this.open=false;this.fist=false;this.fistFrames=0;this.active=false;this.pinchPrev=false}
+var H=[new HandState(),new HandState()];
+var swipeLastTime=0,swipeCooldown=900;
+var twoHandPrevDist=null;
+
+// ---- 手勢點擊資訊卡 ----
+var DWELL_FRAMES=22;   // ~1.1s @ 20fps
+var dwell=0,dwellCooldown=0;
+var cursorEl=document.getElementById('finger-cursor');
+var progEl=cursorEl.querySelector('.prog');
+var PROG_MAX=75.4; // 2πr with r=12
+function updateCursor(sx,sy,show){
+  if(show){cursorEl.classList.add('on');cursorEl.style.transform='translate('+sx+'px,'+sy+'px) translate(-50%,-50%)'}
+  else cursorEl.classList.remove('on');
+}
+function setDwellProgress(p){progEl.style.strokeDashoffset=PROG_MAX*(1-p)}
+
+function processHands(results){
+  var hands=results.multiHandLandmarks||[];
+  H[0].active=hands.length>=1;H[1].active=hands.length>=2;
+  if(!H[0].active){H[0].wx=H[0].prevWx=null;H[0].vel=0;H[0].fistFrames=0;H[0].pinchPrev=false}
+  if(!H[1].active){H[1].wx=H[1].prevWx=null;H[1].vel=0;H[1].fistFrames=0;H[1].pinchPrev=false;twoHandPrevDist=null}
+
+  hlDots.forEach(function(d){d.classList.remove('up')});
+  hrDots.forEach(function(d){d.classList.remove('up')});
+
+  var anySwipe=false,anyFist=false,anyPinch=false,anyPoint=false;
+
+  for(var hi=0;hi<hands.length&&hi<2;hi++){
+    var lm=hands[hi],h=H[hi];
+    h.wx=ema(h.wx,lm[0].x,.4);h.wy=ema(h.wy,lm[0].y,.4);
+    h.fingers=[Math.abs(lm[4].x-lm[2].x)>.055,lm[8].y<lm[6].y,lm[12].y<lm[10].y,lm[16].y<lm[14].y,lm[20].y<lm[18].y];
+    h.cnt=h.fingers.filter(Boolean).length;
+    h.open=h.cnt>=4;h.fist=h.cnt===0;
+
+    var dots=hi===0?hlDots:hrDots;
+    h.fingers.forEach(function(up,fi){if(up)dots[fi].classList.add(hi===0?'up':'up2')});
+
+    if(h.prevWx!==null)h.vel=ema(h.vel,h.wx-h.prevWx,.5);
+    h.prevWx=h.wx;
+
+    // SWIPE
+    if(h.open&&Math.abs(h.vel)>.011&&(Date.now()-swipeLastTime)>swipeCooldown){
+      swipeLastTime=Date.now();anySwipe=true;
+      if(h.vel>0)prevN();else nextN();
+    }
+    // FIST
+    if(h.fist){h.fistFrames++;if(h.fistFrames>=16){goRiver();h.fistFrames=0;anyFist=true}}
+    else h.fistFrames=0;
+
+    // POINT: 只有食指舉起 → 以該手水平速度旋轉中央圖形
+    var onlyIndex=h.fingers[1]&&!h.fingers[0]&&!h.fingers[2]&&!h.fingers[3]&&!h.fingers[4];
+    if(onlyIndex&&S.node>=0&&Math.abs(h.vel)>.002){
+      S.spinVel+=h.vel*2.2;anyPoint=true;
+    }
+
+    // PINCH: 食指+大拇指捏合 → 觸發 Mythos 重新運算
+    var pinchDist=Math.sqrt(Math.pow(lm[4].x-lm[8].x,2)+Math.pow(lm[4].y-lm[8].y,2));
+    var pinching=pinchDist<.05;
+    if(hands.length===1){
+      // Single-hand pinch = zoom
+      S.tSc=THREE.MathUtils.clamp(THREE.MathUtils.mapLinear(pinchDist,.03,.2,.5,2.8),.5,2.8);
+    }
+    if(pinching&&!h.pinchPrev&&S.node>=0){
+      // 捏合的「起始」瞬間 → 強制重跑 Mythos
+      aiCache[S.node]=null;callMythos(S.node);anyPinch=true;
+    }
+    h.pinchPrev=pinching;
+
+    if(hi===0){S.ttx=(.5-h.wx)*.9;S.tty=(h.wy-.5)*.6}
+  }
+
+  if(H[0].active&&H[1].active){
+    var dx=H[0].wx-H[1].wx,dy=H[0].wy-H[1].wy;
+    var dist=Math.sqrt(dx*dx+dy*dy);
+    if(twoHandPrevDist!==null){
+      var dd=dist-twoHandPrevDist;
+      if(Math.abs(dd)>.003)S.tSc=THREE.MathUtils.clamp(S.tSc+dd*4,.4,3);
+    }
+    twoHandPrevDist=dist;
+    if(!H[0].open&&!H[1].open&&H[0].cnt>=2&&H[1].cnt>=2){
+      var avgVel=(H[0].vel+H[1].vel)/2;
+      if(Math.abs(avgVel)>.005){S.spinVel+=avgVel*1.5;gsEl.textContent='🔄 旋轉';gsEl.className='show'}
+    }
+    S.ttx=(.5-(H[0].wx+H[1].wx)/2)*.9;S.tty=((H[0].wy+H[1].wy)/2-.5)*.6;
+  }else{twoHandPrevDist=null}
+
+  // ---- Dwell click on info panel (食指指尖停留約 1 秒) ----
+  if(dwellCooldown>0)dwellCooldown--;
+  var primary=hands[0];
+  if(primary){
+    var tip=primary[8];
+    var sx=(1-tip.x)*innerWidth, sy=tip.y*innerHeight; // mirror X
+    updateCursor(sx,sy,true);
+    var panel=document.getElementById('infopanel');
+    var over=false;
+    if(panel.classList.contains('show')){
+      var r=panel.getBoundingClientRect();
+      over=sx>=r.left&&sx<=r.right&&sy>=r.top&&sy<=r.bottom;
+    }
+    if(over&&dwellCooldown===0){
+      dwell++;panel.classList.add('dwell');
+      setDwellProgress(Math.min(1,dwell/DWELL_FRAMES));
+      if(dwell>=DWELL_FRAMES){
+        panel.classList.toggle('zoomed');
+        var hint=document.getElementById('zoom-hint');
+        if(hint)hint.textContent=panel.classList.contains('zoomed')?'HOVER TO CLOSE':'HOVER TO ZOOM';
+        dwell=0;dwellCooldown=40;setDwellProgress(0);panel.classList.remove('dwell');
+      }
+    }else{
+      dwell=0;setDwellProgress(0);panel.classList.remove('dwell');
+    }
+  }else{
+    updateCursor(0,0,false);dwell=0;setDwellProgress(0);
+    document.getElementById('infopanel').classList.remove('dwell');
+  }
+
+  var numH=hands.length;
+  if(numH===0){document.getElementById('status').textContent='等待手部...';document.getElementById('status').className='';gsEl.className=''}
+  else{document.getElementById('status').textContent=(numH===2?'雙手':'單手')+'追蹤中 ✓';document.getElementById('status').className='on'}
+
+  if(anyFist){gsEl.textContent='✊ 回到長河';gsEl.className='show fist'}
+  else if(anyPinch){gsEl.textContent='🤏 MYTHOS 重構';gsEl.className='show'}
+  else if(anyPoint){gsEl.textContent='☝ 旋轉';gsEl.className='show'}
+  else if(anySwipe){gsEl.textContent='👋 切換!';gsEl.className='show'}
+
+  proc=false;
+}
+
+async function pf(){if(proc||!mpH||vidEl.readyState<2)return;proc=true;try{await mpH.send({image:vidEl})}catch(e){proc=false}}
+async function startCam(){
+  var em=document.getElementById('errmsg');em.style.display='none';
+  try{
+    var st=await navigator.mediaDevices.getUserMedia({video:{width:{ideal:640},height:{ideal:480},facingMode:'user'}});
+    vidEl.srcObject=st;await vidEl.play();
+    mpH=new Hands({locateFile:function(f){return'https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/'+f}});
+    mpH.setOptions({maxNumHands:2,modelComplexity:1,minDetectionConfidence:.6,minTrackingConfidence:.5});
+    mpH.onResults(processHands);setInterval(pf,50);
+    document.getElementById('start').classList.add('gone');
+  }catch(e){em.textContent='錯誤:'+e.message;em.style.display='block'}
+}
+function startMouse(){document.getElementById('start').classList.add('gone');enableMouse();document.getElementById('status').textContent='滑鼠控制';document.getElementById('status').className='on'}
+
+// ============================================================
+// 🎙 島語:語音合成 (TTS) + 對白泡 + 語音辨識 (STT)
+// ============================================================
+var bubbleEl=document.getElementById('guide-bubble');
+var bubbleTimer=null;
+function showBubble(text,duration){
+  bubbleEl.textContent=text;bubbleEl.classList.add('show');
+  clearTimeout(bubbleTimer);
+  bubbleTimer=setTimeout(function(){bubbleEl.classList.remove('show')},duration||4500);
+}
+
+// 挑選最自然的中文女聲 (優先 Neural / Premium / Enhanced)
+var ttsVoice=null,allZhVoices=[];
+function rankVoice(v){
+  var s=0,n=v.name||'';
+  if(/Neural|Premium|Enhanced|高級|增強/i.test(n))s+=100;     // 神經/高級聲最優先
+  if(/HsiaoChen|HsiaoYu|曉臻|曉雨/i.test(n))s+=80;            // Microsoft 台灣女聲
+  if(/Meijia|Mei-Jia|美佳|Sin-Ji|TingTing/i.test(n))s+=40;    // Apple 中文女聲
+  if(/female|女/i.test(n))s+=20;
+  if(v.lang==='zh-TW')s+=30;
+  else if(/^zh/.test(v.lang))s+=10;
+  if(v.localService===false)s+=15; // 雲端聲音通常品質較好
+  return s;
+}
+function pickVoice(){
+  var vs=speechSynthesis.getVoices();
+  allZhVoices=vs.filter(function(v){return /^zh/.test(v.lang)}).sort(function(a,b){return rankVoice(b)-rankVoice(a)});
+  ttsVoice=allZhVoices[0]||vs[0];
+  populateVoiceMenu();
+}
+speechSynthesis.onvoiceschanged=pickVoice;pickVoice();
+
+// 聲音選單 UI
+function populateVoiceMenu(){
+  var sel=document.getElementById('voice-select');
+  if(!sel||!allZhVoices.length)return;
+  if(sel.options.length===allZhVoices.length)return;
+  sel.innerHTML='';
+  allZhVoices.forEach(function(v,i){
+    var o=document.createElement('option');
+    o.value=i;o.textContent=v.name+' ('+v.lang+')';
+    sel.appendChild(o);
+  });
+  sel.value=0;
+}
+
+// 取得 Gemini TTS 語音 (回傳 Promise<HTMLAudioElement>)
+var ttsCache={},currentAudio=null,ttsVoiceName='Aoede',speakGen=0;
+async function geminiSpeak(text){
+  if(ttsCache[text])return ttsCache[text];
+  var res=await fetch(MYTHOS_URL+'/tts',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({text:text,voice:ttsVoiceName,style:'以溫柔、知性、自然流暢的女聲說(語速正常,不要拖長)'})
+  });
+  if(!res.ok)throw new Error('tts http '+res.status);
+  var blob=await res.blob();
+  var url=URL.createObjectURL(blob);
+  ttsCache[text]=url;
+  return url;
+}
+var SPEAK_RATE=1.15; // 加速播放,聽起來更自然
+
+function legacySpeak(text){
+  // 後援:瀏覽器內建
+  var u=new SpeechSynthesisUtterance(text);
+  if(ttsVoice)u.voice=ttsVoice;
+  u.lang='zh-TW';u.rate=.92;u.pitch=.96;
+  speechSynthesis.speak(u);
+}
+
+function speak(text,opts){
+  opts=opts||{};
+  // 中斷正在播放的 intro / 上一句
+  abortIntro();
+  speechSynthesis.cancel();
+  if(currentAudio){currentAudio.pause();currentAudio=null}
+  var myGen=++speakGen;
+
+  // 切句策略:省 quota 為主 — 第一塊 50-80 字 (確保 1-2 秒能上聲),其餘合成一塊
+  // 100 字敘事 → 約 2 次 API 請求 (而非 5-6 次),省約 3 倍 quota
+  var sentences=text.split(/(?<=[。！？!?,、,;;])/).map(function(s){return s.trim()}).filter(function(s){return s.length>0});
+  if(sentences.length===0)sentences=[text];
+  var merged=[],buf='';
+  var FIRST_CAP=60,REST_CAP=200; // 第一塊較短(快速上聲)、後面合成大塊
+  sentences.forEach(function(c){
+    var cap=merged.length===0?FIRST_CAP:REST_CAP;
+    if(buf.length+c.length<=cap){buf+=c}
+    else{if(buf)merged.push(buf);buf=c}
+  });
+  if(buf)merged.push(buf);
+  if(merged.length===0)merged=[text];
+
+  // 並行下載所有塊
+  var urlPromises=merged.map(function(c){return geminiSpeak(c).catch(function(){return null})});
+
+  (async function(){
+    var allFailed=true;
+    for(var i=0;i<merged.length;i++){
+      if(myGen!==speakGen)return;
+      var chunk=merged[i];
+      var url;
+      try{url=await urlPromises[i]}catch(e){url=null}
+      if(myGen!==speakGen)return;
+      if(!url){
+        // 第一塊就失敗 → 整段改用瀏覽器內建語音 (一致性比較重要)
+        if(i===0){
+          showBubble(text,Math.max(3000,text.length*240));
+          legacySpeak(text); // 一次念完整段
+          return;
+        }
+        // 中間某塊失敗 → 跳過,不混搭聲音
+        continue;
+      }
+      allFailed=false;
+      if(currentAudio){currentAudio.pause()}
+      await new Promise(function(resolve){
+        currentAudio=new Audio(url);
+        currentAudio.playbackRate=SPEAK_RATE;
+        if(i===0)currentAudio.onplaying=function(){showBubble(text,Math.max(3000,text.length*240))};
+        currentAudio.onended=resolve;
+        currentAudio.onerror=resolve;
+        currentAudio.onpause=resolve;
+        currentAudio.play().catch(resolve);
+      });
+      await new Promise(function(r){setTimeout(r,40)});
+    }
+  })();
+
+  return {onend:function(cb){if(currentAudio)currentAudio.onended=cb}};
+}
+
+// =========================================================
+// 🔥 Firebase helper (錯誤時靜默跳過,不影響本地體驗)
+// =========================================================
+async function fbCall(fn){
+  try{
+    var fb=await window.fbReady;
+    if(fb&&fn)return await fn(fb);
+  } catch(e){console.warn('[fb]',e)}
+}
+// 嘗試從 Firestore 讀取既有暱稱 (跨裝置同步)
+fbCall(async function(fb){
+  if(fb.profile&&fb.profile.nickname&&!localStorage.getItem('mythos_nickname')){
+    localStorage.setItem('mythos_nickname',fb.profile.nickname);
+    nickname=fb.profile.nickname;
+    document.body.classList.add('named');
+    console.log('[fb] 從 Firestore 讀回暱稱:',fb.profile.nickname);
+  }
+});
+
+// =========================================================
+// 👤 使用者身份 (PHASE 1:語音取名,必須完成才能進入長河)
+// =========================================================
+var nickname=localStorage.getItem('mythos_nickname')||null;
+var nameStage='idle';        // idle | asking | confirming | done
+var pendingName=null;
+var nameAttempts=0;
+var silenceTimer=null;
+
+function INTRO_LINES_FOR(){
+  if(nickname){
+    return [
+      '歡迎回來,'+nickname+'。',
+      '我們上次的對話我都記得。準備好繼續穿越這條歷史長河了嗎?'
+    ];
+  }
+  return [
+    '你好,我是島語。',
+    '我會陪你穿越這座島嶼六千年的記憶 — 從南島語族的獨木舟,到 AI 與你共寫歷史的此刻。',
+    '在我們開始之前,你想讓我怎麼稱呼你?'
+  ];
+}
+
+// 從語音中嘗試擷取姓名 (人們常說「我叫X」「叫我X」「X」)
+function extractName(text){
+  var t=text.replace(/\s+/g,'');
+  // 移除常見前綴
+  t=t.replace(/^(我叫|叫我|我是|我的名字是|名字是|我的綽號是|綽號是|請叫我|可以叫我|你可以叫我)/,'');
+  // 移除常見後綴
+  t=t.replace(/(就好|就可以|這樣|了|喔|啊|啦|耶|哦|呢)$/g,'');
+  return t.slice(0,8); // 限制長度
+}
+
+function isAffirmative(text){return /對|是|沒錯|正確|可以|好|嗯|yes|ok|right|correct/i.test(text)}
+function isNegative(text){return /不對|不是|錯了|錯|不|不行|不好|no|wrong/i.test(text)}
+
+function setNickname(name){
+  nickname=name;
+  localStorage.setItem('mythos_nickname',name);
+  nameStage='done';
+  resetSilence();
+  document.body.classList.add('named');
+  // ☁️ 同步到 Firestore
+  fbCall(function(fb){return fb.saveProfile(name)});
+  fbCall(function(fb){return fb.ensureSession(SESSION_ID)});
+  speak('很高興認識你,'+name+'。準備好出發了嗎?說「開始探索」或按下方按鈕,我們一起進入歷史長河。');
+}
+
+function startNamingFlow(){
+  if(nickname){nameStage='done';document.body.classList.add('named');return} // 老朋友
+  nameStage='asking';nameAttempts=0;
+  resetSilence();
+}
+
+function askForNameAgain(){
+  speak('再說一次你的名字?或者你想用別的稱呼也可以。');
+  nameStage='asking';
+  resetSilence();
+}
+
+function resetSilence(){
+  clearTimeout(silenceTimer);
+  if(nameStage==='asking'||nameStage==='confirming'){
+    silenceTimer=setTimeout(function(){
+      if(nameStage==='asking'){
+        speak('我還在等你。如果說話不方便,可以按下方的「打字輸入」。');
+        showEscapeHatch();
+      } else if(nameStage==='confirming'){
+        speak('你還在嗎?剛才聽到你說「'+pendingName+'」,對嗎?');
+      }
+    },15000);
+  }
+}
+
+function showEscapeHatch(){
+  var box=document.getElementById('name-typebox');
+  if(box)box.classList.add('show');
+}
+
+// 命令詞黑名單 — 這些不可以被當作名字
+var NAME_BLACKLIST=/(開始探索|啟動探索|開始體驗|出發|進入長河|回到長河|長河|打開|放大|縮小|關掉|念給|朗讀|下一個|上一個|前一個|聊聊|聊天|對話|介紹|你是誰|跳過|暫停|閉嘴|安靜|改名)/;
+
+function handleNameInput(rawText){
+  if(nameStage==='asking'){
+    // 如果是命令詞 → 提示使用者
+    if(NAME_BLACKLIST.test(rawText)){
+      speak('那是個指令喔。我先請你給我一個稱呼,例如「我叫阿芸」或直接說你的名字。');
+      resetSilence();
+      return;
+    }
+    var name=extractName(rawText);
+    if(!name||name.length<1||NAME_BLACKLIST.test(name)){
+      speak('我沒聽清楚,可以再說一次嗎?');
+      resetSilence();
+      return;
+    }
+    pendingName=name;
+    nameStage='confirming';
+    speak('「'+name+'」,我聽得對嗎?');
+    resetSilence();
+    return;
+  }
+  if(nameStage==='confirming'){
+    if(isAffirmative(rawText)){
+      setNickname(pendingName);
+      return;
+    }
+    if(isNegative(rawText)){
+      nameAttempts++;
+      if(nameAttempts>=3)showEscapeHatch();
+      askForNameAgain();
+      return;
+    }
+    // 「應該是 X」 / 「是 X」 — 直接更正
+    var corrected=extractName(rawText);
+    if(corrected&&corrected.length>=1){
+      pendingName=corrected;
+      speak('喔,「'+corrected+'」,這樣對嗎?');
+      resetSilence();
+      return;
+    }
+    // 完全聽不懂
+    speak('剛才聽到「'+pendingName+'」,是的話請說「對」,不是的話請說「不對」。');
+    resetSilence();
+  }
+}
+
+// 開場白 — 動態決定 (有 nickname → 歡迎回來)
+var INTRO_LINES=INTRO_LINES_FOR();
+var introAborted=false;
+async function playIntro(){
+  introAborted=false;
+  INTRO_LINES=INTRO_LINES_FOR(); // 動態:有 nickname 走「歡迎回來」
+  // 1) 立即同時 fetch 全部句子 (parallel)
+  var urlPromises=INTRO_LINES.map(function(line){
+    return geminiSpeak(line).catch(function(){return null});
+  });
+  // 2) 依序播放,前一句講完馬上接下一句 (URL 多半已 ready)
+  for(var i=0;i<INTRO_LINES.length;i++){
+    if(introAborted)return;
+    var line=INTRO_LINES[i];
+    var url;
+    try{url=await urlPromises[i]}catch(e){url=null}
+    if(introAborted)return;
+    if(!url){
+      // 重試一次,仍失敗就靜默跳過該句 (不切換到不同的聲音)
+      try{url=await geminiSpeak(line)}catch(e){url=null}
+      if(introAborted)return;
+      if(!url){showBubble(line,Math.max(3500,line.length*260));continue}
+    }
+    if(currentAudio){currentAudio.pause()}
+    await new Promise(function(resolve){
+      currentAudio=new Audio(url);
+      currentAudio.playbackRate=SPEAK_RATE;
+      currentAudio.onplaying=function(){showBubble(line,Math.max(3000,line.length*220))};
+      currentAudio.onended=resolve;
+      currentAudio.onerror=resolve;
+      currentAudio.onpause=resolve; // 被打斷時也要解鎖
+      currentAudio.play().catch(resolve);
+    });
+    // 句間幾乎無停頓
+    await new Promise(function(r){setTimeout(r,60)});
+  }
+}
+function abortIntro(){
+  introAborted=true;
+  speechSynthesis.cancel();
+  if(currentAudio){currentAudio.pause();currentAudio=null}
+  speakGen++;
+}
+
+// playIntro 完成後 → 進入取名階段
+var origPlayIntro=playIntro;
+playIntro=async function(){
+  await origPlayIntro();
+  if(introAborted)return;
+  startNamingFlow();
+};
+
+// ----- 語音辨識 (Web Speech API) -----
+var voiceMode=false,awake=false,awakeTimer=null,recognition=null;
+var voiceDot=document.getElementById('voice-dot'),voiceLabel=document.getElementById('voice-label');
+
+function setVoiceUI(){
+  voiceDot.className='';voiceLabel.textContent='VOICE OFF';
+  if(voiceMode){voiceDot.classList.add(awake?'awake':'listening');
+    voiceLabel.textContent=awake?'AWAKE':'LISTENING';}
+}
+
+function setAwake(on){
+  awake=on;setVoiceUI();
+  clearTimeout(awakeTimer);
+  if(on)awakeTimer=setTimeout(function(){setAwake(false)},30000);
+}
+
+// 各年代的關鍵字 (對應 DATA index)
+var ERA_KEYWORDS=[
+  ['南島','南島語族','原住民','獨木舟','史前','原始','起源','四千年','大坌坑'],            // 0 ~4000 BCE
+  ['大航海','一六二四','1624','荷蘭','紅毛城','大員','東印度','香料'],                     // 1 1624
+  ['鄭氏','鄭成功','東寧','一六六一','1661','熱蘭遮','安平','驅荷','明朝'],                 // 2 1661
+  ['鐵路','電光','火車','蒸汽','劉銘傳','一八八七','1887','大稻埕','電燈','現代化'],       // 3 1887
+  ['乙未','割讓','馬關','一八九五','1895','民主國','日本','殖民','唐景崧'],                 // 4 1895
+  ['文化覺醒','文化','覺醒','蔣渭水','一九二一','1921','文化協會','啟蒙','臨床講義'],       // 5 1921
+  ['二二八','228','一九四七','1947','私菸','創傷','陳儀'],                                   // 6 1947
+  ['矽島','一九八零','一九八〇','1980','新竹','科學園區','半導體','晶片','晶圓','竹科'],   // 7 1980
+  ['解嚴','戒嚴','一九八七','1987','綻放','飛鳥','破曉','黨禁','報禁','自由'],              // 8 1987
+  ['總統直選','直選','一九九六','1996','投票','選舉','飛彈','海峽','李登輝'],               // 9 1996
+  ['九二一','921','一九九九','1999','地震','大地震','搖晃','集集','斷層'],                  // 10 1999
+  ['太陽花','學運','二零一四','二〇一四','2014','立法院','春天','向日葵'],                  // 11 2014
+  ['護國神山','神山','口罩','疫情','二零二零','二〇二〇','2020','台積電','COVID','外交'], // 12 2020
+  ['AI','人工智慧','共創','二零二六','二〇二六','2026','神經網絡','機器','未來']             // 13 2026
+];
+function matchEra(text){
+  for(var i=0;i<ERA_KEYWORDS.length;i++){
+    var ks=ERA_KEYWORDS[i];
+    for(var j=0;j<ks.length;j++){
+      if(text.indexOf(ks[j])>=0)return i;
+    }
+  }
+  return -1;
+}
+
+function handleVoiceCommand(raw){
+  var text=raw.replace(/\s+/g,'');
+  console.log('[島語聽到]',text);
+  // 取名流程進行中 → 所有語音都先給 handleNameInput
+  if(nameStage==='asking'||nameStage==='confirming'){
+    handleNameInput(text);
+    return;
+  }
+  // 喚醒詞 (含常見誤聽)
+  // 喚醒詞 — 大幅擴充常見誤聽
+  if(/島語|稻語|倒語|島嶼|到雨|刀語|道語|道宇|道嶼|到豫|道雨|刀雨|稻雨|稻宇|倒雨|倒嶼|倒宇|盜語|搗語|島雨|島宇|盜雨|搗雨|搗宇|搗嶼|刀宇|刀嶼|稻嶼|稻豫|倒玉|刀玉|刀虞|刀餘|到玉|島玉|島嶼|盜玉|挑語|TaoYu|tao\s*yu|dao\s*yu|DaoYu/i.test(text)){
+    setAwake(true);
+    // 同句若同時含年代關鍵字 → 直接切過去
+    var hit=matchEra(text);
+    if(hit>=0){
+      selectNode(hit,'right');
+      speak('好的,帶你來到「'+DATA[hit].name+'」。');
+    } else {
+      speak('我在,請說。');
+    }
+    return;
+  }
+  // 「我想聊聊」 → 開啟對話面板
+  if(document.body.classList.contains('entered')&&tryOpenChatVoice(text))return;
+
+  // 「開始/啟動 探索」 — 必須先取名完成
+  if(/開始探索|啟動探索|開始體驗|出發|進入長河/.test(text)){
+    if(nameStage!=='done'){
+      speak('我們先讓你取個稱呼吧。你想讓我怎麼叫你?');
+      nameStage='asking';resetSilence();
+      return;
+    }
+    if(!document.getElementById('start').classList.contains('gone')){
+      speak('好的,'+nickname+',我們出發。');
+      setTimeout(function(){startCam()},900);
+    }
+    return;
+  }
+  if(!awake)return;
+  // 命令
+  var panel=document.getElementById('infopanel');
+  if(/打開|放大|展開/.test(text)){
+    if(panel.classList.contains('show')){
+      panel.classList.add('zoomed');speak('資訊卡已展開。');
+    } else speak('現在還沒有開啟任何年代,請先選一個。');
+  } else if(/關|縮小|收起|關掉|關閉/.test(text)){
+    panel.classList.remove('zoomed');speak('好的。');
+  } else if(/念|讀|朗讀|唸/.test(text)){
+    var nar=document.getElementById('ai-narrative');
+    if(nar&&nar.textContent&&nar.textContent.indexOf('尚未')<0){
+      speak(nar.textContent);
+    } else speak('還沒有 AI 重構結果可以朗讀。');
+  } else if(/下一|往後|前進/.test(text)){
+    nextN();speak('切換到下一個年代。');
+  } else if(/上一|往前|回去|前一/.test(text)){
+    prevN();speak('回到上一個年代。');
+  } else if(/回到長河|長河|回首頁/.test(text)){
+    goRiver();speak('回到時間長河。');
+  } else if(/暫停|停|閉嘴|安靜/.test(text)){
+    speechSynthesis.cancel();bubbleEl.classList.remove('show');
+  } else if(/(你是誰|介紹|你叫|你的名字)/.test(text)){
+    speak('我是島語,由 Mythos 模型的潛在空間粒子凝聚而成,負責陪你走過這條歷史長河。');
+  } else {
+    // 嘗試豐富的年代關鍵字
+    var hit=matchEra(text);
+    if(hit>=0){
+      selectNode(hit,'right');
+      speak(DATA[hit].era+',「'+DATA[hit].name+'」。');
+      setAwake(true); // 延長 awake 視窗,方便繼續下指令
+    }
+  }
+}
+
+function startRecognition(){
+  var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){speak('這個瀏覽器不支援語音辨識,請改用 Chrome 或 Edge。');return false}
+  recognition=new SR();
+  recognition.lang='zh-TW';
+  recognition.continuous=true;
+  recognition.interimResults=true;  // 開啟即時辨識結果
+  recognition.maxAlternatives=3;
+  recognition.onresult=function(ev){
+    for(var i=ev.resultIndex;i<ev.results.length;i++){
+      var res=ev.results[i];
+      // 把所有 alternative 都拿來比對 (有時喚醒詞藏在第二、三選項)
+      var transcripts=[];
+      for(var j=0;j<res.length;j++)transcripts.push(res[j].transcript);
+      var combined=transcripts.join(' ');
+      // 即時顯示聽到的字 (debug visualization)
+      if(!res.isFinal){
+        showHeard(combined,false);
+      } else {
+        showHeard(combined,true);
+        handleVoiceCommand(combined);
+      }
+    }
+  };
+  recognition.onerror=function(e){
+    console.warn('[SR error]',e.error);
+    if(e.error==='not-allowed'||e.error==='service-not-allowed'){
+      showHeard('⚠ 麥克風被拒絕,請到網址列允許',true);
+    } else if(e.error==='no-speech'){
+      // 一段時間沒聲音,重新啟動就好
+    } else {
+      showHeard('⚠ 辨識錯誤:'+e.error,true);
+    }
+  };
+  recognition.onend=function(){if(voiceMode)try{recognition.start()}catch(e){}};
+  try{recognition.start();voiceMode=true;setVoiceUI();return true}
+  catch(e){console.warn(e);return false}
+}
+
+// 即時顯示聽到的字 (右下角小條)
+function showHeard(text,isFinal){
+  var el=document.getElementById('heard');
+  if(!el)return;
+  el.textContent=(isFinal?'🎤 ':'… ')+text.slice(0,40);
+  el.classList.toggle('final',!!isFinal);
+  el.classList.add('show');
+  clearTimeout(showHeard._t);
+  showHeard._t=setTimeout(function(){el.classList.remove('show')},isFinal?2500:900);
+}
+
+function stopRecognition(){
+  voiceMode=false;awake=false;setVoiceUI();
+  if(recognition){try{recognition.stop()}catch(e){}}
+}
+
+// 切換 UI:點擊 voice 燈可關閉/重啟
+voiceDot.addEventListener('click',function(){voiceMode?stopRecognition():startRecognition()});
+voiceLabel.addEventListener('click',function(){voiceMode?stopRecognition():startRecognition()});
+
+// 聲音鎖定為島語的 Gemini Aoede,不開放使用者切換
+
+// 包裝 startCam / startMouse:打開探索 UI、淡出台灣島、不再播額外歡迎詞
+var origStartCam=startCam,origStartMouse=startMouse;
+function bootstrapAfterStart(){
+  document.body.classList.add('entered'); // 顯示 HUD / timeline / 等
+  abortIntro();                            // 確定開場詞已停
+  setTimeout(function(){S.tProg=0;setTgtImmediate('taiwan')},600);
+  // 只有當開場詞還沒播過時才打招呼,否則靜默進入
+  if(!firstInteractionDone){
+    setTimeout(function(){speak('我們出發。')},300);
+  }
+}
+startCam=async function(){await origStartCam();bootstrapAfterStart()};
+startMouse=function(){origStartMouse();bootstrapAfterStart()};
+
+// ========== 開場:首次互動 → 立刻開麥克風 + 並行播放歡迎詞 ==========
+var firstInteractionDone=false;
+function isStartButton(t){return t&&(t.id==='go'||t.id==='nohand'||t.closest&&(t.closest('#go')||t.closest('#nohand')))}
+function onFirstInteraction(e){
+  if(firstInteractionDone)return;
+  firstInteractionDone=true;
+  // 立即啟動語音辨識 — 用戶在 intro 播放中也能呼叫「島語」打斷
+  startRecognition();
+  // 直接按啟動按鈕 → 跳過 intro 由 startCam 接手
+  if(e&&isStartButton(e.target))return;
+  // 否則平行播放歡迎詞
+  playIntro();
+}
+document.addEventListener('click',onFirstInteraction,{capture:true});
+document.addEventListener('keydown',onFirstInteraction,{capture:true});
+
+// 包裝 renderAi:當資訊卡有新敘事時,如果語音模式開著就主動朗讀
+var origRenderAi=renderAi;
+renderAi=function(idx){
+  origRenderAi(idx);
+  var r=aiCache[idx];
+  if(voiceMode&&r&&!r.pending&&!r.error&&r.narrative){
+    setTimeout(function(){speak(r.narrative)},400);
+  }
+};
+
+// =========================================================
+// 💬 對話面板 — 與島語進行 KB 對話
+// =========================================================
+var SESSION_ID=localStorage.getItem('mythos_session_id');
+if(!SESSION_ID){SESSION_ID='s_'+Date.now()+'_'+Math.random().toString(36).slice(2,8);localStorage.setItem('mythos_session_id',SESSION_ID)}
+var chatBusy=false;
+
+function currentEraText(){
+  if(S.node<0)return '(尚未選擇)';
+  var d=DATA[S.node];return d.era+' '+d.name;
+}
+
+function appendMsg(role,text,extraClass){
+  var log=document.getElementById('chat-log');
+  var div=document.createElement('div');
+  div.className='msg '+role+(extraClass?' '+extraClass:'');
+  div.textContent=text;
+  log.appendChild(div);
+  log.scrollTop=log.scrollHeight;
+  return div;
+}
+
+async function sendChat(message){
+  if(chatBusy||!message.trim())return;
+  chatBusy=true;
+  appendMsg('user',message);
+  document.getElementById('chat-input').value='';
+  var era=currentEraText();
+  // ☁️ 寫入使用者訊息
+  fbCall(function(fb){return fb.saveMessage(SESSION_ID,'user',message,era)});
+
+  var thinkingEl=appendMsg('guide','思考中',' thinking');
+  document.getElementById('chat-status').textContent='島語在思考…';
+  try{
+    var res=await fetch(MYTHOS_URL+'/chat',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        session_id:SESSION_ID,
+        nickname:nickname||'訪客',
+        message:message,
+        current_era:era
+      })
+    });
+    var data=await res.json();
+    var reply=data.reply||'(我這次沒能回應你)';
+    thinkingEl.classList.remove('thinking');
+    thinkingEl.textContent=reply;
+    document.getElementById('chat-status').textContent='島語說完了 — 你接著回應';
+    // ☁️ 寫入島語回應
+    fbCall(function(fb){return fb.saveMessage(SESSION_ID,'guide',reply,era)});
+    speak(reply);
+  } catch(e){
+    thinkingEl.classList.remove('thinking');
+    thinkingEl.textContent='⚠ 連線出問題,稍後再試。';
+  } finally {
+    chatBusy=false;
+  }
+}
+
+function openChat(){
+  document.body.classList.add('chat-open');
+  var log=document.getElementById('chat-log');
+  if(log.children.length===0){
+    // 第一次開啟 — 島語主動歡迎
+    var greet='你好,'+(nickname||'朋友')+'。'+
+      (S.node>=0?'我們現在停在「'+DATA[S.node].name+'」。':'')+
+      '你想聊聊什麼?或者,讓我先問你一個問題:在這條歷史長河裡,有哪一個年代讓你最有共鳴?為什麼?';
+    appendMsg('guide',greet);
+    speak(greet);
+    document.getElementById('chat-status').textContent='可以說話或打字回應';
+  }
+  document.getElementById('chat-input').focus();
+}
+function closeChat(){document.body.classList.remove('chat-open');stopSpeak()}
+
+document.getElementById('chat-fab').addEventListener('click',openChat);
+document.getElementById('chat-close').addEventListener('click',closeChat);
+
+// 文字送出
+document.getElementById('chat-send').addEventListener('click',function(){
+  var v=document.getElementById('chat-input').value.trim();
+  if(v)sendChat(v);
+});
+document.getElementById('chat-input').addEventListener('keydown',function(e){
+  if(e.key==='Enter'){var v=this.value.trim();if(v)sendChat(v)}
+});
+
+// 對話面板裡的麥克風按鈕 — 一次性錄音 (按一下開始,再按一下結束送出)
+var chatRecognition=null,chatRecActive=false,chatRecBuffer='';
+document.getElementById('chat-mic').addEventListener('click',function(){
+  var btn=this;
+  if(chatRecActive){
+    // 結束錄音
+    if(chatRecognition){try{chatRecognition.stop()}catch(e){}}
+    chatRecActive=false;btn.classList.remove('recording');
+    document.getElementById('chat-status').textContent='處理中…';
+    if(chatRecBuffer.trim())sendChat(chatRecBuffer.trim());
+    chatRecBuffer='';
+    return;
+  }
+  var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){alert('此瀏覽器不支援語音輸入');return}
+  // 暫停背景監聽 (避免衝突)
+  if(recognition){try{recognition.stop()}catch(e){}}
+  chatRecognition=new SR();
+  chatRecognition.lang='zh-TW';chatRecognition.continuous=true;chatRecognition.interimResults=true;
+  chatRecBuffer='';
+  chatRecognition.onresult=function(ev){
+    var fin='',inter='';
+    for(var i=0;i<ev.results.length;i++){
+      var t=ev.results[i][0].transcript;
+      if(ev.results[i].isFinal)fin+=t;else inter+=t;
+    }
+    chatRecBuffer=fin;
+    document.getElementById('chat-status').textContent='聽到:'+(fin||inter);
+    document.getElementById('chat-status').classList.add('listen');
+  };
+  chatRecognition.onerror=function(){chatRecActive=false;btn.classList.remove('recording')};
+  chatRecognition.onend=function(){
+    if(chatRecActive){try{chatRecognition.start()}catch(e){}}
+    else if(voiceMode){try{recognition.start()}catch(e){}}
+  };
+  try{chatRecognition.start();chatRecActive=true;btn.classList.add('recording');
+    document.getElementById('chat-status').textContent='聽你說 — 再按一次麥克風結束';
+  } catch(e){console.warn(e)}
+});
+
+// 語音指令:「我想聊聊」「想跟你聊」 → 開啟面板
+function tryOpenChatVoice(text){
+  if(/(想|要)(跟你|和你)?(聊聊|聊天|對話|說話)|和你?聊|跟你?聊|聊聊歷史/.test(text)){
+    openChat();
+    return true;
+  }
+  return false;
+}
+
+// 啟動按鈕:必須先取名才能啟動
+function guardedStart(fn){
+  return function(){
+    if(nameStage!=='done'){
+      speak('我們先讓你取個稱呼。你想讓我怎麼叫你?');
+      nameStage='asking';resetSilence();
+      return;
+    }
+    fn();
+  };
+}
+document.getElementById('go').addEventListener('click',guardedStart(startCam));
+document.getElementById('nohand').addEventListener('click',guardedStart(startMouse));
+
+// 打字逃生口
+(function(){
+  var input=document.getElementById('name-input');
+  var btn=document.getElementById('name-submit');
+  function submit(){
+    var v=(input.value||'').trim().slice(0,8);
+    if(v.length<1){input.focus();return}
+    pendingName=v;
+    setNickname(v);
+    document.getElementById('name-typebox').classList.remove('show');
+  }
+  btn.addEventListener('click',submit);
+  input.addEventListener('keydown',function(e){if(e.key==='Enter')submit()});
+})();
+enableMouse();
+addEventListener('keydown',function(e){
+  if(e.key==='ArrowRight')nextN();
+  else if(e.key==='ArrowLeft')prevN();
+  else if(e.key==='Escape')goRiver();
+  else{var k=+e.key;if(k>=1&&k<=NUM_NODES)selectNode(k-1,'right')}
+});
+addEventListener('resize',function(){cam3.aspect=innerWidth/innerHeight;cam3.updateProjectionMatrix();ren.setSize(innerWidth,innerHeight)});
+
+// =========================================================
+// 📱 觸控手勢:swipe 切年代 / 點擊資訊卡放大 / 雙指 pinch 縮放場景
+// =========================================================
+if(IS_TOUCH){
+  var tStart=null,tStartTime=0,pinchStart=null;
+
+  document.addEventListener('touchstart',function(e){
+    if(e.touches.length===1){
+      tStart={x:e.touches[0].clientX,y:e.touches[0].clientY};
+      tStartTime=Date.now();
+    } else if(e.touches.length===2){
+      var dx=e.touches[0].clientX-e.touches[1].clientX;
+      var dy=e.touches[0].clientY-e.touches[1].clientY;
+      pinchStart=Math.hypot(dx,dy);
+    }
+  },{passive:true});
+
+  document.addEventListener('touchmove',function(e){
+    // 雙指捏合 → 縮放場景 (覆蓋掉手勢的 zoom)
+    if(e.touches.length===2&&pinchStart){
+      var dx=e.touches[0].clientX-e.touches[1].clientX;
+      var dy=e.touches[0].clientY-e.touches[1].clientY;
+      var d=Math.hypot(dx,dy);
+      var ratio=d/pinchStart;
+      S.tSc=THREE.MathUtils.clamp(ratio*1,.4,3);
+    }
+  },{passive:true});
+
+  document.addEventListener('touchend',function(e){
+    pinchStart=null;
+    if(!tStart||!document.body.classList.contains('entered'))return;
+    var t=e.changedTouches[0];
+    var dx=t.clientX-tStart.x,dy=t.clientY-tStart.y;
+    var dt=Date.now()-tStartTime;
+    var absX=Math.abs(dx),absY=Math.abs(dy);
+    // 左右 swipe (水平距離 > 60px,且時間 < 800ms,主要為水平方向)
+    if(dt<800&&absX>60&&absX>absY*1.5){
+      if(dx>0)prevN();else nextN();
+    }
+    // 向下 swipe → 回到長河
+    else if(dt<800&&dy>120&&absY>absX*1.5){
+      goRiver();
+    }
+    tStart=null;
+  },{passive:true});
+
+  // 觸控裝置上,點擊資訊卡上的任意處都觸發放大/縮小
+  // (原本的 click 已綁定,但保險加一次)
+}
+})();
+</script>
+</body>
+</html>
