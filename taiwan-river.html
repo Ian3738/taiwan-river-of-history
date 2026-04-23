@@ -634,7 +634,10 @@ var DATA=[
   text:'當 AI 走進教室,人類與機器共同書寫知識。歷史不再只是過去,而是透過開放架構,持續進化的生命體。'}
 ];
 var NUM_NODES=DATA.length;
-var MYTHOS_URL='http://localhost:8000';
+// 自動偵測:本地開發用 localhost,部署站點用 HF Space
+var MYTHOS_URL=(location.hostname==='localhost'||location.hostname==='127.0.0.1')
+  ? 'http://localhost:8000'
+  : 'https://ian3738-island-guide-server.hf.space';
 
 // ------------------------------------------------------------
 // Shape generators (from epic-river-of-time, only the 5 needed)
