@@ -1672,16 +1672,25 @@ function processHands(results){
 async function pf(){if(proc||!mpH||vidEl.readyState<2)return;proc=true;try{await mpH.send({image:vidEl})}catch(e){proc=false}}
 async function startCam(){
   var em=document.getElementById('errmsg');em.style.display='none';
+  // 無論鏡頭是否成功 — 一定要進入網站
+  document.getElementById('start').classList.add('gone');
+  enableMouse();
   try{
     var st=await navigator.mediaDevices.getUserMedia({video:{width:{ideal:640},height:{ideal:480},facingMode:'user'}});
     vidEl.srcObject=st;await vidEl.play();
     mpH=new Hands({locateFile:function(f){return'https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/'+f}});
     mpH.setOptions({maxNumHands:2,modelComplexity:1,minDetectionConfidence:.6,minTrackingConfidence:.5});
     mpH.onResults(processHands);setInterval(pf,50);
-    document.getElementById('start').classList.add('gone');
-  }catch(e){em.textContent='錯誤:'+e.message;em.style.display='block'}
+    document.getElementById('status').textContent='雙手追蹤中';
+    document.getElementById('status').className='on';
+  }catch(e){
+    // 鏡頭失敗 (權限拒絕 / 沒鏡頭) → 自動改用滑鼠/觸控模式,不卡住
+    console.warn('Camera unavailable, falling back to mouse mode:',e.message);
+    document.getElementById('status').textContent='滑鼠/觸控控制';
+    document.getElementById('status').className='on';
+  }
 }
-function startMouse(){document.getElementById('start').classList.add('gone');enableMouse();document.getElementById('status').textContent='滑鼠控制';document.getElementById('status').className='on'}
+function startMouse(){document.getElementById('start').classList.add('gone');enableMouse();document.getElementById('status').textContent='滑鼠/觸控控制';document.getElementById('status').className='on'}
 
 // ============================================================
 // 🎙 島語:語音合成 (TTS) + 對白泡 + 語音辨識 (STT)
