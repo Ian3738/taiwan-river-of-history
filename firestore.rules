@@ -1,0 +1,74 @@
+rules_version = '2';
+
+// ========================================================
+// 台灣歷史長河 · Firestore 安全規則
+// ========================================================
+// 原則:
+// 1. 必須登入(含匿名登入)才能讀寫
+// 2. 使用者「只能」讀寫自己的 users/{uid} 子樹
+// 3. 寫入時做基本欄位/長度檢驗,避免被惡意灌爆資料
+// ========================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---- users/{uid} 與其下所有子集合 ----
+    // 只有「擁有者本人」可以讀寫自己的資料
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create, update: if isOwner(userId)
+        && validProfile(request.resource.data);
+      allow delete: if false; // 永不允許前端刪除整個使用者文件
+
+      // sessions/{sid}
+      match /sessions/{sessionId} {
+        allow read: if isOwner(userId);
+        allow create, update: if isOwner(userId);
+        allow delete: if false;
+
+        // sessions/{sid}/messages/{mid}
+        match /messages/{messageId} {
+          allow read: if isOwner(userId);
+          allow create: if isOwner(userId)
+            && validMessage(request.resource.data);
+          allow update, delete: if false; // 訊息一旦寫入不可改/刪
+        }
+      }
+
+      // eraVisits/{vid}
+      match /eraVisits/{visitId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId)
+          && validEraVisit(request.resource.data);
+        allow update, delete: if false;
+      }
+    }
+
+    // 其他路徑全部禁止
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+
+  // ---- helper functions ----
+  function isOwner(userId) {
+    return request.auth != null && request.auth.uid == userId;
+  }
+
+  function validProfile(data) {
+    return data.nickname is string
+      && data.nickname.size() >= 1
+      && data.nickname.size() <= 20;
+  }
+
+  function validMessage(data) {
+    return data.role in ['user', 'guide']
+      && data.text is string
+      && data.text.size() <= 2000;
+  }
+
+  function validEraVisit(data) {
+    return data.eraName is string
+      && data.eraName.size() <= 100;
+  }
+}
