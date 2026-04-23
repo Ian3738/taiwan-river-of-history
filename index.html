@@ -1443,14 +1443,18 @@ function renderAi(idx){
 }
 
 function callMythos(idx){
-  if(aiCache[idx]&&aiCache[idx].n_loops===nLoops&&!aiCache[idx].error)return;
+  // 已有成功結果 (同一 n_loops) → 不重送
+  if(aiCache[idx]&&!aiCache[idx].pending&&aiCache[idx].n_loops===nLoops&&!aiCache[idx].error)return;
+  // 正在 fetch → 擋重入,避免 Gemini 被轟炸
+  if(aiCache[idx]&&aiCache[idx].pending)return;
   var d=DATA[idx];
   aiCache[idx]={pending:true,n_loops:nLoops};renderAi(idx);
   fetch(MYTHOS_URL+'/narrate',{method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({era:d.era,name:d.name,description:d.text,n_loops:nLoops})
   }).then(function(r){return r.json().then(function(j){if(!r.ok)throw new Error(j.detail||'unknown');return j})})
   .then(function(d){
-    aiCache[idx]={narrative:d.narrative,mythos:d.mythos,gemini_elapsed:d.gemini_elapsed,n_loops:d.mythos.n_loops};
+    // spoken:false — 讓 renderAi 知道這是「新結果」,該念一次
+    aiCache[idx]={narrative:d.narrative,mythos:d.mythos,gemini_elapsed:d.gemini_elapsed,n_loops:d.mythos.n_loops,spoken:false};
     if(S.node===idx)renderAi(idx);
   }).catch(function(e){
     aiCache[idx]={error:'Mythos × Gemini 連線失敗:'+e.message};
@@ -1598,8 +1602,9 @@ function processHands(results){
       // Single-hand pinch = zoom
       S.tSc=THREE.MathUtils.clamp(THREE.MathUtils.mapLinear(pinchDist,.03,.2,.5,2.8),.5,2.8);
     }
-    if(pinching&&!h.pinchPrev&&S.node>=0){
-      // 捏合的「起始」瞬間 → 強制重跑 Mythos
+    if(pinching&&!h.pinchPrev&&S.node>=0&&Date.now()-(window._lastPinchTime||0)>4000){
+      // 捏合的「起始」瞬間 → 強制重跑 Mythos (4 秒冷卻,防止抖動連發)
+      window._lastPinchTime=Date.now();
       aiCache[S.node]=null;callMythos(S.node);anyPinch=true;
     }
     h.pinchPrev=pinching;
@@ -2219,8 +2224,10 @@ var origRenderAi=renderAi;
 renderAi=function(idx){
   origRenderAi(idx);
   var r=aiCache[idx];
-  if(voiceMode&&r&&!r.pending&&!r.error&&r.narrative){
-    setTimeout(function(){speak(r.narrative)},400);
+  // 只有「剛收到新結果」才念一次 — 用 r.spoken 標記避免重複
+  if(voiceMode&&r&&!r.pending&&!r.error&&r.narrative&&!r.spoken){
+    r.spoken=true;
+    setTimeout(function(){if(S.node===idx)speak(r.narrative)},400);
   }
 };
 
