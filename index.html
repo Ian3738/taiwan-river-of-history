@@ -2037,17 +2037,30 @@ function setNickname(name){
   nameStage='done';
   resetSilence();
   document.body.classList.add('named');
+  // 解鎖啟動按鈕 (移除 disabled 屬性,純 CSS 無法覆寫 HTML 原生 disabled)
+  var goBtn=document.getElementById('go');
+  var nohandBtn=document.getElementById('nohand');
+  if(goBtn)goBtn.removeAttribute('disabled');
+  if(nohandBtn)nohandBtn.removeAttribute('disabled');
   // ☁️ 同步到 Firestore
   fbCall(function(fb){return fb.saveProfile(name)});
   fbCall(function(fb){return fb.ensureSession(SESSION_ID)});
   speak('很高興認識你,'+name+'。準備好出發了嗎?說「開始探索」或按下方按鈕,我們一起進入歷史長河。');
 }
 
+function unlockStartButtons(){
+  var goBtn=document.getElementById('go');
+  var nohandBtn=document.getElementById('nohand');
+  if(goBtn)goBtn.removeAttribute('disabled');
+  if(nohandBtn)nohandBtn.removeAttribute('disabled');
+}
 function startNamingFlow(){
-  if(nickname){nameStage='done';document.body.classList.add('named');return} // 老朋友
+  if(nickname){nameStage='done';document.body.classList.add('named');unlockStartButtons();return} // 老朋友
   nameStage='asking';nameAttempts=0;
   resetSilence();
 }
+// 頁面一載入就檢查 — 如果已有 nickname,立即解鎖按鈕
+if(nickname){document.body.classList.add('named');setTimeout(unlockStartButtons,0)}
 
 function askForNameAgain(){
   speak('再說一次你的名字?或者你想用別的稱呼也可以。');
