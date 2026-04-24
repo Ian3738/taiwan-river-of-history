@@ -2012,9 +2012,9 @@ function enableMouse(){
 var vidEl=document.getElementById('vid'),mpH=null,proc=false;
 var hlDots=document.querySelectorAll('.hl'),hrDots=document.querySelectorAll('.hr');
 function ema(p,c,a){return p===null?c:a*c+(1-a)*p}
-function HandState(){this.wx=null;this.wy=null;this.prevWx=null;this.vel=0;this.fingers=[];this.cnt=0;this.open=false;this.fist=false;this.fistFrames=0;this.active=false;this.pinchPrev=false}
+function HandState(){this.wx=null;this.wy=null;this.prevWx=null;this.vel=0;this.fingers=[];this.cnt=0;this.open=false;this.fist=false;this.fistFrames=0;this.active=false;this.pinchPrev=false;this.activeAt=0}
 var H=[new HandState(),new HandState()];
-var swipeLastTime=0,swipeCooldown=900;
+var swipeLastTime=0,swipeCooldown=1500; // 延長到 1.5 秒,避免誤判
 var twoHandPrevDist=null;
 
 // ---- 手勢點擊資訊卡 ----
@@ -2032,8 +2032,11 @@ function setDwellProgress(p){progEl.style.strokeDashoffset=PROG_MAX*(1-p)}
 function processHands(results){
   var hands=results.multiHandLandmarks||[];
   H[0].active=hands.length>=1;H[1].active=hands.length>=2;
-  if(!H[0].active){H[0].wx=H[0].prevWx=null;H[0].vel=0;H[0].fistFrames=0;H[0].pinchPrev=false}
-  if(!H[1].active){H[1].wx=H[1].prevWx=null;H[1].vel=0;H[1].fistFrames=0;H[1].pinchPrev=false;twoHandPrevDist=null}
+  if(!H[0].active){H[0].wx=H[0].prevWx=null;H[0].vel=0;H[0].fistFrames=0;H[0].pinchPrev=false;H[0].activeAt=0}
+  if(!H[1].active){H[1].wx=H[1].prevWx=null;H[1].vel=0;H[1].fistFrames=0;H[1].pinchPrev=false;twoHandPrevDist=null;H[1].activeAt=0}
+  // 手剛從「無」變成「有」 → 記錄時間,進入 1 秒暖機期
+  if(H[0].active&&H[0].activeAt===0)H[0].activeAt=Date.now();
+  if(H[1].active&&H[1].activeAt===0)H[1].activeAt=Date.now();
 
   hlDots.forEach(function(d){d.classList.remove('up')});
   hrDots.forEach(function(d){d.classList.remove('up')});
@@ -2053,32 +2056,30 @@ function processHands(results){
     if(h.prevWx!==null)h.vel=ema(h.vel,h.wx-h.prevWx,.5);
     h.prevWx=h.wx;
 
-    // SWIPE
-    if(h.open&&Math.abs(h.vel)>.011&&(Date.now()-swipeLastTime)>swipeCooldown){
+    // 手剛出現的暖機期 (1 秒內) 不觸發任何會切換年代或重念的手勢
+    var warmed=Date.now()-h.activeAt>1000;
+
+    // SWIPE (只在暖機後)
+    if(warmed&&h.open&&Math.abs(h.vel)>.011&&(Date.now()-swipeLastTime)>swipeCooldown){
       swipeLastTime=Date.now();anySwipe=true;
       if(h.vel>0)prevN();else nextN();
     }
-    // FIST
-    if(h.fist){h.fistFrames++;if(h.fistFrames>=16){goRiver();h.fistFrames=0;anyFist=true}}
+    // FIST (暖機後才能 → 回到長河)
+    if(warmed&&h.fist){h.fistFrames++;if(h.fistFrames>=16){goRiver();h.fistFrames=0;anyFist=true}}
     else h.fistFrames=0;
 
-    // POINT: 只有食指舉起 → 以該手水平速度旋轉中央圖形
+    // POINT: 食指指向旋轉圖形 (不會觸發朗讀,可以不用等暖機)
     var onlyIndex=h.fingers[1]&&!h.fingers[0]&&!h.fingers[2]&&!h.fingers[3]&&!h.fingers[4];
     if(onlyIndex&&S.node>=0&&Math.abs(h.vel)>.002){
       S.spinVel+=h.vel*2.2;anyPoint=true;
     }
 
-    // PINCH: 食指+大拇指捏合 → 觸發 Mythos 重新運算
+    // PINCH: 捏合 — 不再清快取觸發重讀,只用於 zoom
     var pinchDist=Math.sqrt(Math.pow(lm[4].x-lm[8].x,2)+Math.pow(lm[4].y-lm[8].y,2));
     var pinching=pinchDist<.05;
     if(hands.length===1){
-      // Single-hand pinch = zoom
+      // Single-hand pinch = 場景縮放
       S.tSc=THREE.MathUtils.clamp(THREE.MathUtils.mapLinear(pinchDist,.03,.2,.5,2.8),.5,2.8);
-    }
-    if(pinching&&!h.pinchPrev&&S.node>=0&&Date.now()-(window._lastPinchTime||0)>4000){
-      // 捏合的「起始」瞬間 → 強制重跑 Mythos (4 秒冷卻,防止抖動連發)
-      window._lastPinchTime=Date.now();
-      aiCache[S.node]=null;callMythos(S.node);anyPinch=true;
     }
     h.pinchPrev=pinching;
 
@@ -2624,8 +2625,9 @@ function handleVoiceCommand(raw){
     prevN();speak('回到上一個年代。');
   } else if(/回到長河|長河|回首頁/.test(text)){
     goRiver();speak('回到時間長河。');
-  } else if(/暫停|停|閉嘴|安靜/.test(text)){
-    speechSynthesis.cancel();bubbleEl.classList.remove('show');
+  } else if(/停止導覽|不要念了|不要念|停止朗讀|別念了|停下來|暫停|閉嘴|安靜|停止說話/.test(text)){
+    stopSpeak();
+    showBubble('好的,我安靜了。隨時喚我「島語」就回來。',4000);
   } else if(/(你是誰|介紹|你叫|你的名字)/.test(text)){
     speak('我是島語,由 Mythos 模型的潛在空間粒子凝聚而成,負責陪你走過這條歷史長河。');
   } else {
