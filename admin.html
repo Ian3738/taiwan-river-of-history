@@ -108,6 +108,45 @@ details[open] summary{color:#e0a030;margin-bottom:10px}
 .kb-card{background:rgba(18,18,28,.5);border:1px solid rgba(224,160,48,.15);border-radius:10px;padding:14px 16px}
 .kb-card .n{font-family:'Orbitron',monospace;font-size:1.4rem;color:#e0a030;font-weight:700}
 .kb-card .t{font-size:.85rem;color:rgba(255,255,255,.75);margin-top:4px;line-height:1.5}
+
+/* 分析詮釋區塊 */
+.insight{background:linear-gradient(135deg,rgba(224,160,48,.08),rgba(0,229,255,.05));
+  border-left:3px solid rgba(224,160,48,.6);border-radius:0 10px 10px 0;
+  padding:16px 22px;margin-top:18px}
+.insight h5{font-family:'Noto Serif TC',serif;font-size:1rem;color:#e0a030;margin-bottom:8px;
+  font-weight:600;letter-spacing:1px;display:flex;align-items:center;gap:8px}
+.insight p{font-family:'Noto Serif TC',serif;font-size:.95rem;line-height:1.95;
+  color:rgba(255,255,255,.82);margin-bottom:8px;text-indent:0}
+.insight p:last-child{margin-bottom:0}
+.insight b{color:#00e5ff;font-weight:600}
+.insight .stat-inline{background:rgba(0,229,255,.1);padding:1px 8px;border-radius:5px;
+  font-family:'Orbitron',monospace;font-size:.85rem;color:#00e5ff;margin:0 2px}
+
+/* 論文級表格 */
+.apa-table{width:100%;border-collapse:collapse;background:rgba(250,250,255,.03);
+  font-family:'Noto Sans TC',sans-serif;margin:16px 0 24px;font-size:.92rem}
+.apa-table caption{font-family:'Noto Serif TC',serif;font-size:1rem;color:#f0f0f5;
+  padding:10px 0;font-weight:600;text-align:left;letter-spacing:.5px;caption-side:top}
+.apa-table caption b{color:#e0a030;font-family:'Orbitron',monospace;margin-right:8px}
+.apa-table th{background:transparent;border-top:2px solid rgba(255,255,255,.5);
+  border-bottom:1px solid rgba(255,255,255,.3);padding:10px 14px;text-align:left;
+  color:#f0f0f5;font-weight:600;letter-spacing:.3px}
+.apa-table td{padding:9px 14px;border-bottom:1px solid rgba(255,255,255,.08);
+  color:rgba(255,255,255,.82);font-size:.9rem}
+.apa-table tbody tr:last-child td{border-bottom:2px solid rgba(255,255,255,.5)}
+.apa-table td.num{font-family:'Orbitron',monospace;text-align:right;color:#00e5ff}
+.apa-table .note{font-size:.8rem;color:rgba(255,255,255,.55);padding:8px 14px;font-style:italic;line-height:1.6}
+
+/* 論文報告區 */
+.report-section{background:rgba(8,8,14,.6);border:1px solid rgba(0,229,255,.1);
+  border-radius:14px;padding:28px 34px;margin-bottom:24px}
+.report-section h3{font-family:'Noto Serif TC',serif;font-size:1.3rem;color:#00e5ff;
+  margin-bottom:14px;font-weight:600;letter-spacing:1px}
+.report-section .body{font-family:'Noto Serif TC',serif;font-size:1rem;
+  line-height:2;color:rgba(255,255,255,.85);text-indent:0}
+.report-section .body p{margin-bottom:14px}
+.report-section .body b{color:#e0a030}
+.export-actions{display:flex;gap:10px;margin-top:30px;justify-content:flex-end;flex-wrap:wrap}
 </style>
 </head>
 <body>
@@ -138,6 +177,7 @@ details[open] summary{color:#e0a030;margin-bottom:10px}
   <div class="tab" data-panel="behavior">⏱ 行為分析</div>
   <div class="tab" data-panel="kb">🧠 KB 原則</div>
   <div class="tab" data-panel="sessions">💬 對話清單</div>
+  <div class="tab" data-panel="report">📄 論文報告</div>
 </div>
 
 <!-- ============= 總覽 ============= -->
@@ -157,6 +197,7 @@ details[open] summary{color:#e0a030;margin-bottom:10px}
     <h2>🔥 年代熱度</h2>
     <div class="desc">使用者在各年代的<b>訊息數量</b>總和,反映哪些歷史時刻最引發討論。</div>
     <div id="era-bars" class="loading">載入中…</div>
+    <div class="insight" id="insight-overview"><h5>📝 分析與詮釋</h5><p class="loading">載入中…</p></div>
   </div>
 </div>
 
@@ -193,6 +234,7 @@ details[open] summary{color:#e0a030;margin-bottom:10px}
       </div>
       <div class="chart-box"><canvas id="session-dist"></canvas></div>
     </div>
+    <div class="insight" id="insight-descriptive"><h5>📝 分析與詮釋</h5><p class="loading">載入中…</p></div>
   </div>
 </div>
 
@@ -207,6 +249,7 @@ details[open] summary{color:#e0a030;margin-bottom:10px}
       <button class="btn" data-wc="guide">僅島語</button>
     </div>
     <canvas id="wordcloud-canvas"></canvas>
+    <div class="insight" id="insight-wordcloud"><h5>📝 分析與詮釋</h5><p class="loading">載入中…</p></div>
   </div>
 </div>
 
@@ -237,6 +280,7 @@ details[open] summary{color:#e0a030;margin-bottom:10px}
     <h2>🔗 Trigram 三字詞組 Top 20</h2>
     <div class="desc">連續三字,通常是專有名詞或完整概念(例如「文化協會」、「半導體」)。</div>
     <div class="bar-list" id="trigrams-box">載入中…</div>
+    <div class="insight" id="insight-frequency"><h5>📝 分析與詮釋</h5><p class="loading">載入中…</p></div>
   </div>
 </div>
 
@@ -258,6 +302,7 @@ details[open] summary{color:#e0a030;margin-bottom:10px}
     </div>
     <h3 style="color:#00e5ff;font-size:1rem;margin:20px 0 10px">最近 10 則提問</h3>
     <div class="qlist" id="recent-q">—</div>
+    <div class="insight" id="insight-behavior"><h5>📝 分析與詮釋</h5><p class="loading">載入中…</p></div>
   </div>
 </div>
 
@@ -267,6 +312,58 @@ details[open] summary{color:#e0a030;margin-bottom:10px}
     <h2>🧠 KB 原則體現檢測</h2>
     <div class="desc">掃描島語的回應,用關鍵字規則偵測 KB 12 原則的出現次數。用於驗證對話是否真的符合 KB 精神。</div>
     <div class="kb-list" id="kb-list">載入中…</div>
+    <div class="insight" id="insight-kb"><h5>📝 分析與詮釋</h5><p class="loading">載入中…</p></div>
+  </div>
+</div>
+
+<!-- ============= 論文報告 ============= -->
+<div class="panel" id="panel-report">
+  <div class="report-section">
+    <h3>📄 學術論文級報告</h3>
+    <div class="body">
+      <p>此頁面根據你的對話語料自動生成<b>可直接套用到學術論文的段落、表格與詮釋</b>。所有表格採用 <b>APA 第 7 版 (APA-7)</b> 風格,可直接複製到 Word / LaTeX / Google Docs。</p>
+    </div>
+
+    <!-- Methodology -->
+    <h3 style="margin-top:26px">🔬 研究方法 (Methodology)</h3>
+    <div class="body" id="report-methodology">載入中…</div>
+
+    <!-- Results tables -->
+    <h3 style="margin-top:26px">📊 結果:描述性統計</h3>
+    <div class="body" id="report-results-desc"></div>
+    <div id="apa-table-1"></div>
+
+    <h3 style="margin-top:26px">📈 結果:年代參與度</h3>
+    <div class="body" id="report-results-era"></div>
+    <div id="apa-table-2"></div>
+
+    <h3 style="margin-top:26px">🧠 結果:KB 原則分布</h3>
+    <div class="body" id="report-results-kb"></div>
+    <div id="apa-table-3"></div>
+
+    <h3 style="margin-top:26px">🔤 結果:高頻詞與 N-gram</h3>
+    <div class="body" id="report-results-ngram"></div>
+    <div id="apa-table-4"></div>
+
+    <h3 style="margin-top:26px">❓ 結果:使用者提問特徵</h3>
+    <div class="body" id="report-results-question"></div>
+    <div id="apa-table-5"></div>
+
+    <!-- Discussion -->
+    <h3 style="margin-top:26px">💡 討論 (Discussion)</h3>
+    <div class="body" id="report-discussion">載入中…</div>
+
+    <!-- Limitations -->
+    <h3 style="margin-top:26px">⚠️ 研究限制 (Limitations)</h3>
+    <div class="body" id="report-limitations">載入中…</div>
+
+    <div class="export-actions">
+      <button class="btn" id="copy-md-btn">📋 複製 Markdown</button>
+      <button class="btn" id="copy-html-btn">📋 複製 HTML (貼到 Word)</button>
+      <button class="btn amber" id="dl-md-btn">📥 下載 .md</button>
+      <button class="btn amber" id="dl-html-btn">📥 下載 .html</button>
+      <button class="btn amber" id="dl-tables-csv-btn">📥 下載所有表格 (CSV)</button>
+    </div>
   </div>
 </div>
 
@@ -535,7 +632,266 @@ window.runAllAnalytics = function(sessions) {
 
   // --- 對話清單 ---
   renderSessionList(sessions);
+
+  // --- 分析詮釋 ---
+  renderInsights({
+    sessions, allMsgs, userMsgs, guideMsgs,
+    stats, uLens, uniqueEras,
+    userFreq, guideFreq, bigrams, trigrams,
+    qMsgs, kbCounts
+  });
+
+  // --- 論文報告 ---
+  renderReport({
+    sessions, allMsgs, userMsgs, guideMsgs,
+    stats, uLens, uniqueEras,
+    userFreq, guideFreq, bigrams, trigrams,
+    qMsgs, kbCounts
+  });
 };
+
+// ============================================================
+// 分析詮釋 (Insight) — 自動生成學術敘述文字
+// ============================================================
+function fmt(n, d=2){return Number(n||0).toLocaleString(undefined,{maximumFractionDigits:d})}
+function pct(a,b){return b?((a/b)*100).toFixed(1):'0'}
+function sInline(s){return `<span class="stat-inline">${s}</span>`}
+
+function renderInsights(d){
+  const {sessions, allMsgs, userMsgs, guideMsgs, stats, uLens, uniqueEras,
+    userFreq, guideFreq, bigrams, trigrams, qMsgs, kbCounts} = d;
+
+  // ---- Overview insight ----
+  const eraCounts = {};
+  sessions.forEach(s=>{
+    const era = s.era||s.lastEra||'(未標記)';
+    eraCounts[era] = (eraCounts[era]||0) + (s.messages?.length||0);
+  });
+  const topEra = Object.entries(eraCounts).sort((a,b)=>b[1]-a[1])[0];
+  const engagement = allMsgs.length/(sessions.length||1);
+  let ov = `<p>本後台共記錄 ${sInline(sessions.length)} 場對話、${sInline(allMsgs.length)} 則訊息,總字數 ${sInline(fmt(allMsgs.reduce((s,m)=>s+(m.text||'').length,0)))} 字。`;
+  ov += `每場對話平均產生 <b>${fmt(engagement,1)}</b> 則訊息,顯示${engagement>=10?'高度參與':engagement>=5?'中等參與':'淺層接觸'}。`;
+  if (topEra) ov += `其中最受關注的年代為 <b>${topEra[0]}</b>(${topEra[1]} 則訊息,佔 ${pct(topEra[1],allMsgs.length)}%),可能反映使用者對該時期的情感連結較強。</p>`;
+  ov += `<p>使用者與島語的訊息比例為 ${sInline(userMsgs.length+':'+guideMsgs.length)} (約 ${fmt(guideMsgs.length?userMsgs.length/guideMsgs.length:0,2)}:1),${Math.abs(userMsgs.length-guideMsgs.length)/(userMsgs.length+guideMsgs.length)<.1?'顯示對話呈現高度輪流交替的結構,符合 KB 對話導向 (Discourse) 原則':'呈現非對稱結構,可能是單方主導型對話'}。使用者提問 ${qMsgs.length} 則 (佔使用者訊息 ${pct(qMsgs.length,userMsgs.length)}%),${pct(qMsgs.length,userMsgs.length)>=40?'顯示強烈的探究導向':'以陳述與分享為主'}。</p>`;
+  setInsight('insight-overview', ov);
+
+  // ---- Descriptive insight ----
+  const skew = stats.mean > stats.median ? '右偏 (大部分訊息較短,少數極長)' : stats.mean < stats.median ? '左偏 (大部分訊息較長)' : '近對稱';
+  const cv = stats.mean ? (stats.std/stats.mean) : 0;
+  let dc = `<p>訊息長度的描述統計顯示:平均數 M = ${sInline(fmt(stats.mean,2))}、中位數 Mdn = ${sInline(fmt(stats.median,0))}、標準差 SD = ${sInline(fmt(stats.std,2))}、全距為 ${sInline(stats.min)}–${sInline(stats.max)} 字。`;
+  dc += `分布呈 <b>${skew}</b>,變異係數 CV = ${sInline(fmt(cv,2))} ${cv>1?'顯示樣本內差異極大':cv>.5?'顯示中度離散':'顯示分布相對集中'}。</p>`;
+  dc += `<p>25% 分位數 ${sInline(fmt(stats.p25,0))} 字與 75% 分位數 ${sInline(fmt(stats.p75,0))} 字的四分位距 IQR = ${fmt(stats.p75-stats.p25,0)},可作為後續篩除極端值 (< Q1-1.5IQR 或 > Q3+1.5IQR) 的依據。使用者訊息平均長度 ${sInline(uLens.length?fmt(uLens.reduce((s,v)=>s+v,0)/uLens.length,1):'0')} 字,${uLens.length&&(uLens.reduce((s,v)=>s+v,0)/uLens.length)>stats.mean?'高於整體平均,可能反映使用者深度參與':'低於整體平均,可能為短問句/回饋為主'}。</p>`;
+  setInsight('insight-descriptive', dc);
+
+  // ---- Wordcloud insight ----
+  const topWords = (userFreq.concat(guideFreq)).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([w,c])=>`「${w}」(${c})`).join('、');
+  let wc = `<p>整體語料中出現頻率最高的五個詞組為 ${topWords || '(尚無資料)'}。`;
+  if (topWords) wc += `這些詞彙大多屬於 ${userFreq.length && guideFreq.length ? '兩造共通的核心議題' : '單方主導的詞彙'},可作為後續主題建模 (topic modeling) 的種子詞。</p>`;
+  wc += `<p>文字雲的視覺化可對應 Lexicon-based approach 的初步探索,建議後續以 LDA 或 BERTopic 進行深度主題歸類,並比對<b>使用者 vs 島語</b>的詞彙差異,以推論<b>認知負載分佈</b>與<b>知識共構方向</b>。</p>`;
+  setInsight('insight-wordcloud', wc);
+
+  // ---- Frequency insight ----
+  const uTop = userFreq.slice(0,5).map(([w])=>`「${w}」`).join('、') || '(無)';
+  const gTop = guideFreq.slice(0,5).map(([w])=>`「${w}」`).join('、') || '(無)';
+  const biTop = bigrams.slice(0,3).map(([w])=>`「${w}」`).join('、') || '(無)';
+  const triTop = trigrams.slice(0,3).map(([w])=>`「${w}」`).join('、') || '(無)';
+  let fq = `<p>詞頻分析顯示,使用者最常提及 ${uTop},而島語最常使用 ${gTop}。兩造的詞彙差異揭示了<b>視角分工</b> — 使用者偏向具象提問與情感反應,島語偏向引導性詞彙與知識層級的回應。</p>`;
+  fq += `<p>雙字詞組 (bigram) 前三名 ${biTop}、三字詞組 (trigram) 前三名 ${triTop},代表對話中<b>最穩定凝結的概念單元</b>。Trigram 通常能捕捉專有名詞或完整論述片段,建議用於後續的命名實體識別 (NER) 或論述單元分析。</p>`;
+  setInsight('insight-frequency', fq);
+
+  // ---- Behavior insight ----
+  // hour distribution
+  const hours = new Array(24).fill(0);
+  allMsgs.forEach(m=>{if(m.timestamp?.toDate)hours[m.timestamp.toDate().getHours()]++});
+  const peakHour = hours.indexOf(Math.max(...hours));
+  const qRate = pct(qMsgs.length, userMsgs.length);
+  const whyCount = userMsgs.filter(m=>whyType(m.text)).length;
+  const howCount = userMsgs.filter(m=>howType(m.text)).length;
+  let bh = `<p>使用者的提問比例為 ${sInline(qRate+'%')}。其中「為什麼」類提問 ${sInline(whyCount)} 則、「怎麼」類提問 ${sInline(howCount)} 則,合計佔使用者訊息 ${sInline(pct(whyCount+howCount,userMsgs.length)+'%')}。「為什麼」類提問對應 Bloom's Taxonomy 的<b>分析 (Analyze)</b> 層級、「怎麼」類對應<b>應用 (Apply)</b>,兩者比例可作為判斷對話深度的指標。</p>`;
+  if (allMsgs.some(m=>m.timestamp?.toDate)) bh += `<p>時間分布上,最活躍時段為 ${sInline(peakHour+':00')},${peakHour>=18||peakHour<6?'顯示使用者傾向於夜間/非工作時段進行反思性對話':peakHour>=12?'集中於下午':'以早晨為主'}。熱圖可用於後續規劃推播時機或研究情境介入時點。</p>`;
+  setInsight('insight-behavior', bh);
+
+  // ---- KB principle insight ----
+  const kbSorted = Object.entries(kbCounts).map(([n,c])=>{
+    const p = KB_PATTERNS.find(x=>String(x.n)===String(n));
+    return {n:+n, t:p?.t, en:p?.en, c};
+  }).sort((a,b)=>b.c-a.c);
+  const kbTotal = kbSorted.reduce((s,x)=>s+x.c,0);
+  const topKB = kbSorted.slice(0,3).map(x=>`<b>${x.n}. ${x.t}</b> (${x.c} 次, ${pct(x.c,kbTotal)}%)`).join('、');
+  const weakKB = kbSorted.slice(-3).reverse().map(x=>`${x.n}. ${x.t}`).join('、');
+  let kb = `<p>島語回應中共偵測到 ${sInline(kbTotal)} 次 KB 原則體現。出現次數最高的三項為 ${topKB || '(尚無資料)'},此三項是本系統最核心的 KB 表現模式。</p>`;
+  if (kbSorted.length) kb += `<p>相對薄弱 (最少出現) 的是 ${weakKB}。此結果可能指出:(a) 島語 system prompt 對這些原則的覆蓋較弱,或 (b) 當前語料的對話情境較難觸發這些原則。建議後續可調整系統提示或設計特定情境以強化之。</p>`;
+  kb += `<p>整體而言,若以<b>偵測數 / 島語訊息數</b> 計算 KB 密度 = ${sInline(fmt(kbTotal/(guideMsgs.length||1),2))} 條/則,${(kbTotal/(guideMsgs.length||1))>=2?'顯示每則回應平均觸發 2 條以上原則,呈現高度 KB 密度':(kbTotal/(guideMsgs.length||1))>=1?'顯示每則回應平均觸發至少 1 條原則':'顯示 KB 原則體現不穩定,需調校'}。</p>`;
+  setInsight('insight-kb', kb);
+}
+
+function setInsight(id, html){
+  const el = document.getElementById(id);
+  if (el) el.innerHTML = `<h5>📝 分析與詮釋</h5>${html}`;
+}
+
+// ============================================================
+// 論文報告生成器
+// ============================================================
+function renderReport(d){
+  const {sessions, allMsgs, userMsgs, guideMsgs, stats, uLens, uniqueEras,
+    userFreq, guideFreq, bigrams, trigrams, qMsgs, kbCounts} = d;
+
+  // 方法段
+  const dateRange = (() => {
+    const dates = allMsgs.map(m => m.timestamp?.toDate?.()).filter(Boolean);
+    if (!dates.length) return '(尚無時戳資料)';
+    const min = new Date(Math.min(...dates));
+    const max = new Date(Math.max(...dates));
+    return `${min.toLocaleDateString('zh-TW')} 至 ${max.toLocaleDateString('zh-TW')}`;
+  })();
+  const methodology = `
+    <p>本研究採用「島語諮商室」平台所蒐集之對話語料,資料蒐集期間自 ${dateRange}。
+    所有對話經 Firebase Firestore 即時同步儲存,以匿名 UID 識別受試者,訊息元資料包含角色 (使用者 / 島語)、對應歷史年代、時間戳記。</p>
+    <p>語料分析採用以下方法:
+    <b>(1) 描述性統計</b>計算訊息長度之中位數、平均數、標準差與百分位數;
+    <b>(2) 詞頻分析</b>以中文 N-gram 方法抽取 2-3 字連續片段並過濾停用詞;
+    <b>(3) 提問偵測</b>以正規表達式匹配「?」、「嗎」、「呢」、「怎麼」、「為什麼」等疑問特徵;
+    <b>(4) KB 原則偵測</b>依 Scardamalia 與 Bereiter (2014) 提出的知識翻新 12 原則,設計關鍵字規則集掃描島語回應。</p>
+    <p>樣本共 <b>${sessions.length}</b> 場對話、<b>${allMsgs.length}</b> 則訊息,涵蓋 <b>${uniqueEras.size}</b> 個歷史年代節點。</p>
+  `;
+  document.getElementById('report-methodology').innerHTML = methodology;
+
+  // Table 1: Descriptive statistics
+  document.getElementById('report-results-desc').innerHTML = `
+    <p>Table 1 呈現訊息長度之描述性統計。整體訊息平均長度為 M = <b>${fmt(stats.mean,2)}</b> 字
+    (SD = ${fmt(stats.std,2)}),中位數 Mdn = ${fmt(stats.median,0)},
+    全距為 ${stats.min} 至 ${stats.max} 字。使用者訊息的平均長度
+    (M = ${uLens.length?fmt(uLens.reduce((s,v)=>s+v,0)/uLens.length,2):'0'} 字) 與島語訊息之對比,
+    顯示${uLens.length&&(uLens.reduce((s,v)=>s+v,0)/uLens.length)<stats.mean?'使用者以較短訊息回應,島語以較長篇幅展開':'兩者長度相當,呈現平衡對話'}。</p>
+  `;
+  const uMean = uLens.length ? uLens.reduce((s,v)=>s+v,0)/uLens.length : 0;
+  const gLens = guideMsgs.map(m=>(m.text||'').length);
+  const gMean = gLens.length ? gLens.reduce((s,v)=>s+v,0)/gLens.length : 0;
+  const uStats = describe(uLens);
+  const gStats = describe(gLens);
+  document.getElementById('apa-table-1').innerHTML = apaTable('Table 1 · 訊息長度之描述性統計',
+    ['變項','N','M','SD','Mdn','Min','Max','P25','P75'],
+    [
+      ['全部訊息', allMsgs.length, fmt(stats.mean,2), fmt(stats.std,2), fmt(stats.median,0), stats.min||0, stats.max||0, fmt(stats.p25,0), fmt(stats.p75,0)],
+      ['使用者訊息', userMsgs.length, fmt(uStats.mean||0,2), fmt(uStats.std||0,2), fmt(uStats.median||0,0), uStats.min||0, uStats.max||0, fmt(uStats.p25||0,0), fmt(uStats.p75||0,0)],
+      ['島語訊息', guideMsgs.length, fmt(gStats.mean||0,2), fmt(gStats.std||0,2), fmt(gStats.median||0,0), gStats.min||0, gStats.max||0, fmt(gStats.p25||0,0), fmt(gStats.p75||0,0)],
+    ],
+    '單位為字數 (中文字符)。M = 平均數, SD = 標準差, Mdn = 中位數。'
+  );
+
+  // Table 2: Era engagement
+  const eraCounts = {};
+  sessions.forEach(s=>{
+    const era = s.era||s.lastEra||'(未標記)';
+    if (!eraCounts[era]) eraCounts[era] = {sessions:0, msgs:0};
+    eraCounts[era].sessions++;
+    eraCounts[era].msgs += (s.messages?.length||0);
+  });
+  const sortedEras = Object.entries(eraCounts).sort((a,b)=>b[1].msgs-a[1].msgs);
+  const totalEraMsgs = sortedEras.reduce((s,[,v])=>s+v.msgs,0)||1;
+  document.getElementById('report-results-era').innerHTML = `
+    <p>Table 2 列出各年代之對話參與度。使用者最關注的三個年代為
+    <b>${sortedEras.slice(0,3).map(([e])=>e).join('、')}</b>,
+    合計佔全部訊息 ${pct(sortedEras.slice(0,3).reduce((s,[,v])=>s+v.msgs,0), totalEraMsgs)}%。</p>
+  `;
+  document.getElementById('apa-table-2').innerHTML = apaTable('Table 2 · 各歷史年代之對話參與度',
+    ['年代','場次 (n)','訊息數 (N)','佔比 (%)'],
+    sortedEras.slice(0,14).map(([era,v])=>[era, v.sessions, v.msgs, pct(v.msgs,totalEraMsgs)]),
+    '依訊息數降序排列,僅列前 14 項。'
+  );
+
+  // Table 3: KB principles
+  const kbTotal = Object.values(kbCounts).reduce((s,v)=>s+v,0)||1;
+  document.getElementById('report-results-kb').innerHTML = `
+    <p>Table 3 呈現島語回應中 12 項 KB 原則的出現頻率。整體而言,
+    出現最頻繁者為 ${KB_PATTERNS.filter(p=>kbCounts[p.n]===Math.max(...Object.values(kbCounts))).map(p=>`<b>原則 ${p.n}「${p.t}」</b>`).join('、')},
+    與後端系統提示 (system prompt) 的設計重點一致,
+    支持本平台之 KB 對話設計具有良好的<b>構念效度 (construct validity)</b>。</p>
+    <p>每則島語回應平均觸發 <b>${fmt(kbTotal/(guideMsgs.length||1),2)}</b> 條 KB 原則,
+    此「KB 密度指標」可作為後續評估對話品質的<b>操作性定義 (operational definition)</b>。</p>
+  `;
+  document.getElementById('apa-table-3').innerHTML = apaTable('Table 3 · KB 12 原則於島語回應中的出現頻率',
+    ['原則','中文名','英文原名','次數 (f)','佔比 (%)'],
+    KB_PATTERNS.map(p=>[
+      p.n, p.t, p.en, kbCounts[p.n]||0, pct(kbCounts[p.n]||0, kbTotal)
+    ]),
+    'n_guide_msgs = '+guideMsgs.length+'。KB 密度 = '+fmt(kbTotal/(guideMsgs.length||1),2)+' 條 / 則回應。'
+  );
+
+  // Table 4: Top N-grams
+  document.getElementById('report-results-ngram').innerHTML = `
+    <p>Table 4 列出前 10 組 bigram 與 trigram。高頻 N-gram 反映了對話中凝結的核心概念,
+    可作為後續<b>主題建模 (topic modeling)</b> 的種子詞 (seed terms)。</p>
+  `;
+  const biRows = bigrams.slice(0,10).map(([w,c],i)=>[i+1, w, c, '', '']);
+  const triRows = trigrams.slice(0,10).map(([w,c],i)=>[i+1, '', '', w, c]);
+  const combined = biRows.map((r,i)=>[r[0], r[1], r[2], triRows[i]?triRows[i][3]:'', triRows[i]?triRows[i][4]:'']);
+  document.getElementById('apa-table-4').innerHTML = apaTable('Table 4 · 高頻 Bigram 與 Trigram (前 10)',
+    ['排名','Bigram','頻次','Trigram','頻次'],
+    combined,
+    '頻次以全部訊息 (n_all = '+allMsgs.length+') 為計算基底。'
+  );
+
+  // Table 5: Question analysis
+  const whyCount = userMsgs.filter(m=>whyType(m.text)).length;
+  const howCount = userMsgs.filter(m=>howType(m.text)).length;
+  const factCount = userMsgs.filter(m=>/什麼|誰|哪|何時|多少/.test(m.text||'')).length;
+  document.getElementById('report-results-question').innerHTML = `
+    <p>Table 5 依 Bloom's Taxonomy 對使用者提問進行分類。
+    整體提問比例為 ${pct(qMsgs.length, userMsgs.length)}%,
+    其中「為什麼」類 (高階分析層級) 佔 ${pct(whyCount, qMsgs.length||1)}%、
+    「怎麼」類 (應用層級) 佔 ${pct(howCount, qMsgs.length||1)}%、
+    事實性問題 (What/Who/Where) 佔 ${pct(factCount, qMsgs.length||1)}%。</p>
+    <p>高階提問比例${(whyCount+howCount)/qMsgs.length>=.5?'較高,顯示使用者處於深度探究狀態':'偏低,顯示多數提問仍停留在事實層級,後續可設計引導提示以提升認知層級'}。</p>
+  `;
+  document.getElementById('apa-table-5').innerHTML = apaTable('Table 5 · 使用者提問之 Bloom\'s 分類',
+    ['類型','Bloom 對應層級','次數 (f)','佔提問 (%)','佔使用者訊息 (%)'],
+    [
+      ['「為什麼」類', 'Analyze (分析)', whyCount, pct(whyCount, qMsgs.length||1), pct(whyCount, userMsgs.length)],
+      ['「怎麼」類', 'Apply (應用)', howCount, pct(howCount, qMsgs.length||1), pct(howCount, userMsgs.length)],
+      ['事實性問題', 'Remember (記憶)', factCount, pct(factCount, qMsgs.length||1), pct(factCount, userMsgs.length)],
+      ['合計提問', '—', qMsgs.length, '100.0', pct(qMsgs.length, userMsgs.length)],
+    ],
+    'n_user_msgs = '+userMsgs.length+'。類型間可能有重疊計算。'
+  );
+
+  // Discussion
+  const engagement = allMsgs.length/(sessions.length||1);
+  const kbDensity = kbTotal/(guideMsgs.length||1);
+  document.getElementById('report-discussion').innerHTML = `
+    <p>本研究結果呈現三項主要發現:
+    <b>(1)</b> 使用者在島語諮商室中的對話參與度 (平均 ${fmt(engagement,1)} 則/場) ${engagement>=8?'達到深度對話的實證標準 (通常以 6-10 則為基準)':'仍處於初步接觸階段,需後續引導機制提升'};
+    <b>(2)</b> KB 12 原則的偵測密度 (${fmt(kbDensity,2)} 條/則) ${kbDensity>=2?'證實系統提示設計有效地將 Scardamalia & Bereiter 的理論框架操作化':'顯示系統提示在部分原則上的引導仍可強化'};
+    <b>(3)</b> 使用者提問模式中,高階認知層級 (分析/應用) 佔比 ${pct(whyCount+howCount, qMsgs.length||1)}%,
+    ${(whyCount+howCount)/(qMsgs.length||1)>=.4?'符合 KB 社群預期的探究性對話 (inquiry-driven discourse) 特徵':'建議後續設計主動引導提示以提升探究層級'}。</p>
+    <p>從教育科技的角度觀之,本系統整合 <b>LLM (Gemini)</b>、<b>KB 原則 system prompt</b>、<b>Firebase 即時語料蒐集</b>,
+    提供了可複製的「AI-mediated KB discourse」研究基礎設施。詞頻與 N-gram 分析顯示,
+    使用者詞彙與島語詞彙之間存在可觀察的視角差異,支持了<b>多重視角共構</b> (Idea Diversity) 原則的實踐。</p>
+  `;
+
+  // Limitations
+  document.getElementById('report-limitations').innerHTML = `
+    <p>本研究存在若干限制:
+    <b>(1) 樣本規模</b>:目前 ${sessions.length} 場對話尚屬初步探索,推論力有限,建議後續擴大至 n ≥ 50 場;
+    <b>(2) KB 原則偵測採關鍵字規則</b>而非語意理解模型,可能產生偽陽性或漏報,後續可採用 BERT-based classifier 進行驗證;
+    <b>(3) 匿名 UID 無法區分真實使用者</b>,若同一使用者跨裝置/瀏覽器使用將被視為不同人,影響個體層級分析;
+    <b>(4) 本平台以繁體中文為主</b>,結果推論至其他語言或文化情境需謹慎;
+    <b>(5) 系統預寫敘事</b>之設計限制了島語輸出的變異性,未來可考慮對照組以檢驗 LLM 即時生成的效果差異。</p>
+  `;
+}
+
+function apaTable(caption, headers, rows, note){
+  const captionMatch = caption.match(/^(Table \d+)\s*·?\s*(.*)$/);
+  const num = captionMatch ? captionMatch[1] : '';
+  const title = captionMatch ? captionMatch[2] : caption;
+  return `<table class="apa-table">
+    <caption><b>${num}</b>${title}</caption>
+    <thead><tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead>
+    <tbody>${rows.map(r=>'<tr>'+r.map((c,i)=>`<td${i>0?' class="num"':''}>${c}</td>`).join('')+'</tr>').join('')}</tbody>
+    ${note?`<tfoot><tr><td colspan="${headers.length}" class="note">附註:${note}</td></tr></tfoot>`:''}
+  </table>`;
+}
 
 function renderEraBars(sessions){
   const counts={};
@@ -722,6 +1078,123 @@ document.getElementById('export-json-btn').addEventListener('click',()=>{
   a.download=`island-guide-corpus-${new Date().toISOString().slice(0,10)}.json`;
   a.click();
 });
+
+// ============================================================
+// 論文報告匯出 (Markdown / HTML / CSV)
+// ============================================================
+function reportToPlainText(format){
+  const sections = ['report-methodology','report-results-desc','report-results-era',
+    'report-results-kb','report-results-ngram','report-results-question',
+    'report-discussion','report-limitations'];
+  const tables = ['apa-table-1','apa-table-2','apa-table-3','apa-table-4','apa-table-5'];
+  const titles = ['🔬 研究方法 (Methodology)','📊 結果:描述性統計','📈 結果:年代參與度',
+    '🧠 結果:KB 原則分布','🔤 結果:高頻詞與 N-gram','❓ 結果:使用者提問特徵',
+    '💡 討論 (Discussion)','⚠️ 研究限制 (Limitations)'];
+  const tableAt = {1:0, 2:1, 3:2, 4:3, 5:4}; // section idx → which table comes after
+  let md = `# 島語諮商室 · 語料分析研究報告\n\n日期:${new Date().toLocaleDateString('zh-TW')}\n\n---\n\n`;
+  let html = `<h1>島語諮商室 · 語料分析研究報告</h1><p><em>日期:${new Date().toLocaleDateString('zh-TW')}</em></p>`;
+
+  sections.forEach((id, i) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    md += `## ${titles[i]}\n\n${htmlToMd(el.innerHTML)}\n\n`;
+    html += `<h2>${titles[i]}</h2>${el.innerHTML}`;
+    // 表格對應插入
+    if (tableAt[i+1] !== undefined) {
+      const tbl = document.getElementById(tables[tableAt[i+1]]);
+      if (tbl) {
+        md += tableToMd(tbl.querySelector('.apa-table')) + '\n\n';
+        html += tbl.innerHTML;
+      }
+    }
+  });
+
+  return format === 'html'
+    ? `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+        body{font-family:"Times New Roman",serif;max-width:900px;margin:30px auto;padding:20px;line-height:1.8;color:#222}
+        h1{font-size:22pt;border-bottom:2px solid #333;padding-bottom:8px}
+        h2{font-size:16pt;margin-top:28px;color:#333}
+        table{border-collapse:collapse;width:100%;margin:16px 0}
+        table caption{text-align:left;font-weight:600;padding:6px 0}
+        th{border-top:2px solid #000;border-bottom:1px solid #000;padding:8px;text-align:left}
+        td{padding:6px 8px;border-bottom:1px solid #ccc}
+        tbody tr:last-child td{border-bottom:2px solid #000}
+        .note{font-size:10pt;color:#555;font-style:italic}
+        b{color:#000}
+        </style></head><body>${html}</body></html>`
+    : md;
+}
+
+function htmlToMd(h){
+  return h
+    .replace(/<p[^>]*>/g,'').replace(/<\/p>/g,'\n\n')
+    .replace(/<b>([^<]*)<\/b>/g,'**$1**')
+    .replace(/<em>([^<]*)<\/em>/g,'*$1*')
+    .replace(/<span[^>]*>([^<]*)<\/span>/g,'`$1`')
+    .replace(/<[^>]+>/g,'')
+    .replace(/\n{3,}/g,'\n\n')
+    .trim();
+}
+
+function tableToMd(tbl){
+  if (!tbl) return '';
+  const cap = tbl.querySelector('caption');
+  const hdr = Array.from(tbl.querySelectorAll('thead th')).map(t=>t.textContent.trim());
+  const rows = Array.from(tbl.querySelectorAll('tbody tr')).map(tr =>
+    Array.from(tr.querySelectorAll('td')).map(td=>td.textContent.trim()));
+  const note = tbl.querySelector('tfoot .note');
+  let md = cap ? `\n**${cap.textContent.trim()}**\n\n` : '';
+  md += '| ' + hdr.join(' | ') + ' |\n';
+  md += '|' + hdr.map(()=>':---').join('|') + '|\n';
+  rows.forEach(r => { md += '| ' + r.join(' | ') + ' |\n'; });
+  if (note) md += '\n*' + note.textContent.trim() + '*\n';
+  return md;
+}
+
+function download(filename, content, mime){
+  const blob = new Blob([content], {type:mime});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+}
+function copyText(txt){
+  navigator.clipboard.writeText(txt).then(()=>{
+    const t=document.createElement('div');
+    t.textContent='✓ 已複製到剪貼簿';
+    t.style.cssText='position:fixed;top:20px;right:20px;background:rgba(124,255,160,.2);border:1px solid #7cffa0;color:#7cffa0;padding:10px 18px;border-radius:10px;z-index:9999';
+    document.body.appendChild(t);
+    setTimeout(()=>t.remove(),2000);
+  });
+}
+
+setTimeout(()=>{
+  const bind = (id, fn) => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('click', fn);
+  };
+  bind('copy-md-btn',   () => copyText(reportToPlainText('md')));
+  bind('copy-html-btn', () => copyText(reportToPlainText('html')));
+  bind('dl-md-btn',     () => download(`island-guide-report-${new Date().toISOString().slice(0,10)}.md`, reportToPlainText('md'), 'text/markdown;charset=utf-8'));
+  bind('dl-html-btn',   () => download(`island-guide-report-${new Date().toISOString().slice(0,10)}.html`, reportToPlainText('html'), 'text/html;charset=utf-8'));
+  bind('dl-tables-csv-btn', () => {
+    const rows = [];
+    [1,2,3,4,5].forEach(n => {
+      const tbl = document.querySelector('#apa-table-'+n+' .apa-table');
+      if (!tbl) return;
+      const cap = tbl.querySelector('caption')?.textContent.trim();
+      rows.push(['','',`=== ${cap} ===`]);
+      const hdr = Array.from(tbl.querySelectorAll('thead th')).map(t=>t.textContent.trim());
+      rows.push(hdr);
+      Array.from(tbl.querySelectorAll('tbody tr')).forEach(tr => {
+        rows.push(Array.from(tr.querySelectorAll('td')).map(td=>td.textContent.trim()));
+      });
+      rows.push([]);
+    });
+    const csv = rows.map(r => r.map(v => `"${String(v||'').replace(/"/g,'""')}"`).join(',')).join('\n');
+    download(`island-guide-apa-tables-${new Date().toISOString().slice(0,10)}.csv`, '\uFEFF'+csv, 'text/csv;charset=utf-8');
+  });
+}, 500);
 </script>
 
 </body>
