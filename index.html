@@ -2629,15 +2629,53 @@ function handleVoiceCommand(raw){
     stopSpeak();
     showBubble('好的,我安靜了。隨時喚我「島語」就回來。',4000);
   } else if(/(你是誰|介紹|你叫|你的名字)/.test(text)){
-    speak('我是島語,由 Mythos 模型的潛在空間粒子凝聚而成,負責陪你走過這條歷史長河。');
+    speak('我是島語,專注於台灣歷史的 AI 對話夥伴。我可以帶你穿越六千年的台灣記憶,從南島語族到 AI 時代。');
   } else {
-    // 嘗試豐富的年代關鍵字
+    // 先嘗試年代關鍵字
     var hit=matchEra(text);
     if(hit>=0){
       selectNode(hit,'right');
       speak(DATA[hit].era+',「'+DATA[hit].name+'」。');
-      setAwake(true); // 延長 awake 視窗,方便繼續下指令
+      setAwake(true);
+      return;
     }
+    // 沒有年代命中 → 交給 Gemini 用 KB 風格自然回應
+    if(text.length>=2){
+      askIslandGuide(text);
+      setAwake(true);
+    }
+  }
+}
+
+// 醒著時,任何話都能送到 Gemini chat 取得自然回應
+var _chatBusy=false;
+async function askIslandGuide(userText){
+  if(_chatBusy)return;
+  _chatBusy=true;
+  // 立即顯示「思考中」提示,讓使用者知道有收到
+  showBubble('讓我想想...',2500);
+  try{
+    var era = S.node>=0 ? (DATA[S.node].era+' '+DATA[S.node].name) : '(尚未選擇)';
+    var res=await fetch(MYTHOS_URL+'/chat',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        session_id: SESSION_ID,
+        nickname: nickname||'朋友',
+        message: userText,
+        current_era: era
+      })
+    });
+    var data=await res.json();
+    var reply=(data.reply||'抱歉,我這次沒能回應你。').trim();
+    // 同步寫入 Firestore (如果 Firebase 已連上)
+    fbCall(function(fb){return fb.saveMessage(SESSION_ID,'user',userText,era)});
+    fbCall(function(fb){return fb.saveMessage(SESSION_ID,'guide',reply,era)});
+    speak(reply);
+  } catch(e){
+    console.warn('[askIslandGuide]',e);
+    speak('抱歉,我現在連不上我的思考系統。你可以稍後再問一次。');
+  } finally {
+    _chatBusy=false;
   }
 }
 
