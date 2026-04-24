@@ -3,42 +3,93 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>島語語料後台 · Admin</title>
+<title>島語語料分析後台 · Corpus Analytics</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E📊%3C/text%3E%3C/svg%3E">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&family=Noto+Serif+TC:wght@400;600&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
+
+<!-- 分析庫 (CDN) -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/wordcloud@1.2.2/src/wordcloud2.min.js"></script>
+
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Noto Sans TC',sans-serif;background:#0a0a12;color:#d4d4dc;
   min-height:100vh;padding:24px;line-height:1.6;font-size:15px}
 header{display:flex;justify-content:space-between;align-items:center;
-  border-bottom:1px solid rgba(0,229,255,.15);padding-bottom:20px;margin-bottom:32px}
-h1{font-family:'Noto Serif TC',serif;font-size:1.6rem;color:#00e5ff;letter-spacing:2px}
-.sub{font-size:.75rem;color:rgba(255,255,255,.4);letter-spacing:2px;font-family:'Orbitron',monospace}
+  border-bottom:1px solid rgba(0,229,255,.15);padding-bottom:20px;margin-bottom:32px;flex-wrap:wrap;gap:12px}
+h1{font-family:'Noto Serif TC',serif;font-size:1.7rem;color:#00e5ff;letter-spacing:2px;font-weight:600}
+.sub{font-size:.75rem;color:rgba(255,255,255,.4);letter-spacing:2px;font-family:'Orbitron',monospace;margin-top:4px}
 .auth-status{font-size:.85rem;color:rgba(124,255,160,.8)}
+.nav-actions{display:flex;gap:8px;flex-wrap:wrap}
 
-.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-bottom:32px}
-.card{background:rgba(18,18,28,.7);border:1px solid rgba(0,229,255,.12);border-radius:14px;padding:22px}
-.card .label{font-family:'Orbitron',monospace;font-size:.7rem;letter-spacing:2px;
-  color:rgba(0,229,255,.6);margin-bottom:10px;font-weight:600}
-.card .value{font-family:'Noto Serif TC',serif;font-size:2rem;color:#f0f0f5;font-weight:600;letter-spacing:1px}
-.card .note{font-size:.8rem;color:rgba(255,255,255,.45);margin-top:6px}
+.btn{background:rgba(0,229,255,.12);border:1px solid rgba(0,229,255,.4);color:#00e5ff;
+  padding:8px 18px;border-radius:18px;cursor:pointer;font-family:'Noto Sans TC';font-size:.88rem;letter-spacing:1px;transition:all .2s}
+.btn:hover{background:rgba(0,229,255,.25)}
+.btn.amber{border-color:rgba(224,160,48,.4);color:#e0a030;background:rgba(224,160,48,.1)}
+.btn.amber:hover{background:rgba(224,160,48,.2)}
 
-.section{margin-bottom:40px}
-.section h2{font-family:'Noto Serif TC',serif;font-size:1.25rem;color:#e0a030;margin-bottom:16px;letter-spacing:1.5px}
+/* Tabs */
+.tabs{display:flex;gap:6px;border-bottom:1px solid rgba(0,229,255,.12);margin-bottom:28px;flex-wrap:wrap}
+.tab{padding:10px 20px;cursor:pointer;color:rgba(255,255,255,.55);font-size:.95rem;
+  border-bottom:2px solid transparent;transition:all .2s;letter-spacing:.5px}
+.tab:hover{color:#00e5ff}
+.tab.active{color:#00e5ff;border-bottom-color:#00e5ff;font-weight:600}
 
-table{width:100%;border-collapse:collapse;background:rgba(18,18,28,.5);border-radius:10px;overflow:hidden}
-th{background:rgba(0,229,255,.08);color:#00e5ff;text-align:left;padding:12px 16px;font-size:.85rem;letter-spacing:1px;font-weight:500}
-td{padding:11px 16px;border-top:1px solid rgba(255,255,255,.04);font-size:.92rem}
-tr:hover td{background:rgba(0,229,255,.03)}
-.tag{display:inline-block;padding:2px 8px;border-radius:8px;background:rgba(224,160,48,.15);
-  color:#e0a030;font-size:.7rem;letter-spacing:1px;font-family:'Noto Sans TC',sans-serif}
+.panel{display:none}
+.panel.active{display:block;animation:fadeIn .3s}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 
-.bar-row{display:flex;align-items:center;gap:12px;margin-bottom:10px}
-.bar-row .label{min-width:180px;font-size:.88rem;color:#f0f0f5}
-.bar{flex:1;height:22px;background:rgba(255,255,255,.04);border-radius:4px;overflow:hidden;position:relative}
-.bar-fill{height:100%;background:linear-gradient(90deg,#00e5ff,#e0a030);border-radius:4px;transition:width .6s}
-.bar-row .count{min-width:40px;text-align:right;font-family:'Orbitron',monospace;font-size:.8rem;color:rgba(0,229,255,.85)}
+/* Cards grid */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:28px}
+.card{background:rgba(18,18,28,.7);border:1px solid rgba(0,229,255,.12);border-radius:14px;padding:20px 22px;transition:all .2s}
+.card:hover{border-color:rgba(0,229,255,.3)}
+.card .label{font-family:'Orbitron',monospace;font-size:.68rem;letter-spacing:2px;
+  color:rgba(0,229,255,.65);margin-bottom:10px;font-weight:600}
+.card .value{font-family:'Noto Serif TC',serif;font-size:1.95rem;color:#f0f0f5;font-weight:600;letter-spacing:1px;line-height:1.1}
+.card .note{font-size:.78rem;color:rgba(255,255,255,.45);margin-top:6px;line-height:1.5}
+.card.amber{border-color:rgba(224,160,48,.15)}
+.card.amber .label{color:rgba(224,160,48,.7)}
+.card.amber .value{color:#e0a030}
 
+/* Section */
+.section{margin-bottom:40px;background:rgba(14,14,22,.5);border:1px solid rgba(255,255,255,.04);border-radius:16px;padding:28px 32px}
+.section h2{font-family:'Noto Serif TC',serif;font-size:1.35rem;color:#e0a030;margin-bottom:6px;letter-spacing:1.5px;font-weight:600}
+.section .desc{font-size:.88rem;color:rgba(255,255,255,.55);margin-bottom:20px;line-height:1.7}
+
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:900px){.two-col{grid-template-columns:1fr}}
+
+/* Chart containers */
+.chart-box{background:rgba(10,10,18,.6);border-radius:10px;padding:16px;min-height:280px;position:relative}
+
+/* Word cloud */
+#wordcloud-canvas{width:100%;height:420px;background:radial-gradient(ellipse at center,rgba(0,229,255,.04) 0%,transparent 70%);border-radius:12px;display:block}
+
+/* Bar list (for top words) */
+.bar-list{max-height:400px;overflow-y:auto;padding-right:8px}
+.bar-list::-webkit-scrollbar{width:6px}
+.bar-list::-webkit-scrollbar-thumb{background:rgba(0,229,255,.2);border-radius:3px}
+.bar-row{display:flex;align-items:center;gap:12px;margin-bottom:8px;padding:6px 4px}
+.bar-row .word{min-width:90px;font-size:.9rem;color:#f0f0f5;font-weight:500}
+.bar-row .bar{flex:1;height:20px;background:rgba(255,255,255,.04);border-radius:4px;overflow:hidden}
+.bar-row .bar-fill{height:100%;background:linear-gradient(90deg,#00e5ff,#e0a030);border-radius:4px}
+.bar-row .count{min-width:42px;text-align:right;font-family:'Orbitron',monospace;font-size:.8rem;color:rgba(0,229,255,.85)}
+.bar-row.user .bar-fill{background:linear-gradient(90deg,#7cffa0,#00e5ff)}
+.bar-row.guide .bar-fill{background:linear-gradient(90deg,#e0a030,#ff8fa3)}
+
+/* Heatmap */
+.heatmap{display:grid;grid-template-columns:60px repeat(24,1fr);gap:2px;font-size:.7rem}
+.heatmap .hlabel{color:rgba(255,255,255,.45);padding:2px 4px;text-align:right}
+.heatmap .hcell{background:rgba(0,229,255,.05);border-radius:2px;aspect-ratio:1;cursor:help;transition:all .15s}
+.heatmap .hcell:hover{transform:scale(1.2);box-shadow:0 0 8px rgba(0,229,255,.5)}
+.heatmap .hcol-label{color:rgba(255,255,255,.35);font-size:.58rem;text-align:center;padding:2px 0;font-family:'Orbitron',monospace}
+
+/* Question analysis */
+.qlist{display:flex;flex-direction:column;gap:8px;max-height:400px;overflow-y:auto}
+.qitem{background:rgba(0,229,255,.04);padding:10px 14px;border-radius:8px;font-size:.92rem;line-height:1.6;border-left:2px solid rgba(0,229,255,.4)}
+.qitem .meta{font-size:.72rem;color:rgba(255,255,255,.4);margin-top:4px}
+
+/* Session list */
 details{background:rgba(18,18,28,.5);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:14px 18px;margin-bottom:10px}
 details summary{cursor:pointer;font-size:.95rem;color:#f0f0f5;font-weight:500}
 details summary:hover{color:#00e5ff}
@@ -49,10 +100,14 @@ details[open] summary{color:#e0a030;margin-bottom:10px}
 
 .loading{text-align:center;padding:40px;color:rgba(255,255,255,.4);font-style:italic}
 .warn{background:rgba(255,100,100,.08);border:1px solid rgba(255,100,100,.3);
-  color:#ff8080;padding:16px;border-radius:10px;margin-bottom:20px;font-size:.88rem}
-.btn{background:rgba(0,229,255,.12);border:1px solid rgba(0,229,255,.4);color:#00e5ff;
-  padding:8px 18px;border-radius:18px;cursor:pointer;font-family:'Noto Sans TC';font-size:.88rem;letter-spacing:1px}
-.btn:hover{background:rgba(0,229,255,.25)}
+  color:#ff8080;padding:14px 18px;border-radius:10px;margin-bottom:20px;font-size:.9rem;line-height:1.6}
+.tag{display:inline-block;padding:2px 10px;border-radius:8px;background:rgba(224,160,48,.15);
+  color:#e0a030;font-size:.72rem;letter-spacing:1px;margin-right:6px}
+
+.kb-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.kb-card{background:rgba(18,18,28,.5);border:1px solid rgba(224,160,48,.15);border-radius:10px;padding:14px 16px}
+.kb-card .n{font-family:'Orbitron',monospace;font-size:1.4rem;color:#e0a030;font-weight:700}
+.kb-card .t{font-size:.85rem;color:rgba(255,255,255,.75);margin-top:4px;line-height:1.5}
 </style>
 </head>
 <body>
@@ -60,46 +115,174 @@ details[open] summary{color:#e0a030;margin-bottom:10px}
 <header>
   <div>
     <h1>📊 島語語料分析後台</h1>
-    <div class="sub">LANGUAGE CORPUS · KB ANALYTICS</div>
+    <div class="sub">CORPUS ANALYTICS · KB RESEARCH</div>
   </div>
-  <div>
+  <div class="nav-actions">
     <span class="auth-status" id="auth-status">載入中…</span>
-    <button class="btn" id="refresh-btn" style="margin-left:12px">🔄 重新整理</button>
-    <button class="btn" id="export-csv-btn" style="margin-left:6px">📥 匯出 CSV</button>
+    <button class="btn" id="refresh-btn">🔄 重新整理</button>
+    <button class="btn amber" id="export-csv-btn">📥 匯出 CSV</button>
+    <button class="btn amber" id="export-json-btn">📥 匯出 JSON</button>
   </div>
 </header>
 
 <div class="warn" id="warn-box" style="display:none">
-  ⚠️ 這是你(帳號擁有者)的個人分析後台。Firestore 安全規則限制,只能看到「<b>你自己</b>」的對話。若要看所有訪客的對話,需把安全規則改開讀取(會失去隱私保護)。
+  ⚠️ 這是個人後台。Firestore 安全規則限制:只能看到「<b>你自己</b>」的對話。要看所有訪客需調整 rules(會失去隱私保護,不建議於 production 使用)。
 </div>
 
-<!-- 統計卡片 -->
-<section class="section">
-  <div class="cards" id="stat-cards">
+<!-- Tabs -->
+<div class="tabs">
+  <div class="tab active" data-panel="overview">📌 總覽</div>
+  <div class="tab" data-panel="descriptive">📏 描述統計</div>
+  <div class="tab" data-panel="wordcloud">☁️ 文字雲</div>
+  <div class="tab" data-panel="frequency">📊 詞頻/N-gram</div>
+  <div class="tab" data-panel="behavior">⏱ 行為分析</div>
+  <div class="tab" data-panel="kb">🧠 KB 原則</div>
+  <div class="tab" data-panel="sessions">💬 對話清單</div>
+</div>
+
+<!-- ============= 總覽 ============= -->
+<div class="panel active" id="panel-overview">
+  <div class="cards">
     <div class="card"><div class="label">TOTAL SESSIONS</div><div class="value" id="stat-sessions">—</div><div class="note">對話場次</div></div>
     <div class="card"><div class="label">TOTAL MESSAGES</div><div class="value" id="stat-msgs">—</div><div class="note">訊息總量</div></div>
-    <div class="card"><div class="label">USER MESSAGES</div><div class="value" id="stat-user">—</div><div class="note">使用者提問/回應</div></div>
-    <div class="card"><div class="label">AVG LEN</div><div class="value" id="stat-avg">—</div><div class="note">每則訊息平均字數</div></div>
+    <div class="card"><div class="label">USER MESSAGES</div><div class="value" id="stat-user">—</div><div class="note">使用者提問 / 回應</div></div>
+    <div class="card"><div class="label">GUIDE MESSAGES</div><div class="value" id="stat-guide">—</div><div class="note">島語回應</div></div>
+    <div class="card amber"><div class="label">AVG MSG LEN</div><div class="value" id="stat-avg">—</div><div class="note">每則平均字數</div></div>
+    <div class="card amber"><div class="label">TOTAL WORDS</div><div class="value" id="stat-words">—</div><div class="note">總字數</div></div>
+    <div class="card amber"><div class="label">QUESTIONS</div><div class="value" id="stat-q">—</div><div class="note">使用者提問數</div></div>
+    <div class="card amber"><div class="label">UNIQUE ERAS</div><div class="value" id="stat-eras">—</div><div class="note">被討論的年代</div></div>
   </div>
-</section>
 
-<!-- 年代熱度 -->
-<section class="section">
-  <h2>🔥 年代熱度(依被討論次數排序)</h2>
-  <div id="era-bars" class="loading">載入中…</div>
-</section>
+  <div class="section">
+    <h2>🔥 年代熱度</h2>
+    <div class="desc">使用者在各年代的<b>訊息數量</b>總和,反映哪些歷史時刻最引發討論。</div>
+    <div id="era-bars" class="loading">載入中…</div>
+  </div>
+</div>
 
-<!-- Session 清單 -->
-<section class="section">
-  <h2>💬 歷次對話</h2>
-  <div id="session-list" class="loading">載入中…</div>
-</section>
+<!-- ============= 描述性統計 ============= -->
+<div class="panel" id="panel-descriptive">
+  <div class="section">
+    <h2>📏 訊息長度分佈</h2>
+    <div class="desc">每則訊息字數的分佈 — 判斷對話深度、找出異常長/短的極值。</div>
+    <div class="two-col">
+      <div class="chart-box"><canvas id="length-hist"></canvas></div>
+      <div>
+        <div class="cards" style="grid-template-columns:repeat(2,1fr)">
+          <div class="card"><div class="label">MEDIAN</div><div class="value" id="stat-median">—</div><div class="note">中位數字數</div></div>
+          <div class="card"><div class="label">STD DEV</div><div class="value" id="stat-std">—</div><div class="note">標準差</div></div>
+          <div class="card"><div class="label">MIN</div><div class="value" id="stat-min">—</div><div class="note">最短</div></div>
+          <div class="card"><div class="label">MAX</div><div class="value" id="stat-max">—</div><div class="note">最長</div></div>
+          <div class="card"><div class="label">P25</div><div class="value" id="stat-p25">—</div><div class="note">第 25 百分位</div></div>
+          <div class="card"><div class="label">P75</div><div class="value" id="stat-p75">—</div><div class="note">第 75 百分位</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-<!-- Firebase init + data -->
+  <div class="section">
+    <h2>💬 對話場次特徵</h2>
+    <div class="two-col">
+      <div>
+        <div class="cards" style="grid-template-columns:repeat(2,1fr)">
+          <div class="card"><div class="label">MSGS/SESSION</div><div class="value" id="stat-mps">—</div><div class="note">每場平均訊息</div></div>
+          <div class="card"><div class="label">LONGEST SESSION</div><div class="value" id="stat-longest">—</div><div class="note">最長場次訊息數</div></div>
+          <div class="card"><div class="label">USER/GUIDE</div><div class="value" id="stat-ratio">—</div><div class="note">使用者:島語比例</div></div>
+          <div class="card"><div class="label">AVG USER LEN</div><div class="value" id="stat-uavg">—</div><div class="note">使用者平均字數</div></div>
+        </div>
+      </div>
+      <div class="chart-box"><canvas id="session-dist"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============= 文字雲 ============= -->
+<div class="panel" id="panel-wordcloud">
+  <div class="section">
+    <h2>☁️ 文字雲</h2>
+    <div class="desc">根據出現頻率繪製。已過濾常見停用詞(的、是、在、我、你...)及標點符號。字大小對應頻率。</div>
+    <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+      <button class="btn" data-wc="all">全部</button>
+      <button class="btn" data-wc="user">僅使用者</button>
+      <button class="btn" data-wc="guide">僅島語</button>
+    </div>
+    <canvas id="wordcloud-canvas"></canvas>
+  </div>
+</div>
+
+<!-- ============= 詞頻 / N-gram ============= -->
+<div class="panel" id="panel-frequency">
+  <div class="section">
+    <h2>📊 高頻詞 Top 30</h2>
+    <div class="desc">左:使用者提到的詞;右:島語提到的詞。比較視角差異。</div>
+    <div class="two-col">
+      <div>
+        <h3 style="color:#7cffa0;font-size:1rem;margin-bottom:10px">👤 使用者</h3>
+        <div class="bar-list" id="freq-user">載入中…</div>
+      </div>
+      <div>
+        <h3 style="color:#e0a030;font-size:1rem;margin-bottom:10px">🌊 島語</h3>
+        <div class="bar-list" id="freq-guide">載入中…</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>🔗 Bigram 兩字詞組 Top 20</h2>
+    <div class="desc">連續兩字 (bigram) 的高頻組合,可看出常被討論的概念。</div>
+    <div class="bar-list" id="bigrams-box">載入中…</div>
+  </div>
+
+  <div class="section">
+    <h2>🔗 Trigram 三字詞組 Top 20</h2>
+    <div class="desc">連續三字,通常是專有名詞或完整概念(例如「文化協會」、「半導體」)。</div>
+    <div class="bar-list" id="trigrams-box">載入中…</div>
+  </div>
+</div>
+
+<!-- ============= 行為分析 ============= -->
+<div class="panel" id="panel-behavior">
+  <div class="section">
+    <h2>⏱ 活躍時段熱圖</h2>
+    <div class="desc">縱軸:星期一至日;橫軸:一天 24 小時。顏色越亮,訊息量越多。</div>
+    <div class="heatmap" id="heatmap-box"></div>
+  </div>
+
+  <div class="section">
+    <h2>❓ 使用者提問分析</h2>
+    <div class="desc">偵測使用者訊息中含「?」、「嗎」、「呢」、「怎麼」、「為什麼」等疑問特徵。</div>
+    <div class="cards" style="grid-template-columns:repeat(3,1fr)">
+      <div class="card"><div class="label">QUESTION RATE</div><div class="value" id="stat-qrate">—</div><div class="note">提問比例</div></div>
+      <div class="card"><div class="label">WHY QUESTIONS</div><div class="value" id="stat-why">—</div><div class="note">「為什麼」類</div></div>
+      <div class="card"><div class="label">HOW QUESTIONS</div><div class="value" id="stat-how">—</div><div class="note">「怎麼」類</div></div>
+    </div>
+    <h3 style="color:#00e5ff;font-size:1rem;margin:20px 0 10px">最近 10 則提問</h3>
+    <div class="qlist" id="recent-q">—</div>
+  </div>
+</div>
+
+<!-- ============= KB 原則分析 ============= -->
+<div class="panel" id="panel-kb">
+  <div class="section">
+    <h2>🧠 KB 原則體現檢測</h2>
+    <div class="desc">掃描島語的回應,用關鍵字規則偵測 KB 12 原則的出現次數。用於驗證對話是否真的符合 KB 精神。</div>
+    <div class="kb-list" id="kb-list">載入中…</div>
+  </div>
+</div>
+
+<!-- ============= 對話清單 ============= -->
+<div class="panel" id="panel-sessions">
+  <div class="section">
+    <h2>💬 所有對話</h2>
+    <div id="session-list" class="loading">載入中…</div>
+  </div>
+</div>
+
+<!-- Firebase init -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
 import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
-import { getFirestore, doc, getDoc, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+import { getFirestore, doc, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCSy_3ouSo5bWndt4ohXsognLH2ISwS8W0",
@@ -116,111 +299,385 @@ const db = getFirestore(app);
 signInAnonymously(auth);
 onAuthStateChanged(auth, async user => {
   if (!user) { document.getElementById('auth-status').textContent = '⚠️ 未登入'; return; }
-  document.getElementById('auth-status').textContent = '✓ 已登入 · uid ' + user.uid.slice(0,8) + '…';
+  document.getElementById('auth-status').textContent = '✓ uid ' + user.uid.slice(0,8) + '…';
   document.getElementById('warn-box').style.display = 'block';
   await loadAll(user.uid);
 });
 
 async function loadAll(uid) {
   try {
-    // 1. 對話 sessions (原 chat panel 和諮商都算)
+    const sessions = [];
     const chatSnap = await getDocs(query(collection(db,'users',uid,'sessions'),orderBy('lastActive','desc')));
-    const counselSnap = await getDocs(query(collection(db,'users',uid,'counselingSessions'),orderBy('lastActive','desc')));
-
-    const allSessions = [];
     for (const d of chatSnap.docs) {
       const data = d.data();
       const msgs = await getDocs(query(collection(db,'users',uid,'sessions',d.id,'messages'),orderBy('timestamp','asc')));
-      allSessions.push({id:d.id, ...data, messages: msgs.docs.map(m=>m.data()), type: 'chat'});
+      sessions.push({id:d.id,...data,messages:msgs.docs.map(m=>m.data()),type:'chat'});
     }
+    const counselSnap = await getDocs(query(collection(db,'users',uid,'counselingSessions'),orderBy('lastActive','desc')));
     for (const d of counselSnap.docs) {
       const data = d.data();
       const msgs = await getDocs(query(collection(db,'users',uid,'counselingSessions',d.id,'messages'),orderBy('timestamp','asc')));
-      allSessions.push({id:d.id, ...data, messages: msgs.docs.map(m=>m.data()), type: 'counseling'});
+      sessions.push({id:d.id,...data,messages:msgs.docs.map(m=>m.data()),type:'counseling'});
     }
+    window._all = sessions;
+    window.runAllAnalytics(sessions);
+  } catch(e) { console.error(e); alert('載入失敗: '+e.message); }
+}
+</script>
 
-    renderStats(allSessions);
-    renderEraBars(allSessions);
-    renderSessionList(allSessions);
-    window._allSessions = allSessions; // for CSV export
-  } catch(e) {
-    console.error(e);
-    alert('載入失敗: ' + e.message);
-  }
+<script>
+// ============================================================
+// 語料分析工具
+// ============================================================
+
+// 常見中文停用詞
+const STOP_WORDS = new Set([
+  '的','了','是','在','我','你','他','她','它','們','這','那','也','就','都','和','與','或','但','而','於','為','以','於','把','被','對','從','由','向','到','讓','使','給','跟','啊','啊','呢','嗎','吧','喔','哦','耶','哈','的話','一個','一些','可以','可能','需要','如果','因為','所以','雖然','但是','不過','還是','然後','接著','再來','最後','例如','比如','像是','也許','或許','只是','只有','還有','甚至','尤其','特別','非常','真的','應該','可以','有','沒','沒有','不','不是','無','要','不要','會','不會','能','能夠','可','無法','已經','還','又','再','才','就是','如此','這樣','那樣','這種','那種','其實','其他','另外','之後','之前','之間','時候','時間','方式','方法','地方','地區','部分','整個','一直','一樣','一直','很','多','少','大','小','好','不好','更','最','較','非','和','及','或','者','與','乃','則','且','亦','矣','焉','哉','也','者','之','於','而','以','若','其','某','此','彼','乎','斯','為','者','之','耳','以','者','則','一','二','三','四','五','六','七','八','九','十','一個','這個','那個','個','次','年','月','日','時','分','秒','點','件','條','張','支','把','的','地','得','時'
+]);
+
+// 中文分詞:用簡單的 N-gram 方法,抽取 2-4 字的連續片段
+function tokenize(text, n=2) {
+  if (!text) return [];
+  // 清除 URL、標點、數字太多的
+  text = text.replace(/[,.!?;:,。!?;:、()()「」『』"'《》<>\/\\\-\n\r\t]/g, ' ')
+             .replace(/\s+/g,' ').trim();
+  const chunks = text.split(' ').filter(s => /[\u4e00-\u9fa5]/.test(s));
+  const tokens = [];
+  chunks.forEach(chunk => {
+    if (chunk.length < n) return;
+    for (let i = 0; i <= chunk.length - n; i++) {
+      const t = chunk.slice(i, i+n);
+      if (!/^[\u4e00-\u9fa5]+$/.test(t)) continue;  // 只要漢字
+      tokens.push(t);
+    }
+  });
+  return tokens;
 }
 
-function renderStats(sessions) {
-  const allMsgs = sessions.flatMap(s => s.messages);
-  const userMsgs = allMsgs.filter(m => m.role === 'user');
-  const avgLen = allMsgs.length ? Math.round(allMsgs.reduce((s,m)=>s+(m.text||'').length,0)/allMsgs.length) : 0;
+function countFrequencies(messages, n=2, filter=null) {
+  const counts = {};
+  messages.forEach(m => {
+    if (filter && m.role !== filter) return;
+    const tokens = tokenize(m.text, n);
+    tokens.forEach(t => {
+      if (n===2 && STOP_WORDS.has(t)) return;
+      counts[t] = (counts[t] || 0) + 1;
+    });
+  });
+  return Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+}
+
+// 描述性統計
+function describe(values) {
+  if (!values.length) return {};
+  const sorted = [...values].sort((a,b)=>a-b);
+  const n = sorted.length;
+  const sum = sorted.reduce((s,v)=>s+v,0);
+  const mean = sum/n;
+  const std = Math.sqrt(sorted.reduce((s,v)=>s+(v-mean)**2,0)/n);
+  const p = q => sorted[Math.floor(n*q)];
+  return {
+    n, mean, median:p(.5), std,
+    min:sorted[0], max:sorted[n-1],
+    p25:p(.25), p75:p(.75)
+  };
+}
+
+// 問句偵測
+function isQuestion(text) {
+  if (!text) return false;
+  return /[?？]|嗎|呢|怎麼|為什麼|什麼|哪裡|哪個|誰|何時|多少|如何|幾|是否/.test(text);
+}
+function whyType(text) { return /為什麼|為何|why/i.test(text) }
+function howType(text) { return /怎麼|如何|怎樣|how/i.test(text) }
+
+// KB 原則關鍵字規則 (rough heuristic)
+const KB_PATTERNS = [
+  {n:1, t:'真實問題', re:/真正的|真實|實際|你怎麼|你覺得|你會|從你的/},
+  {n:2, t:'想法精進', re:/如果.*加上|可以更|更完整|再加上|如果考慮|想法很|這想法|精進/},
+  {n:3, t:'想法多樣性', re:/角度|視角|另一面|另一邊|原住民|漢人|女性|勞工|多元|不同的|另外一|換個/},
+  {n:4, t:'統整提升', re:/統整|整合|更高層次|rise above|共通|貫穿|整體來看/},
+  {n:5, t:'社群共創', re:/另一位訪客|別人|其他人曾|社群|大家|一起/},
+  {n:6, t:'民主參與', re:/平等|每個人|共同|一起|我們都/},
+  {n:7, t:'對話導向', re:/為什麼|怎麼知道|還有哪些可能|你怎麼|你如何|什麼讓|你覺得/},
+  {n:8, t:'自主追求', re:/你最想|你想了解|你的興趣|你決定|你選|讓你/},
+  {n:9, t:'即時評量', re:/你剛才|你提的|很有意思|很有|這觀點|很棒/},
+  {n:10,t:'互享共榮', re:/我沒想過|謝謝你|你讓我|我學到|從你那裡/},
+  {n:11,t:'無所不在', re:/今天|現在|你的生活|現代|日常|連到/},
+  {n:12,t:'善用權威', re:/臺灣通史|被出賣的台灣|海洋台灣|史記|學者|書中|資料顯示|根據|引用|《[^》]+》/}
+];
+
+function detectKBMoves(text) {
+  return KB_PATTERNS.filter(p => p.re.test(text)).map(p=>p.n);
+}
+
+// ============================================================
+// 主分析函式
+// ============================================================
+window.runAllAnalytics = function(sessions) {
+  const allMsgs = sessions.flatMap(s => (s.messages||[]).map(m=>({...m,sessionEra:s.era||s.lastEra||null})));
+  const userMsgs = allMsgs.filter(m => m.role==='user');
+  const guideMsgs = allMsgs.filter(m => m.role==='guide');
+
+  // --- 總覽 ---
+  const lens = allMsgs.map(m => (m.text||'').length);
   document.getElementById('stat-sessions').textContent = sessions.length;
   document.getElementById('stat-msgs').textContent = allMsgs.length;
   document.getElementById('stat-user').textContent = userMsgs.length;
-  document.getElementById('stat-avg').textContent = avgLen + ' 字';
-}
+  document.getElementById('stat-guide').textContent = guideMsgs.length;
+  document.getElementById('stat-avg').textContent = lens.length ? Math.round(lens.reduce((s,v)=>s+v,0)/lens.length) + ' 字' : '0';
+  document.getElementById('stat-words').textContent = lens.reduce((s,v)=>s+v,0).toLocaleString();
+  document.getElementById('stat-q').textContent = userMsgs.filter(m=>isQuestion(m.text)).length;
+  const uniqueEras = new Set(allMsgs.map(m=>m.era).filter(Boolean));
+  document.getElementById('stat-eras').textContent = uniqueEras.size;
 
-function renderEraBars(sessions) {
-  const counts = {};
-  sessions.forEach(s => {
-    const era = s.era || s.lastEra || '(未標記)';
-    counts[era] = (counts[era] || 0) + (s.messages?.length || 0);
-  });
-  const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,20);
-  const max = sorted[0]?.[1] || 1;
-  const html = sorted.map(([era, count]) => `
-    <div class="bar-row">
-      <div class="label">${era}</div>
-      <div class="bar"><div class="bar-fill" style="width:${count/max*100}%"></div></div>
-      <div class="count">${count}</div>
+  // --- 年代熱度 ---
+  renderEraBars(sessions);
+
+  // --- 描述性統計 ---
+  const stats = describe(lens);
+  document.getElementById('stat-median').textContent = Math.round(stats.median||0) + ' 字';
+  document.getElementById('stat-std').textContent = Math.round(stats.std||0);
+  document.getElementById('stat-min').textContent = stats.min||0;
+  document.getElementById('stat-max').textContent = stats.max||0;
+  document.getElementById('stat-p25').textContent = Math.round(stats.p25||0);
+  document.getElementById('stat-p75').textContent = Math.round(stats.p75||0);
+
+  const uLens = userMsgs.map(m=>(m.text||'').length);
+  document.getElementById('stat-mps').textContent = sessions.length ? (allMsgs.length/sessions.length).toFixed(1) : '0';
+  const longestSession = sessions.reduce((m,s)=>Math.max(m, s.messages?.length||0),0);
+  document.getElementById('stat-longest').textContent = longestSession;
+  document.getElementById('stat-ratio').textContent = guideMsgs.length ? (userMsgs.length/guideMsgs.length).toFixed(2) : '—';
+  document.getElementById('stat-uavg').textContent = uLens.length ? Math.round(uLens.reduce((s,v)=>s+v,0)/uLens.length) + ' 字' : '0';
+
+  renderLengthHistogram(lens);
+  renderSessionDistribution(sessions);
+
+  // --- 文字雲 (預設全部) ---
+  window._allMsgs = allMsgs;
+  renderWordCloud('all');
+
+  // --- 詞頻 ---
+  const userFreq = countFrequencies(userMsgs).slice(0,30);
+  const guideFreq = countFrequencies(guideMsgs).slice(0,30);
+  renderBarList('freq-user', userFreq, 'user');
+  renderBarList('freq-guide', guideFreq, 'guide');
+
+  // --- Bigram / Trigram ---
+  const bigrams = countFrequencies(allMsgs,2).slice(0,20);
+  const trigrams = countFrequencies(allMsgs,3).filter(([t])=>!/的|了|是|在|我|你/.test(t[0])).slice(0,20);
+  renderBarList('bigrams-box', bigrams);
+  renderBarList('trigrams-box', trigrams);
+
+  // --- 行為分析 ---
+  renderHeatmap(allMsgs);
+  const qMsgs = userMsgs.filter(m=>isQuestion(m.text));
+  document.getElementById('stat-qrate').textContent = userMsgs.length ? Math.round(qMsgs.length/userMsgs.length*100)+'%' : '0%';
+  document.getElementById('stat-why').textContent = userMsgs.filter(m=>whyType(m.text)).length;
+  document.getElementById('stat-how').textContent = userMsgs.filter(m=>howType(m.text)).length;
+  const recentQ = qMsgs.slice(-10).reverse();
+  document.getElementById('recent-q').innerHTML = recentQ.map(m=>`
+    <div class="qitem">${escapeHtml(m.text)}<div class="meta">${m.sessionEra||'(自由對話)'}</div></div>
+  `).join('') || '<p style="color:rgba(255,255,255,.5)">尚無提問</p>';
+
+  // --- KB 分析 ---
+  const kbCounts = {};
+  KB_PATTERNS.forEach(p=>kbCounts[p.n]=0);
+  guideMsgs.forEach(m => detectKBMoves(m.text||'').forEach(n=>kbCounts[n]++));
+  document.getElementById('kb-list').innerHTML = KB_PATTERNS.map(p=>`
+    <div class="kb-card">
+      <div class="n">${kbCounts[p.n]}</div>
+      <div class="t"><b>${p.n}. ${p.t}</b><br/><span style="color:rgba(255,255,255,.4);font-size:.75rem">次出現</span></div>
     </div>
   `).join('');
-  document.getElementById('era-bars').innerHTML = html || '<p class="loading">尚無資料</p>';
-  document.getElementById('era-bars').classList.remove('loading');
+
+  // --- 對話清單 ---
+  renderSessionList(sessions);
+};
+
+function renderEraBars(sessions){
+  const counts={};
+  sessions.forEach(s => {
+    const era = s.era || s.lastEra || '(未標記)';
+    counts[era] = (counts[era]||0) + (s.messages?.length||0);
+  });
+  const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,20);
+  renderBarList('era-bars', sorted);
 }
 
-function renderSessionList(sessions) {
-  const html = sessions.map(s => {
+function renderBarList(containerId, entries, role){
+  const box = document.getElementById(containerId);
+  if (!entries.length) { box.innerHTML = '<p style="color:rgba(255,255,255,.5)">尚無資料</p>'; return; }
+  const max = entries[0][1];
+  box.innerHTML = entries.map(([k,c])=>`
+    <div class="bar-row ${role||''}">
+      <div class="word">${escapeHtml(k)}</div>
+      <div class="bar"><div class="bar-fill" style="width:${c/max*100}%"></div></div>
+      <div class="count">${c}</div>
+    </div>
+  `).join('');
+}
+
+let histChart=null, sessDistChart=null;
+function renderLengthHistogram(lens){
+  const bins = [0,10,25,50,100,200,500,1000,2000];
+  const binLabels = bins.slice(0,-1).map((b,i)=>`${b}-${bins[i+1]}`);
+  const binCounts = new Array(bins.length-1).fill(0);
+  lens.forEach(l=>{
+    for(let i=0;i<bins.length-1;i++){
+      if (l>=bins[i]&&l<bins[i+1]){binCounts[i]++;break}
+    }
+  });
+  const ctx = document.getElementById('length-hist').getContext('2d');
+  if (histChart) histChart.destroy();
+  histChart = new Chart(ctx,{
+    type:'bar',
+    data:{labels:binLabels,datasets:[{label:'訊息數',data:binCounts,
+      backgroundColor:'rgba(0,229,255,.6)',borderColor:'#00e5ff',borderWidth:1}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#d4d4dc'}}},
+      scales:{
+        x:{ticks:{color:'rgba(255,255,255,.6)'},grid:{color:'rgba(255,255,255,.05)'}},
+        y:{ticks:{color:'rgba(255,255,255,.6)'},grid:{color:'rgba(255,255,255,.05)'}}
+      }}
+  });
+}
+
+function renderSessionDistribution(sessions){
+  const sizes = sessions.map(s => s.messages?.length||0).sort((a,b)=>a-b);
+  const ctx = document.getElementById('session-dist').getContext('2d');
+  if (sessDistChart) sessDistChart.destroy();
+  sessDistChart = new Chart(ctx,{
+    type:'line',
+    data:{labels:sizes.map((_,i)=>i+1),datasets:[{
+      label:'訊息數 (每場)',data:sizes,
+      backgroundColor:'rgba(224,160,48,.2)',borderColor:'#e0a030',
+      fill:true,tension:.3,pointRadius:2}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#d4d4dc'}},title:{display:true,text:'場次訊息數量分佈',color:'#e0a030'}},
+      scales:{
+        x:{ticks:{color:'rgba(255,255,255,.6)'},grid:{color:'rgba(255,255,255,.05)'}},
+        y:{ticks:{color:'rgba(255,255,255,.6)'},grid:{color:'rgba(255,255,255,.05)'}}
+      }}
+  });
+}
+
+function renderWordCloud(mode){
+  const msgs = mode==='user'?window._allMsgs.filter(m=>m.role==='user')
+             :mode==='guide'?window._allMsgs.filter(m=>m.role==='guide')
+             :window._allMsgs;
+  const freq = countFrequencies(msgs,2).slice(0,150);
+  if (!freq.length) return;
+  const list = freq.map(([w,c])=>[w, Math.max(12, Math.min(60, c*3 + 12))]);
+  WordCloud(document.getElementById('wordcloud-canvas'), {
+    list,
+    gridSize: 8,
+    weightFactor: 1,
+    fontFamily: 'Noto Serif TC, serif',
+    color: (w,weight) => weight>40?'#00e5ff':weight>25?'#e0a030':weight>18?'#7cffa0':'#ff8fa3',
+    backgroundColor: 'transparent',
+    rotateRatio: .3,
+    shuffle: true,
+    drawOutOfBound: false
+  });
+}
+
+function renderHeatmap(allMsgs){
+  const grid = Array.from({length:7},()=>new Array(24).fill(0));
+  allMsgs.forEach(m => {
+    if (!m.timestamp?.toDate) return;
+    const d = m.timestamp.toDate();
+    grid[d.getDay()][d.getHours()]++;
+  });
+  const max = Math.max(1,...grid.flat());
+  const dayLabels = ['週日','週一','週二','週三','週四','週五','週六'];
+  let html = '<div></div>';
+  for (let h=0;h<24;h+=1) html += `<div class="hcol-label">${h}</div>`;
+  for (let d=0;d<7;d++){
+    html += `<div class="hlabel">${dayLabels[d]}</div>`;
+    for (let h=0;h<24;h++){
+      const v = grid[d][h];
+      const intensity = v/max;
+      const color = v===0 ? 'rgba(255,255,255,.03)' :
+        `rgba(0,229,255,${.15+intensity*.85})`;
+      html += `<div class="hcell" title="${dayLabels[d]} ${h}:00 — ${v} 則" style="background:${color}"></div>`;
+    }
+  }
+  document.getElementById('heatmap-box').innerHTML = html;
+}
+
+function renderSessionList(sessions){
+  document.getElementById('session-list').innerHTML = sessions.map(s=>{
     const d = s.startedAt?.toDate ? s.startedAt.toDate() : null;
     const dateStr = d ? d.toLocaleString('zh-TW') : '—';
-    const msgHtml = (s.messages || []).map(m => `
-      <div class="msg-row ${m.role}">
-        <span class="who">${m.role === 'user' ? '訪客' : '🌊 島語'}</span>${escapeHtml(m.text||'')}
-      </div>
+    const msgHtml = (s.messages||[]).map(m=>`
+      <div class="msg-row ${m.role}"><span class="who">${m.role==='user'?'訪客':'🌊 島語'}</span>${escapeHtml(m.text||'')}</div>
     `).join('');
-    return `
-      <details>
-        <summary>
-          <span class="tag">${s.type === 'counseling' ? '諮商' : '對話'}</span>
-          ${s.era || s.lastEra || '(自由對話)'}
-          · ${s.messages?.length || 0} 則
-          · ${dateStr}
-        </summary>
-        ${msgHtml || '<p style="color:rgba(255,255,255,.4)">(無訊息)</p>'}
-      </details>
-    `;
-  }).join('');
-  document.getElementById('session-list').innerHTML = html || '<p class="loading">尚無對話。到 <a href="./counseling.html" style="color:#00e5ff">諮商室</a> 開始第一場吧。</p>';
+    return `<details>
+      <summary>
+        <span class="tag">${s.type==='counseling'?'諮商':'對話'}</span>
+        ${s.era||s.lastEra||'(自由對話)'}
+        · ${s.messages?.length||0} 則 · ${dateStr}
+      </summary>
+      ${msgHtml||'<p style="color:rgba(255,255,255,.4)">(無訊息)</p>'}
+    </details>`;
+  }).join('') || '<p class="loading">尚無對話。到 <a href="./counseling.html" style="color:#00e5ff">諮商室</a> 開始吧。</p>';
   document.getElementById('session-list').classList.remove('loading');
 }
 
-function escapeHtml(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+function escapeHtml(s){const d=document.createElement('div');d.textContent=s||'';return d.innerHTML}
 
-document.getElementById('refresh-btn').addEventListener('click', () => location.reload());
+// ============================================================
+// UI 事件
+// ============================================================
+document.querySelectorAll('.tab').forEach(t=>{
+  t.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById('panel-'+t.dataset.panel).classList.add('active');
+  });
+});
 
-document.getElementById('export-csv-btn').addEventListener('click', () => {
-  if (!window._allSessions) return;
-  const rows = [['session_id','type','era','role','text','timestamp']];
-  window._allSessions.forEach(s => {
-    (s.messages || []).forEach(m => {
-      const t = m.timestamp?.toDate ? m.timestamp.toDate().toISOString() : '';
-      rows.push([s.id, s.type, (s.era||s.lastEra||''), m.role, (m.text||'').replace(/\n/g,' '), t]);
+document.querySelectorAll('[data-wc]').forEach(b=>{
+  b.addEventListener('click',()=>renderWordCloud(b.dataset.wc));
+});
+
+document.getElementById('refresh-btn').addEventListener('click',()=>location.reload());
+
+document.getElementById('export-csv-btn').addEventListener('click',()=>{
+  if (!window._all) return;
+  const rows=[['session_id','type','era','role','text','timestamp','kb_moves']];
+  window._all.forEach(s=>{
+    (s.messages||[]).forEach(m=>{
+      const t=m.timestamp?.toDate?m.timestamp.toDate().toISOString():'';
+      const kb=m.role==='guide'?detectKBMoves(m.text||'').join('|'):'';
+      rows.push([s.id,s.type,(s.era||s.lastEra||''),m.role,(m.text||'').replace(/\n/g,' '),t,kb]);
     });
   });
-  const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
-  const blob = new Blob(['\uFEFF' + csv], {type:'text/csv;charset=utf-8'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `island-guide-corpus-${new Date().toISOString().slice(0,10)}.csv`;
+  const csv=rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`island-guide-corpus-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+});
+
+document.getElementById('export-json-btn').addEventListener('click',()=>{
+  if (!window._all) return;
+  const data=window._all.map(s=>({
+    id:s.id,type:s.type,era:s.era||s.lastEra,
+    startedAt:s.startedAt?.toDate?.().toISOString(),
+    messages:(s.messages||[]).map(m=>({
+      role:m.role,text:m.text,era:m.era,
+      timestamp:m.timestamp?.toDate?.().toISOString(),
+      kb_moves:m.role==='guide'?detectKBMoves(m.text||''):null
+    }))
+  }));
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`island-guide-corpus-${new Date().toISOString().slice(0,10)}.json`;
   a.click();
 });
 </script>
