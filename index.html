@@ -764,7 +764,7 @@ var DATA=[
   text:'距今約六千年前的史前台灣,具備農耕與精湛航海技術的先民,以台灣為起點,乘獨木舟展開跨越太平洋與印度洋的擴張,台灣被廣泛認定為「南島語族」的發源地,在人類海洋遷徙史上具備核心的歷史地位。'},
  {era:'1624',name:'大航海的交會',shape:'ship',color:'#8E9775',
   text:'西元 1624 年荷蘭東印度公司於大員(今台南安平)建立熱蘭遮城,標誌著台灣正式捲入大航海時代的全球化貿易網,此時代的台灣成為東亞鹿皮、蔗糖等物資的國際轉運樞紐,並首次出現由羅馬拼音書寫的「新港文書」。'},
- {era:'1661',name:'鄭氏東寧的孤光',shape:'castle',color:'#B5895A',
+ {era:'1661',name:'鄭氏東寧的孤光',shape:'academy',color:'#B5895A',
   text:'西元 1661 年鄭成功率軍擊退荷蘭政權,建立台灣史上首個漢人政權「東寧王國」,此階段的歷史重心在於軍隊屯田開墾與漢人典章制度的引入,全台首學的設立正式將儒家思想與傳統宗族文化深植於台灣社會。'},
  {era:'1887',name:'鐵路與電光之初',shape:'train',color:'#E28E8E',
   text:'西元 1887 年清法戰爭後台灣建省,首任巡撫劉銘傳啟動近代化建設,開始基隆至新竹鐵路的修築,以及電報線與電燈的架設,這是台灣從傳統農業社會步入近代工業化與基礎設施建設的啟蒙階段。'},
@@ -863,9 +863,26 @@ for(var i=0;i<n;i++){
   } else if(p<.94){// 索具 (從桅頂到船首/船尾的對角線)
     var rope=Math.random();
     x=-7+rope*14;y=8-rope*9+(Math.random()-.5)*.3;z=(Math.random()-.5)*.4;
-  } else{// 海浪 (3D 殼,有寬度)
-    var wt=Math.random()*Math.PI*2,wr=4+Math.random()*5;
-    x=Math.cos(wt)*wr;y=-6-Math.abs(Math.sin(wt*3))*.4;z=Math.sin(wt)*wr*.6;
+  } else{// 遠景:熱蘭遮城 + 海浪 (放在船左後方)
+    var sub=Math.random();
+    if(sub<.45){// 熱蘭遮城:方形城牆 + 稜堡 + 旗桿
+      var part=Math.random();
+      if(part<.5){// 城牆主體
+        x=-10-Math.random()*3;y=-2+Math.random()*3;z=-3+(Math.random()-.5)*2.5;
+      } else if(part<.7){// 稜堡 (左右兩角的圓柱)
+        var corner=Math.random()<.5?-13:-9;
+        var t=Math.random()*Math.PI*2,r=Math.random()*.7;
+        x=corner+Math.cos(t)*r;y=-2+Math.random()*2;z=-3+Math.sin(t)*r;
+      } else if(part<.85){// 城垛鋸齒
+        var cx=-13+Math.random()*4;
+        x=cx;y=1+(Math.floor(cx*2)%2===0?.5:.1);z=-3+(Math.random()-.5)*2;
+      } else{// 城堡旗桿 + 旗
+        x=-11+(Math.random()-.5)*.2;y=1+Math.random()*2;z=-3;
+      }
+    } else{// 海浪
+      var wt=Math.random()*Math.PI*2,wr=4+Math.random()*5;
+      x=Math.cos(wt)*wr;y=-6-Math.abs(Math.sin(wt*3))*.4;z=Math.sin(wt)*wr*.6;
+    }
   }
   a[i*3]=x;a[i*3+1]=y;a[i*3+2]=z;
 }return a}
@@ -1009,17 +1026,30 @@ for(var i=0;i<n;i++){
     else if(sl===1){x=slt*4;y=BOX;z=-.7}
     else if(sl===2){x=-2;y=BOX;z=slt*1.4}
     else{x=2;y=BOX;z=slt*1.4}
-  } else if(p<.95){// 飄落的票卡 (3D 矩形飛在空中)
-    var ballot=Math.floor(Math.random()*4); // 4 張飄落的票
+  } else if(p<.82){// 飄落的票卡 (3D 矩形飛在空中)
+    var ballot=Math.floor(Math.random()*4);
     var bx=[-3,-1,1.5,3.5][ballot];
     var by=BOX+1.5+ballot*1.4+(Math.random()-.5)*.6;
-    var bw=.8,bh=.5;
+    var bw=.9,bh=.6;
     var bu=(Math.random()-.5)*bw,bv=(Math.random()-.5)*bh;
     var rot=ballot*.4;
     x=bx+bu*Math.cos(rot);y=by+bv;z=bu*Math.sin(rot)+(Math.random()-.5)*.15;
-  } else{// 票卡上的勾號
+  } else if(p<.84){// 票卡上的勾號 ✓
     var ck=Math.random();
     x=-1+ck*3;y=BOX+2.5+ck*2;z=(Math.random()-.5)*.2;
+  } else{// 最大張票卡上的「台灣島輪廓」(主權在民)
+    // 番薯形台灣島 — 簡化寬度函數
+    var ty=-3+Math.random()*6; // 島高 6 單位
+    var tw;
+    if(ty>2.5)tw=Math.max(0,1-(ty-2.5)*.8);     // 北角收尖
+    else if(ty>-2)tw=.9+(ty+2)*.08;              // 中部最寬
+    else tw=Math.max(0,.5+(ty+3)*.4);            // 南尖
+    if(tw<=0){i--;continue}
+    var tx=(Math.random()-.5)*2*tw;
+    // 放在票卡位置
+    x=3.5+tx*.6;
+    y=BOX+5+ty*.6;
+    z=(Math.random()-.5)*.15;
   }
   a[i*3]=x;a[i*3+1]=y;a[i*3+2]=z;
 }return a}
@@ -1134,11 +1164,32 @@ function gGuardian(n){var a=new Float32Array(n*3);for(var i=0;i<n;i++){
     var ct=Math.random()*Math.PI*2,cr=4+Math.random()*5;
     x=Math.cos(ct)*cr;z=Math.sin(ct)*cr;
     y=-1+(Math.random()-.5)*.7;
-  } else if(p<.88){// 主峰頂飄雲 (3D 球團)
-    var st=Math.random()*Math.PI*2,sp=Math.acos(2*Math.random()-1),sr=Math.random()*3;
+  } else if(p<.81){// 主峰頂飄雲 (3D 球團,壓扁一點)
+    var st=Math.random()*Math.PI*2,sp=Math.acos(2*Math.random()-1),sr=Math.random()*2.5;
     x=sr*Math.sin(sp)*Math.cos(st);
-    y=6.5+sr*Math.sin(sp)*Math.sin(st)*.4;
+    y=7+sr*Math.sin(sp)*Math.sin(st)*.3;
     z=sr*Math.cos(sp);
+  } else if(p<.92){// 口罩 (覆蓋主峰下半,象徵護國神山 + 口罩外交)
+    // 口罩是一個有皺褶的長方形,覆蓋主峰區的中下部
+    var maskU=(Math.random()-.5)*2; // -1~1 橫向
+    var maskV=Math.random(); // 0~1 上到下
+    var maskW=4.5;  // 口罩寬度
+    var maskH=3.2;  // 口罩高度
+    // 皺褶:橫向三道 pleats
+    var pleat=Math.sin(maskV*Math.PI*3)*.15;
+    // 口罩形狀稍微往下凹(順著山體)
+    var curve=Math.sin(maskU*Math.PI/2)*.3;
+    x=maskU*maskW;
+    y=1-maskV*maskH+pleat+curve;
+    z=3.5+(Math.random()-.5)*.5;  // 口罩在山前
+    // 口罩耳帶 (左右兩側的弧線)
+    if(Math.random()<.08){
+      var ear=Math.random()<.5?-1:1;
+      var et2=Math.random();
+      x=ear*(maskW+1.5*et2);
+      y=-1+et2*2.5;
+      z=3.5+Math.cos(et2*Math.PI)*.8;
+    }
   } else if(p<.96){// 晶圓基座 (3D 圓盤,有厚度)
     var bt=Math.random()*Math.PI*2,br=Math.sqrt(Math.random())*8;
     x=Math.cos(bt)*br;z=Math.sin(bt)*br;
@@ -1198,6 +1249,64 @@ for(var i=0;i<n;i++){
     x=-9+Math.random()*18;
     y=hi[1]+(Math.random()-.5)*.4;
     z=(Math.random()-.5)*.4;
+  }
+  a[i*3]=x;a[i*3+1]=y;a[i*3+2]=z;
+}return a}
+
+// 🏯 全台首學書院:雙層翹脊屋頂 + 兩根立柱 + 牌匾 + 屯田田字 + 鄭成功之劍 (1661 鄭氏東寧)
+function gAcademy(n){var a=new Float32Array(n*3);
+for(var i=0;i<n;i++){
+  var p=Math.random(),x=0,y=0,z=0;
+  if(p<.14){// 兩根立柱
+    var side=Math.random()<.5?-4:4;
+    var t=Math.random()*Math.PI*2,r=.5;
+    x=side+Math.cos(t)*r;y=-4+Math.random()*7;z=Math.sin(t)*r;
+  } else if(p<.20){// 柱礎 (底座立方)
+    var side2=Math.random()<.5?-4:4;
+    x=side2+(Math.random()-.5)*1.6;y=-4.3+(Math.random()-.5)*.5;z=(Math.random()-.5)*1.6;
+  } else if(p<.28){// 橫樑 (頂部水平)
+    x=(Math.random()-.5)*10;y=3+(Math.random()-.5)*.4;z=(Math.random()-.5)*.5;
+  } else if(p<.42){// 下層屋頂 (寬弧)
+    var u=(Math.random()-.5)*2;
+    var roofY=3.4+(1-u*u)*1.3;
+    x=u*5.8;y=roofY;z=(Math.random()-.5)*1.1;
+  } else if(p<.52){// 上層屋頂 (窄弧)
+    var u2=(Math.random()-.5)*2;
+    var roofY2=5.2+(1-u2*u2)*1.5;
+    x=u2*4;y=roofY2;z=(Math.random()-.5)*.9;
+  } else if(p<.56){// 翹脊 (兩端向上捲)
+    var side3=Math.random()<.5?-1:1;
+    var flare=Math.random();
+    x=side3*(5.8+flare*1.2);
+    y=4.5+flare*1.5;
+    z=(Math.random()-.5)*.4;
+  } else if(p<.60){// 上層屋頂兩端翹脊
+    var side4=Math.random()<.5?-1:1;
+    var flare2=Math.random();
+    x=side4*(4+flare2*.8);
+    y=6.5+flare2*.8;
+    z=(Math.random()-.5)*.3;
+  } else if(p<.66){// 牌匾 (橫樑下方矩形)
+    x=(Math.random()-.5)*3;y=2+(Math.random()-.5)*.6;z=(Math.random()-.5)*.25;
+  } else if(p<.70){// 脊飾頂點 (屋脊正中央的寶珠)
+    var spt=Math.random()*Math.PI*2,spp=Math.acos(2*Math.random()-1),spr=Math.random()*.5;
+    x=spr*Math.sin(spp)*Math.cos(spt);y=7.5+spr*Math.cos(spp);z=spr*Math.sin(spp)*Math.sin(spt);
+  } else if(p<.82){// 屯田田字格 (底部網格)
+    var gx=Math.floor(Math.random()*7)-3;
+    var gz=Math.floor(Math.random()*5)-2;
+    x=gx*1.3+(Math.random()-.5)*.25;
+    y=-5.5-Math.random()*.8;
+    z=gz*1.3+(Math.random()-.5)*.25;
+  } else if(p<.92){// 鄭成功之劍:劍身 (垂直)
+    var sword=Math.random();
+    x=-7.5+(Math.random()-.5)*.15;
+    y=-3+sword*5.5;
+    z=(Math.random()-.5)*.15;
+  } else if(p<.95){// 劍柄 (橫條)
+    x=-7.5+(Math.random()-.5)*.9;y=2.5+(Math.random()-.5)*.25;z=(Math.random()-.5)*.3;
+  } else{// 入口門洞 (兩柱間的半圓拱)
+    var at=Math.random()*Math.PI;
+    x=Math.cos(at+Math.PI)*3;y=-3+Math.sin(at)*3;z=(Math.random()-.5)*.3;
   }
   a[i*3]=x;a[i*3+1]=y;a[i*3+2]=z;
 }return a}
@@ -1290,18 +1399,29 @@ function gBook(n){var a=new Float32Array(n*3);for(var i=0;i<n;i++){
     x=Math.cos(spt)*.3;
     y=-2+Math.random()*4;
     z=Math.sin(spt)*.3;
-  } else if(p<.95){// 燈泡 (3D 球)
-    var bt=Math.random()*Math.PI*2,bp=Math.acos(2*Math.random()-1),br=Math.sqrt(Math.random())*1.6;
-    x=br*Math.sin(bp)*Math.cos(bt);
+  } else if(p<.82){// 燈泡 (3D 球,移到右上方)
+    var bt=Math.random()*Math.PI*2,bp=Math.acos(2*Math.random()-1),br=Math.sqrt(Math.random())*1.3;
+    x=4+br*Math.sin(bp)*Math.cos(bt);
     y=5.5+br*Math.sin(bp)*Math.sin(bt);
     z=br*Math.cos(bp);
+  } else if(p<.90){// 擴音器 (Cone shape,左上方,象徵講座與報刊傳播)
+    var ms=Math.random(); // 0=窄口,1=寬口
+    var mt=Math.random()*Math.PI*2;
+    var mr=.3+ms*1.6;  // 從 0.3 擴到 1.9 的錐形
+    x=-5+Math.cos(mt)*mr;
+    y=4+ms*2.5;
+    z=Math.sin(mt)*mr*.7;
+  } else if(p<.93){// 擴音器手柄
+    x=-5.8+(Math.random()-.5)*.3;
+    y=2+Math.random()*2;
+    z=(Math.random()-.5)*.3;
   } else{// 燈絲與燈頭
     if(Math.random()<.5){// 燈絲 (W 形)
       var ft=Math.random();
-      x=(ft-.5)*1.4;y=5+Math.sin(ft*Math.PI*3)*.3;z=(Math.random()-.5)*.2;
+      x=4+(ft-.5)*1.1;y=5+Math.sin(ft*Math.PI*3)*.3;z=(Math.random()-.5)*.2;
     } else{// 燈座 (上方圓柱)
-      var st2=Math.random()*Math.PI*2,sr2=.4;
-      x=Math.cos(st2)*sr2;y=7.3+Math.random()*.5;z=Math.sin(st2)*sr2;
+      var st2=Math.random()*Math.PI*2,sr2=.35;
+      x=4+Math.cos(st2)*sr2;y=7.2+Math.random()*.5;z=Math.sin(st2)*sr2;
     }
   }
   a[i*3]=x;a[i*3+1]=y;a[i*3+2]=z;
@@ -1495,7 +1615,7 @@ function gCanoe(n){var a=new Float32Array(n*3);for(var i=0;i<n;i++){
 }return a}
 function gN(n){var a=new Float32Array(n*3);var nds=[];for(var k=0;k<60;k++){var t=Math.random()*Math.PI*2,p=Math.acos(2*Math.random()-1);nds.push([11*Math.sin(p)*Math.cos(t),11*Math.sin(p)*Math.sin(t),11*Math.cos(p)])}for(var i=0;i<n;i++){if(Math.random()<.3){var nd=nds[Math.floor(Math.random()*nds.length)];a[i*3]=nd[0]+(Math.random()-.5)*1.5;a[i*3+1]=nd[1]+(Math.random()-.5)*1.5;a[i*3+2]=nd[2]+(Math.random()-.5)*1.5}else if(Math.random()<.5){var n1=nds[Math.floor(Math.random()*nds.length)],n2=nds[Math.floor(Math.random()*nds.length)],tt=Math.random();a[i*3]=n1[0]+(n2[0]-n1[0])*tt;a[i*3+1]=n1[1]+(n2[1]-n1[1])*tt;a[i*3+2]=n1[2]+(n2[2]-n1[2])*tt}else{var t2=Math.random()*Math.PI*2,p2=Math.acos(2*Math.random()-1),R=10.5+Math.random();a[i*3]=R*Math.sin(p2)*Math.cos(t2);a[i*3+1]=R*Math.sin(p2)*Math.sin(t2);a[i*3+2]=R*Math.cos(p2)}}return a}
 var GEN={compass:gC,gears:gG,scroll:gSc,atom:gAt,network:gN,brain:gB,wheat:gW,tablet:gT,arch:gA,mandala:gM,pillar:gP,astrolabe:gAs,
-  ship:gShip,train:gTrain,chip:gChip,ballot:gBallot,quake:gQuake,sunflower:gSunflower,guardian:gGuardian,neural:gNeural,castle:gCastle,book:gBook,canoe:gCanoe,dawn:gDawn,guide:gGuide,taiwan:gTaiwan};
+  ship:gShip,train:gTrain,chip:gChip,ballot:gBallot,quake:gQuake,sunflower:gSunflower,guardian:gGuardian,neural:gNeural,castle:gCastle,academy:gAcademy,book:gBook,canoe:gCanoe,dawn:gDawn,guide:gGuide,taiwan:gTaiwan};
 var SHAPES={};DATA.forEach(function(d){SHAPES[d.shape]=GEN[d.shape](N)});
 SHAPES['guide']=gGuide(N);
 SHAPES['taiwan']=gTaiwan(N);
