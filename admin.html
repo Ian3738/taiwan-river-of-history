@@ -161,6 +161,7 @@ details[open] summary{color:#e0a030;margin-bottom:10px}
     <button class="btn" id="refresh-btn">🔄 重新整理</button>
     <button class="btn amber" id="export-csv-btn">📥 匯出 CSV</button>
     <button class="btn amber" id="export-json-btn">📥 匯出 JSON</button>
+    <button class="btn" id="clear-all-btn" style="border-color:rgba(255,100,100,.5);color:#ff8080" title="⚠️ 清空所有語料 (危險)">🗑 清空</button>
   </div>
 </header>
 
@@ -221,20 +222,22 @@ service cloud.firestore {
 
     match /users/{userId} {
       allow read: if isOwner(userId) || isAdmin();
+      allow list: if isAdmin();
       allow create, update: if isOwner(userId)
         && validProfile(request.resource.data);
-      allow delete: if false;
+      allow delete: if isAdmin();
 
       match /sessions/{sessionId} {
         allow read: if isOwner(userId) || isAdmin();
         allow create, update: if isOwner(userId);
-        allow delete: if false;
+        allow delete: if isAdmin();
 
         match /messages/{messageId} {
           allow read: if isOwner(userId) || isAdmin();
           allow create: if isOwner(userId)
             && validMessage(request.resource.data);
-          allow update, delete: if false;
+          allow update: if false;
+          allow delete: if isAdmin();
         }
       }
 
@@ -242,26 +245,23 @@ service cloud.firestore {
         allow read: if isOwner(userId) || isAdmin();
         allow create: if isOwner(userId)
           && validEraVisit(request.resource.data);
-        allow update, delete: if false;
+        allow update: if false;
+        allow delete: if isAdmin();
       }
 
       match /counselingSessions/{sessionId} {
         allow read: if isOwner(userId) || isAdmin();
         allow create, update: if isOwner(userId);
-        allow delete: if false;
+        allow delete: if isAdmin();
 
         match /messages/{messageId} {
           allow read: if isOwner(userId) || isAdmin();
           allow create: if isOwner(userId)
             && validMessage(request.resource.data);
-          allow update, delete: if false;
+          allow update: if false;
+          allow delete: if isAdmin();
         }
       }
-    }
-
-    // 讓管理員能列出所有 users (重要!)
-    match /users/{userId} {
-      allow list: if isAdmin();
     }
 
     match /{document=**} { allow read, write: if false; }
@@ -503,7 +503,7 @@ service cloud.firestore {
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
 import { getAuth, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
-import { getFirestore, doc, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+import { getFirestore, doc, collection, getDocs, query, orderBy, deleteDoc } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCSy_3ouSo5bWndt4ohXsognLH2ISwS8W0",
@@ -593,6 +593,48 @@ async function loadAll() {
     }
   }
 }
+
+// ============================================================
+// 🗑 清空所有語料 (危險,需 2 次確認 + 打字確認)
+// ============================================================
+window._clearAllCorpus = async function(){
+  if (!confirm('⚠️ 第一次確認\n\n這會刪除「所有訪客」的 sessions、messages、counselingSessions、eraVisits。\n\n使用者 profile (暱稱) 會保留,但所有對話記錄會消失、無法復原。\n\n要繼續嗎?')) return;
+  const typed = prompt('⚠️ 最後確認\n\n請打「我確定要清空」才會執行:');
+  if (typed !== '我確定要清空') { alert('已取消。'); return; }
+  const btn = document.getElementById('clear-all-btn');
+  btn.disabled = true; btn.textContent = '清空中…';
+  const all = window._allRaw || [];
+  try {
+    let deleted = 0;
+    for (const s of all) {
+      const uid = s.uid;
+      const subColl = s.type === 'counseling' ? 'counselingSessions' : 'sessions';
+      // 先刪 messages
+      for (const m of (s.messages||[])) {
+        // m 沒有 id,需要重抓
+      }
+      // 直接刪 session 底下所有 messages + session 本身
+      const msgSnap = await getDocs(collection(db,'users',uid,subColl,s.id,'messages'));
+      for (const mDoc of msgSnap.docs) {
+        await deleteDoc(mDoc.ref);
+        deleted++;
+      }
+      await deleteDoc(doc(db,'users',uid,subColl,s.id));
+      deleted++;
+    }
+    // 額外:清 eraVisits
+    const usersSnap = await getDocs(collection(db,'users'));
+    for (const u of usersSnap.docs) {
+      const evSnap = await getDocs(collection(db,'users',u.id,'eraVisits'));
+      for (const ev of evSnap.docs) { await deleteDoc(ev.ref); deleted++; }
+    }
+    alert(`✅ 已刪除 ${deleted} 筆資料。重新載入。`);
+    location.reload();
+  } catch(e) {
+    alert('清空失敗: '+e.message+'\n\n(可能是 Firestore 規則不允許刪除,需要暫時把 allow delete: if false 改成 if isAdmin())');
+    btn.disabled = false; btn.textContent = '🗑 清空';
+  }
+};
 
 window.applyDateFilter = function(){
   const all = window._allRaw||[];
@@ -1221,6 +1263,7 @@ document.querySelectorAll('[data-wc]').forEach(b=>{
 });
 
 document.getElementById('refresh-btn').addEventListener('click',()=>location.reload());
+document.getElementById('clear-all-btn').addEventListener('click',()=>window._clearAllCorpus&&window._clearAllCorpus());
 
 document.getElementById('export-csv-btn').addEventListener('click',()=>{
   if (!window._all) return;
