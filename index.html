@@ -2014,7 +2014,7 @@ var hlDots=document.querySelectorAll('.hl'),hrDots=document.querySelectorAll('.h
 function ema(p,c,a){return p===null?c:a*c+(1-a)*p}
 function HandState(){this.wx=null;this.wy=null;this.prevWx=null;this.vel=0;this.fingers=[];this.cnt=0;this.open=false;this.fist=false;this.fistFrames=0;this.active=false;this.pinchPrev=false;this.activeAt=0}
 var H=[new HandState(),new HandState()];
-var swipeLastTime=0,swipeCooldown=1500; // 延長到 1.5 秒,避免誤判
+var swipeLastTime=0,swipeCooldown=900;
 var twoHandPrevDist=null;
 
 // ---- 手勢點擊資訊卡 ----
@@ -2056,16 +2056,13 @@ function processHands(results){
     if(h.prevWx!==null)h.vel=ema(h.vel,h.wx-h.prevWx,.5);
     h.prevWx=h.wx;
 
-    // 手剛出現的暖機期 (1 秒內) 不觸發任何會切換年代或重念的手勢
-    var warmed=Date.now()-h.activeAt>1000;
-
-    // SWIPE (只在暖機後)
-    if(warmed&&h.open&&Math.abs(h.vel)>.011&&(Date.now()-swipeLastTime)>swipeCooldown){
+    // SWIPE (h.vel 已經有「首幀為 0」保護,所以不需要額外的暖機期)
+    if(h.open&&Math.abs(h.vel)>.011&&(Date.now()-swipeLastTime)>swipeCooldown){
       swipeLastTime=Date.now();anySwipe=true;
       if(h.vel>0)prevN();else nextN();
     }
-    // FIST (暖機後才能 → 回到長河)
-    if(warmed&&h.fist){h.fistFrames++;if(h.fistFrames>=16){goRiver();h.fistFrames=0;anyFist=true}}
+    // FIST — 需持續握拳 16 幀才觸發回到長河,本身就有防抖,不再額外暖機
+    if(h.fist){h.fistFrames++;if(h.fistFrames>=16){goRiver();h.fistFrames=0;anyFist=true}}
     else h.fistFrames=0;
 
     // POINT: 食指指向旋轉圖形 (不會觸發朗讀,可以不用等暖機)
