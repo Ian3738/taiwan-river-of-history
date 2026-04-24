@@ -721,7 +721,7 @@ body.chat-open #chat-panel{transform:translateX(0)}
 </script>
 
 <script id="vs" type="x-shader/x-vertex">
-uniform float uTime,uProgress,uScale,uTiltX,uTiltY,uSpin,uBurst;
+uniform float uTime,uProgress,uScale,uTiltX,uTiltY,uSpin,uBurst,uAnimMode;
 uniform vec3 uAccent;
 attribute vec3 aTarget,aRandom;attribute float aSize;
 varying vec3 vColor;varying float vAlpha;
@@ -735,7 +735,54 @@ void main(){float t=uTime;
   float ny=noise(vec3(aRandom.x*3.+t*.3,aRandom.y*2.,aRandom.z*2.))*2.-1.;
   float nz=noise(vec3(aRandom.z*3.,aRandom.x*2.+t*.2,aRandom.y*2.))*2.-1.;
   vec3 rP=vec3(fM,aRandom.y*6.+ny*6.,aRandom.z*8.+nz*4.);
+  // 基礎呼吸抖動
   vec3 sP=aTarget+vec3(sin(t*.5+aRandom.x*5.)*.3,cos(t*.4+aRandom.y*5.)*.3,sin(t*.6+aRandom.z*5.)*.2);
+  // 節點專屬動畫 (uAnimMode 由前端依年代切換)
+  // 1=海浪搖 (獨木舟/帆船)   2=前進 (火車)    3=斷裂顫抖 (乙未)     4=熄滅閃爍 (二二八)
+  // 5=飛升 (解嚴破曉)        6=雷動 (九二一)  7=花瓣綻放 (太陽花)   8=脈動 (AI 神經網絡)
+  // 9=轉動 (晶圓/投票箱)     10=煙霧上升 (書/煙囪)  0=無
+  vec3 anim=vec3(0.);
+  if(uAnimMode>.5&&uAnimMode<1.5){// 海浪搖
+    anim.y=sin(t*1.4+aTarget.x*.3)*.5;
+    anim.x=cos(t*1.0+aTarget.z*.4)*.25;
+  } else if(uAnimMode>1.5&&uAnimMode<2.5){// 火車前進 (輪子轉 + 煙飄)
+    if(aTarget.y<-2.)anim.x=sin(t*4.+aTarget.x*2.)*.15; // 輪區微震
+    if(aTarget.y>4.)anim.x-=t*.3; anim.x=mod(anim.x,14.)-7.; anim.y=aTarget.y>4.?sin(t*1.5+aRandom.x*3.)*.6:0.; // 煙左飄
+  } else if(uAnimMode>2.5&&uAnimMode<3.5){// 斷裂顫抖
+    anim.x=sin(t*12.+aRandom.x*20.)*.08;
+    anim.y=cos(t*14.+aRandom.y*20.)*.05;
+  } else if(uAnimMode>3.5&&uAnimMode<4.5){// 熄滅閃爍 (用 alpha 的變化由其他地方處理,這邊微震)
+    anim.y=sin(t*2.+aRandom.x*5.)*.1;
+  } else if(uAnimMode>4.5&&uAnimMode<5.5){// 飛升 (破曉鳥向上)
+    if(aTarget.y>2.){
+      float rise=mod(t*.8+aRandom.x*3.,6.);
+      anim.y=rise*.3;
+      anim.x=sin(t+aRandom.y*5.)*.5;
+    }
+  } else if(uAnimMode>5.5&&uAnimMode<6.5){// 雷動搖晃 (地震)
+    float q=exp(-mod(t,3.)*2.); // 每 3 秒一次強震衰減
+    anim.x=sin(t*20.+aRandom.x*40.)*q*.6;
+    anim.y=cos(t*22.+aRandom.y*40.)*q*.3;
+  } else if(uAnimMode>6.5&&uAnimMode<7.5){// 花瓣綻放 (呼吸)
+    float r2=length(aTarget.xy);
+    if(r2>2.5){
+      float br=sin(t*1.5)*.5+.5;
+      anim=normalize(vec3(aTarget.x,aTarget.y-2.,aTarget.z))*br*.5;
+    }
+  } else if(uAnimMode>7.5&&uAnimMode<8.5){// 脈動 (神經網絡)
+    float pulse=sin(t*2.5-length(aTarget)*.5)*.15;
+    anim=aTarget*pulse*.1;
+  } else if(uAnimMode>8.5&&uAnimMode<9.5){// 轉動 (晶圓)
+    float spin=t*.8;
+    float c=cos(spin),s=sin(spin);
+    float nx=aTarget.x*c-aTarget.z*s;
+    float nz=aTarget.x*s+aTarget.z*c;
+    anim.x=nx-aTarget.x; anim.z=nz-aTarget.z;
+    anim.x*=.25; anim.z*=.25; // 淡淡自轉
+  } else if(uAnimMode>9.5&&uAnimMode<10.5){// 煙霧上升 (書+燈泡)
+    if(aTarget.y>5.){anim.y=sin(t*2.+aRandom.x*5.)*.3;anim.x=sin(t*.8+aRandom.y*3.)*.2}
+  }
+  sP+=anim;
   vec3 burstOffset=normalize(aRandom)*uBurst*15.;
   float pr=smoothstep(0.,1.,uProgress);vec3 p=mix(rP,sP,pr)+burstOffset;
   p*=uScale;
@@ -760,33 +807,33 @@ void main(){vec2 c=gl_PointCoord-vec2(.5);float d=length(c);if(d>.5)discard;gl_F
 // 台灣歷史節點
 // ------------------------------------------------------------
 var DATA=[
- {era:'~4000 BCE',name:'南島語族的起源',shape:'canoe',color:'#9CB4A0',
+ {era:'~4000 BCE',name:'南島語族的起源',shape:'canoe',color:'#9CB4A0',anim:1,
   text:'距今約六千年前的史前台灣,具備農耕與精湛航海技術的先民,以台灣為起點,乘獨木舟展開跨越太平洋與印度洋的擴張,台灣被廣泛認定為「南島語族」的發源地,在人類海洋遷徙史上具備核心的歷史地位。'},
- {era:'1624',name:'大航海的交會',shape:'ship',color:'#8E9775',
+ {era:'1624',name:'大航海的交會',shape:'ship',color:'#8E9775',anim:1,
   text:'西元 1624 年荷蘭東印度公司於大員(今台南安平)建立熱蘭遮城,標誌著台灣正式捲入大航海時代的全球化貿易網,此時代的台灣成為東亞鹿皮、蔗糖等物資的國際轉運樞紐,並首次出現由羅馬拼音書寫的「新港文書」。'},
- {era:'1661',name:'鄭氏東寧的孤光',shape:'academy',color:'#B5895A',
+ {era:'1661',name:'鄭氏東寧的孤光',shape:'academy',color:'#B5895A',anim:0,
   text:'西元 1661 年鄭成功率軍擊退荷蘭政權,建立台灣史上首個漢人政權「東寧王國」,此階段的歷史重心在於軍隊屯田開墾與漢人典章制度的引入,全台首學的設立正式將儒家思想與傳統宗族文化深植於台灣社會。'},
- {era:'1887',name:'鐵路與電光之初',shape:'train',color:'#E28E8E',
+ {era:'1887',name:'鐵路與電光之初',shape:'train',color:'#E28E8E',anim:2,
   text:'西元 1887 年清法戰爭後台灣建省,首任巡撫劉銘傳啟動近代化建設,開始基隆至新竹鐵路的修築,以及電報線與電燈的架設,這是台灣從傳統農業社會步入近代工業化與基礎設施建設的啟蒙階段。'},
- {era:'1895',name:'乙未割讓的斷柱',shape:'pillar',color:'#7A6E78',
+ {era:'1895',name:'乙未割讓的斷柱',shape:'pillar',color:'#7A6E78',anim:3,
   text:'西元 1895 年甲午戰爭後《馬關條約》將台灣割讓予日本,引發台灣人民強烈的武裝抵抗(乙未戰爭),隨後展開的五十年日本殖民時期,總督府實行高壓統治與同化政策,同時也建立了現代化的戶政、公衛與水利等基礎設施。'},
- {era:'1921',name:'文化覺醒的年代',shape:'book',color:'#6D8299',
+ {era:'1921',name:'文化覺醒的年代',shape:'book',color:'#6D8299',anim:10,
   text:'西元 1921 年面對殖民體制,台灣知識份子林獻堂、蔣渭水等人成立「台灣文化協會」,歷史路線從武裝抗日轉向體制內的政治與文化啟蒙,透過發行報刊與舉辦講座,促成台灣現代公民意識與民族主體性的首次大規模覺醒。'},
- {era:'1947',name:'二二八的裂縫',shape:'tablet',color:'#9C6B6B',
+ {era:'1947',name:'二二八的裂縫',shape:'tablet',color:'#9C6B6B',anim:4,
   text:'西元 1947 年因戰後國民政府接管初期的施政失當與族群摩擦,爆發了全台性的「二二八事件」及隨後的武力鎮壓,這段沉痛的歷史造成大量本土菁英傷亡,並成為後續實施長達 38 年戒嚴與白色恐怖統治的開端。'},
- {era:'1980',name:'矽島的崛起',shape:'chip',color:'#D4A373',
+ {era:'1980',name:'矽島的崛起',shape:'chip',color:'#D4A373',anim:9,
   text:'西元 1980 年面對國際外交與經濟危機,台灣政府設立「新竹科學工業園區」,此時期歷史重點為經濟結構的重大轉型,藉由海外技術引進與人才回流,台灣開始發展半導體與資訊產業,奠定全球高科技代工重鎮的基礎。'},
- {era:'1987',name:'解嚴後的綻放',shape:'dawn',color:'#C9B26B',
+ {era:'1987',name:'解嚴後的綻放',shape:'dawn',color:'#C9B26B',anim:5,
   text:'西元 1987 年 7 月 15 日台灣正式解除長達 38 年的戒嚴令,黨禁與報禁的解除促使社會壓抑的能量全面釋放,各類社會運動蓬勃發展,政治反對勢力合法化,標誌著台灣正式邁入自由化與民主化的進程。'},
- {era:'1996',name:'首次總統直選',shape:'ballot',color:'#7AA0B8',
+ {era:'1996',name:'首次總統直選',shape:'ballot',color:'#7AA0B8',anim:0,
   text:'西元 1996 年台灣舉行史上首次總統直接選舉,儘管面臨第三次台海飛彈危機的外部軍事威嚇,大選依然順利完成,此歷史事件徹底落實了主權在民的民主原則,是台灣政治體制民主化完成的關鍵里程碑。'},
- {era:'1999',name:'九二一的搖晃',shape:'quake',color:'#8C7A6B',
+ {era:'1999',name:'九二一的搖晃',shape:'quake',color:'#8C7A6B',anim:6,
   text:'西元 1999 年 9 月 21 日台灣中部發生芮氏規模 7.3 強震,造成慘重傷亡與破壞,此事件的歷史意義不僅在於地理與社會的創傷,更在於災後展現的強大民間互助動能,促成國家級災難防救體系與建築防震法規的全面翻新。'},
- {era:'2014',name:'太陽花的春天',shape:'sunflower',color:'#E8C76C',
+ {era:'2014',name:'太陽花的春天',shape:'sunflower',color:'#E8C76C',anim:7,
   text:'西元 2014 年春季因反對立法院草率通過《海峽兩岸服務貿易協議》,爆發青年學生佔領立法院的「太陽花學運」,此時代背景反映了年輕世代對兩岸經貿過度依賴的疑慮,並深刻影響了隨後的政治版圖與公民參與模式。'},
- {era:'2020',name:'護國神山與口罩外交',shape:'guardian',color:'#9AC5D6',
+ {era:'2020',name:'護國神山與口罩外交',shape:'guardian',color:'#9AC5D6',anim:0,
   text:'西元 2020 年面對全球 COVID-19 疫情,台灣成功執行邊境管控並向國際輸出醫療物資,同時全球供應鏈的晶片短缺危機,讓國際社會強烈意識到台灣半導體產業在經濟與地緣政治上的戰略高度與不可替代性。'},
- {era:'2026',name:'AI 與共創時代',shape:'neural',color:'#A3B18A',
+ {era:'2026',name:'AI 與共創時代',shape:'neural',color:'#A3B18A',anim:8,
   text:'西元 2026 年生成式人工智慧全面普及,台灣憑藉先進製程晶片與強大的 AI 伺服器硬體生態系,成為全球算力網絡的核心支柱,此時期的歷史定位在於硬體製造與新興科技的深度融合,台灣持續以科技實力驅動全球的創新發展。'}
 ];
 var NUM_NODES=DATA.length;
@@ -804,11 +851,92 @@ var IS_MOBILE=window.matchMedia('(max-width: 900px)').matches;
 var N=IS_MOBILE?6000:12000;
 function gB(n){var a=new Float32Array(n*3);for(var i=0;i<n;i++){var t=Math.random()*Math.PI*2,p=Math.acos(2*Math.random()-1),R=10+2.5*Math.sin(t*5)*Math.sin(p*7)+1.5*Math.sin(t*3+p*5);a[i*3]=R*Math.sin(p)*Math.cos(t);a[i*3+1]=R*Math.sin(p)*Math.sin(t);a[i*3+2]=R*Math.cos(p)}return a}
 function gW(n){var a=new Float32Array(n*3);for(var i=0;i<n;i++){var t=Math.random(),r=7*(1-t)+Math.random()*.8,h=Math.random()*Math.PI*2;a[i*3]=Math.cos(h)*r;a[i*3+1]=t*22-6;a[i*3+2]=Math.sin(h)*r}return a}
-function gT(n){var a=new Float32Array(n*3);for(var i=0;i<n;i++){if(Math.random()>.7){var s=Math.floor(Math.random()*4),t=Math.random();a[i*3]=s<2?(s===0?-8:8):t*16-8;a[i*3+1]=s<2?t*14-7:(s===2?-7:7);a[i*3+2]=(Math.random()-.5)*1.5}else{a[i*3]=(Math.random()-.5)*16;a[i*3+1]=(Math.random()-.5)*14;a[i*3+2]=(Math.random()-.5)*.6}}return a}
+// 🕯 二二八紀念碑:破碎石碑 + 三根燭台 + 火焰
+function gT(n){var a=new Float32Array(n*3);
+var candles=[-5,0,5]; // 三根燭台的 x 位置
+for(var i=0;i<n;i++){
+  var p=Math.random(),x=0,y=0,z=0;
+  if(p<.30){// 主體石碑 (正中央立方,上段被削去一塊)
+    var cx=(Math.random()-.5)*5;
+    var cy=-2+Math.random()*5;
+    // 製造「裂口」:右上角有個缺口
+    if(cx>1.5&&cy>2){i--;continue}
+    x=cx;y=cy;z=(Math.random()-.5)*1.2;
+  } else if(p<.40){// 石碑底座 (更寬)
+    x=(Math.random()-.5)*7;y=-3.5+(Math.random()-.5)*.8;z=(Math.random()-.5)*2;
+  } else if(p<.50){// 裂縫線 (從上方斜裂到底部)
+    var ct=Math.random();
+    x=1.5+ct*2;
+    y=3-ct*7+Math.sin(ct*5)*.15;
+    z=(Math.random()-.5)*1.3;
+  } else if(p<.75){// 三根燭台 (圓柱)
+    var ci=Math.floor(Math.random()*3);
+    var cx2=candles[ci];
+    var t=Math.random()*Math.PI*2,cr=.35;
+    x=cx2+Math.cos(t)*cr;
+    y=-4.5+Math.random()*1.8; // 燭身高度
+    z=-3.5+Math.sin(t)*cr;
+  } else if(p<.85){// 燭火 (小橢球在燭台頂)
+    var ci2=Math.floor(Math.random()*3);
+    var cx3=candles[ci2];
+    var ft=Math.random()*Math.PI*2,fp=Math.acos(2*Math.random()-1),fr=Math.random()*.4;
+    x=cx3+fr*Math.sin(fp)*Math.cos(ft);
+    y=-2.5+fr*Math.sin(fp)*Math.sin(ft)*1.3; // 往上拉長像火焰
+    z=-3.5+fr*Math.cos(fp);
+  } else if(p<.93){// 飛散碎片 (從石碑破裂處散開)
+    var fragT=Math.random()*Math.PI*2,fragR=3+Math.random()*3;
+    x=2+Math.cos(fragT)*fragR*.6;
+    y=2+Math.sin(fragT)*fragR*.4;
+    z=(Math.random()-.5)*1.5;
+  } else{// 地面紀念磚塊
+    var gx=Math.floor(Math.random()*7)-3,gz=Math.floor(Math.random()*5)-2;
+    x=gx*1.5;y=-5+(Math.random()-.5)*.2;z=gz*1.5;
+  }
+  a[i*3]=x;a[i*3+1]=y;a[i*3+2]=z;
+}return a}
 function gSc(n){var a=new Float32Array(n*3);for(var i=0;i<n;i++){var sd=Math.random()>.5?1:-1,t=Math.random()*Math.PI;a[i*3]=sd*6+Math.cos(t*1.5)*3*sd;a[i*3+1]=(Math.random()-.5)*16;a[i*3+2]=Math.sin(t*1.5)*3}return a}
 function gA(n){var a=new Float32Array(n*3);for(var i=0;i<n;i++){var p=Math.random();if(p<.4){var g=Math.random()*Math.PI,r=8+(Math.random()-.5)*1.5;a[i*3]=Math.cos(g)*r;a[i*3+1]=Math.sin(g)*r;a[i*3+2]=(Math.random()-.5)*3}else{var sx=p<.7?-1:1;a[i*3]=sx*8+(Math.random()-.5)*1.5;a[i*3+1]=Math.random()*-8;a[i*3+2]=(Math.random()-.5)*3}}return a}
 function gM(n){var a=new Float32Array(n*3);for(var i=0;i<n;i++){var t=Math.random()*Math.PI*2,p=Math.acos(2*Math.random()-1),R=9+3*Math.sin(t*6)*Math.sin(p*6)+2*Math.cos(t*3+p*4);a[i*3]=R*Math.sin(p)*Math.cos(t);a[i*3+1]=R*Math.sin(p)*Math.sin(t);a[i*3+2]=R*Math.cos(p)}return a}
-function gP(n){var a=new Float32Array(n*3);for(var i=0;i<n;i++){var p=Math.random(),g=Math.random()*Math.PI*2;if(p<.15){var r=5+(Math.random()-.5);a[i*3]=Math.cos(g)*r;a[i*3+1]=10+(Math.random()-.5)*1.5;a[i*3+2]=Math.sin(g)*r}else if(p<.3){var r2=5+(Math.random()-.5);a[i*3]=Math.cos(g)*r2;a[i*3+1]=-10+(Math.random()-.5)*1.5;a[i*3+2]=Math.sin(g)*r2}else{var r3=3.5+(Math.random()-.5)*.8,fl=1+.3*Math.sin(g*12);a[i*3]=Math.cos(g)*r3*fl;a[i*3+1]=(Math.random()-.5)*20;a[i*3+2]=Math.sin(g)*r3*fl}}return a}
+// 🏛 乙未斷柱:中央斷裂的石柱 + 撕裂的《馬關條約》紙張 + 地面碎石 (1895)
+function gP(n){var a=new Float32Array(n*3);for(var i=0;i<n;i++){
+  var p=Math.random(),g=Math.random()*Math.PI*2,x=0,y=0,z=0;
+  if(p<.35){// 下半截石柱 (直立圓柱,從底到中段)
+    var r=2.2;
+    x=Math.cos(g)*r;y=-8+Math.random()*5;z=Math.sin(g)*r;
+  } else if(p<.45){// 上半截石柱 (斷掉飛起的部分,微微傾斜)
+    var r2=2.2;
+    x=1.5+Math.cos(g)*r2*.9; // 往右偏
+    y=1+Math.random()*4;
+    z=Math.sin(g)*r2*.9;
+  } else if(p<.52){// 斷裂面 (中央裂縫處飛散的碎石)
+    var fr=Math.random()*3;
+    var ft=Math.random()*Math.PI*2;
+    x=Math.cos(ft)*fr;y=-2+(Math.random()-.5)*1.5;z=Math.sin(ft)*fr;
+  } else if(p<.70){// 左側:撕裂的《馬關條約》紙張上半
+    var pu=(Math.random()-.5)*2,pv=Math.random(); // u 沿紙寬, v 沿紙高
+    // 右緣做撕裂 (鋸齒)
+    var tear=pu>0?(Math.sin(pv*15)*.3):0;
+    x=-6+pu*2.5-Math.abs(tear);
+    y=0+pv*5;
+    z=-2+(Math.random()-.5)*.3;
+  } else if(p<.85){// 右側:撕裂的《馬關條約》紙張下半 (翻面)
+    var pu2=(Math.random()-.5)*2,pv2=Math.random();
+    var tear2=pu2<0?(Math.sin(pv2*15)*.3):0;
+    x=6+pu2*2.5+Math.abs(tear2);
+    y=-2+pv2*5;
+    z=-2+(Math.random()-.5)*.3;
+    // 旋轉一點,讓紙張看起來飄落
+  } else if(p<.92){// 地面階梯 (石碑底座)
+    x=(Math.random()-.5)*6;y=-9+(Math.random()-.5)*.4;z=(Math.random()-.5)*6;
+  } else{// 飄落紙屑
+    var sx=Math.random()*Math.PI*2;
+    var sr=4+Math.random()*4;
+    x=Math.cos(sx)*sr;
+    y=-4+Math.random()*8;
+    z=Math.sin(sx)*sr*.6;
+  }
+  a[i*3]=x;a[i*3+1]=y;a[i*3+2]=z;
+}return a}
 function gC(n){var a=new Float32Array(n*3);for(var i=0;i<n;i++){var r=Math.random();if(r<.35){var g=Math.random()*Math.PI*2,R=10+(Math.random()-.5);a[i*3]=Math.cos(g)*R;a[i*3+1]=Math.sin(g)*R;a[i*3+2]=(Math.random()-.5)*.8}else if(r<.65){var g2=Math.random()*Math.PI*2,R2=10+(Math.random()-.5);a[i*3]=(Math.random()-.5)*.8;a[i*3+1]=Math.cos(g2)*R2;a[i*3+2]=Math.sin(g2)*R2}else{var g3=Math.random()*Math.PI*2,sp=Math.random()*10;a[i*3]=Math.cos(g3)*sp;a[i*3+1]=Math.sin(g3)*sp;a[i*3+2]=(Math.random()-.5)*.5}}return a}
 function gG(n){var a=new Float32Array(n*3);var gs=[{x:-6,y:0,r:5,t:10},{x:6,y:0,r:5,t:10},{x:0,y:9,r:4,t:8}];for(var i=0;i<n;i++){var g=gs[Math.floor(Math.random()*3)],ag=Math.random()*Math.PI*2,R=g.r+1.2*Math.max(0,Math.cos(ag*g.t)),rr=R*(.85+Math.random()*.3);a[i*3]=g.x+Math.cos(ag)*rr;a[i*3+1]=g.y+Math.sin(ag)*rr;a[i*3+2]=(Math.random()-.5)*2.5}return a}
 function gAt(n){var a=new Float32Array(n*3);for(var i=0;i<n;i++){if(Math.random()<.25){var t=Math.random()*Math.PI*2,p=Math.acos(2*Math.random()-1),R=3+Math.random()*.5;a[i*3]=R*Math.sin(p)*Math.cos(t);a[i*3+1]=R*Math.sin(p)*Math.sin(t);a[i*3+2]=R*Math.cos(p)}else{var o=Math.floor(Math.random()*3),ag=Math.random()*Math.PI*2,R2=10+(Math.random()-.5),x=Math.cos(ag)*R2,y=Math.sin(ag)*R2,z=(Math.random()-.5)*.4;if(o>0){var an=o===1?1.05:-1.05,c=Math.cos(an),s=Math.sin(an),ny=y*c-z*s;z=y*s+z*c;y=ny}a[i*3]=x;a[i*3+1]=y;a[i*3+2]=z}}return a}
@@ -1636,7 +1764,7 @@ geo.setAttribute('aTarget',new THREE.BufferAttribute(tgt,3));
 geo.setAttribute('aRandom',new THREE.BufferAttribute(rnd,3));
 geo.setAttribute('aSize',new THREE.BufferAttribute(sz,1));
 var mat=new THREE.ShaderMaterial({vertexShader:document.getElementById('vs').textContent,fragmentShader:document.getElementById('fs').textContent,
-  uniforms:{uTime:{value:0},uProgress:{value:0},uScale:{value:1},uTiltX:{value:0},uTiltY:{value:0},uSpin:{value:0},uBurst:{value:0},uAccent:{value:new THREE.Vector3(.55,.9,1)}},
+  uniforms:{uTime:{value:0},uProgress:{value:0},uScale:{value:1},uTiltX:{value:0},uTiltY:{value:0},uSpin:{value:0},uBurst:{value:0},uAnimMode:{value:0},uAccent:{value:new THREE.Vector3(.55,.9,1)}},
   transparent:true,depthWrite:false,blending:THREE.AdditiveBlending});
 scene.add(new THREE.Points(geo,mat));
 
@@ -1753,6 +1881,7 @@ function selectNode(idx,dir){
   fbCall(function(fb){return fb.logEraVisit(SESSION_ID,DATA[idx].id||idx,DATA[idx].era+' '+DATA[idx].name)});
   S.node=idx;S.tProg=1;setTgt(DATA[idx].shape);
   var rgb=hexToRgb(DATA[idx].color);mat.uniforms.uAccent.value.set(rgb[0],rgb[1],rgb[2]);
+  mat.uniforms.uAnimMode.value=DATA[idx].anim||0; // 啟用節點專屬動畫
   sciFiTransition(dir||'right',DATA[idx].era+' · '+DATA[idx].name,DATA[idx].color);
   document.querySelectorAll('.tn').forEach(function(e,i){e.classList.toggle('active',i===idx)});
   document.getElementById('river-btn').classList.remove('active');
@@ -1768,7 +1897,7 @@ function selectNode(idx,dir){
   }
   var tn=document.querySelectorAll('.tn')[idx];if(tn)tn.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});
 }
-function goRiver(){stopSpeak();S.node=-1;S.tProg=0;
+function goRiver(){stopSpeak();S.node=-1;S.tProg=0;mat.uniforms.uAnimMode.value=0;
   document.querySelectorAll('.tn').forEach(function(e){e.classList.remove('active')});
   document.getElementById('river-btn').classList.add('active');
   document.getElementById('infopanel').classList.remove('show');
