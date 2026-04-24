@@ -1552,7 +1552,7 @@ var aiCache={}; // {nodeIdx: {elapsed, shape, nLoops}}
 var aiInflight=null;
 var nLoops=4;
 var loopsEl=document.getElementById('loops'),loopsVal=document.getElementById('loops-val');
-loopsEl.addEventListener('input',function(){nLoops=+loopsEl.value;loopsVal.textContent=nLoops});
+if(loopsEl)loopsEl.addEventListener('input',function(){nLoops=+loopsEl.value;if(loopsVal)loopsVal.textContent=nLoops});
 
 function pingHealth(){
   fetch(MYTHOS_URL+'/health').then(function(r){return r.json()}).then(function(d){
