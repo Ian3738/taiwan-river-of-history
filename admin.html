@@ -502,7 +502,7 @@ service cloud.firestore {
 <!-- Firebase init -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
-import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+import { getAuth, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
 import { getFirestore, doc, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -523,10 +523,28 @@ window._fb = {auth, db, provider, signInWithPopup, signOut};
 onAuthStateChanged(auth, async user => {
   const statusEl = document.getElementById('auth-status');
   if (!user) {
-    statusEl.innerHTML = '<button class="btn amber" id="login-btn">🔐 Google 管理員登入</button>';
+    statusEl.innerHTML = '<button class="btn amber" id="login-btn">🔐 Google 管理員登入</button> <button class="btn" id="login-redirect-btn" title="若 popup 無法跳出">重新導向</button>';
     document.getElementById('login-btn').addEventListener('click', async () => {
-      try { await signInWithPopup(auth, provider); } catch(e) { alert('登入失敗: '+e.message); }
+      try { await signInWithPopup(auth, provider); }
+      catch(e) {
+        console.error('[登入錯誤完整內容]', e);
+        const code = e.code || '';
+        let msg = '登入失敗: '+e.message+'\n\n錯誤代碼: '+code+'\n\n';
+        if (code==='auth/popup-blocked') msg += '→ 瀏覽器擋了 popup。請允許彈出視窗,或改按「重新導向」登入。';
+        else if (code==='auth/unauthorized-domain') msg += '→ 網域未授權。請到 Firebase Console → Authentication → Settings → Authorized domains,加入 ian3738.github.io';
+        else if (code==='auth/operation-not-allowed') msg += '→ Google 登入未啟用。請到 Firebase Console → Authentication → Sign-in method,點「Google」→ 啟用 → Save';
+        else if (code==='auth/popup-closed-by-user') msg += '→ 你把 popup 關掉了,重新點擊即可。';
+        else if (code==='auth/cancelled-popup-request') msg += '→ 重複點擊,再試一次。';
+        else msg += '→ 請截圖 F12 Console 紅字錯誤給我除錯。';
+        alert(msg);
+      }
     });
+    document.getElementById('login-redirect-btn').addEventListener('click', async () => {
+      try { await signInWithRedirect(auth, provider); }
+      catch(e) { alert('redirect 登入失敗: '+e.message); }
+    });
+    // 處理 redirect 回來的結果
+    try { await getRedirectResult(auth); } catch(e) { console.warn('redirect result:', e); }
     return;
   }
   statusEl.innerHTML = `✓ ${user.displayName||'管理員'} <span style="color:rgba(255,255,255,.3);font-size:.8rem;margin-left:8px">uid ${user.uid.slice(0,10)}…</span> <button class="btn" id="logout-btn" style="margin-left:10px">登出</button>`;
