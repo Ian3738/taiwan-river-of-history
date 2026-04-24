@@ -42,6 +42,20 @@ service cloud.firestore {
           && validEraVisit(request.resource.data);
         allow update, delete: if false;
       }
+
+      // counselingSessions/{sid} — 諮商室對話
+      match /counselingSessions/{sessionId} {
+        allow read: if isOwner(userId);
+        allow create, update: if isOwner(userId);
+        allow delete: if false;
+
+        match /messages/{messageId} {
+          allow read: if isOwner(userId);
+          allow create: if isOwner(userId)
+            && validMessage(request.resource.data);
+          allow update, delete: if false;
+        }
+      }
     }
 
     // 其他路徑全部禁止
