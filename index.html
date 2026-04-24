@@ -87,27 +87,22 @@ canvas#c{display:block;position:fixed;inset:0;z-index:1}
 #voice-dot,#voice-label{cursor:pointer;pointer-events:auto}
 
 /* 島語對白泡 */
-#guide-bubble{position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(20px);z-index:6;pointer-events:none;
-  max-width:min(720px,85vw);padding:18px 28px;border-radius:24px;
-  background:rgba(8,8,24,.82);backdrop-filter:blur(14px);
+#guide-bubble{position:fixed;bottom:140px;left:50%;transform:translateX(-50%) translateY(20px);z-index:6;pointer-events:none;
+  width:min(640px,calc(100vw - 48px));padding:16px 24px;border-radius:20px;
+  background:rgba(8,8,24,.85);backdrop-filter:blur(14px);
   border:1px solid rgba(0,229,255,.3);
-  box-shadow:0 0 35px rgba(0,229,255,.18);
-  font-family:'Noto Serif TC',serif;font-size:1.1rem;line-height:1.85;color:#fff;
-  letter-spacing:.6px;text-align:center;
-  opacity:0;transition:all .5s cubic-bezier(.4,0,.2,1)}
+  box-shadow:0 0 30px rgba(0,229,255,.2);
+  font-family:'Noto Serif TC',serif;font-size:1rem;line-height:1.8;color:#fff;
+  letter-spacing:.4px;text-align:center;
+  opacity:0;transition:all .5s cubic-bezier(.4,0,.2,1);
+  box-sizing:border-box}
 #guide-bubble.show{opacity:1;transform:translateX(-50%) translateY(0)}
 /* 開場時對話框置於螢幕上方,不擋按鈕 */
 body:not(.entered) #guide-bubble{bottom:auto;top:8%}
 
 /* 即時聽到的字 — 右下角小條 */
-#heard{position:fixed;bottom:14px;right:14px;z-index:9;
-  font-family:'Orbitron',monospace;font-size:.55rem;letter-spacing:1px;
-  padding:5px 10px;border-radius:10px;
-  background:rgba(8,8,24,.65);border:1px solid rgba(0,229,255,.15);
-  color:rgba(0,229,255,.55);max-width:280px;
-  opacity:0;transition:opacity .25s;pointer-events:none}
-#heard.show{opacity:1}
-#heard.final{color:rgba(124,255,160,.85);border-color:rgba(124,255,160,.3)}
+/* #heard 已移除 — 使用者要求不顯示即時辨識文字 */
+#heard{display:none !important}
 
 /* =========================================================
    響應式設計 — 平板與手機
@@ -282,14 +277,16 @@ body:not(.entered) #guide-bubble{bottom:auto;top:8%}
 #timeline{position:fixed;bottom:0;left:0;right:0;z-index:5;pointer-events:all;padding:0 8px 12px;overflow-x:auto;overflow-y:hidden;white-space:nowrap;scrollbar-width:none}
 #timeline::-webkit-scrollbar{display:none}
 #tl-inner{display:inline-flex;gap:8px;padding:6px 2px;justify-content:center;width:100%}
-.tn{display:inline-flex;flex-direction:column;align-items:center;min-width:118px;padding:10px 10px;background:rgba(8,8,24,.55);border:1px solid rgba(100,160,255,.08);border-radius:11px;cursor:pointer;transition:all .3s;text-align:center;flex-shrink:0}
-.tn:hover{border-color:rgba(0,229,255,.3);background:rgba(0,229,255,.04)}
-.tn.active{border-color:rgba(0,229,255,.55);background:rgba(0,229,255,.08);box-shadow:0 0 16px rgba(0,229,255,.12)}
-.tn .yr{font-family:'Orbitron',monospace;font-size:.78rem;color:rgba(255,255,255,.55);letter-spacing:1px;margin-bottom:5px;font-weight:600}
+#timeline{padding:0 8px 12px}
+#tl-inner{display:inline-flex;gap:6px;padding:6px 2px}
+.tn{display:inline-flex;flex-direction:column;align-items:center;min-width:92px;max-width:110px;padding:8px 8px;background:rgba(8,8,24,.55);border:1px solid rgba(100,160,255,.08);border-radius:10px;cursor:pointer;transition:all .25s;text-align:center;flex-shrink:0}
+.tn:hover{border-color:rgba(0,229,255,.3);background:rgba(0,229,255,.04);transform:translateY(-2px)}
+.tn.active{border-color:rgba(0,229,255,.6);background:rgba(0,229,255,.1);box-shadow:0 0 18px rgba(0,229,255,.15);transform:translateY(-2px)}
+.tn .yr{font-family:'Orbitron',monospace;font-size:.68rem;color:rgba(255,255,255,.55);letter-spacing:.5px;margin-bottom:4px;font-weight:600;white-space:nowrap}
 .tn.active .yr{color:#00e5ff}
-.tn .nm{font-size:.9rem;color:rgba(255,255,255,.72);white-space:normal;line-height:1.3;font-weight:500}
+.tn .nm{font-size:.8rem;color:rgba(255,255,255,.75);white-space:normal;line-height:1.3;font-weight:500}
 .tn.active .nm{color:#fff}
-.tn .dt{width:6px;height:6px;border-radius:50%;margin-top:6px;background:rgba(255,255,255,.12)}
+.tn .dt{width:5px;height:5px;border-radius:50%;margin-top:5px;background:rgba(255,255,255,.12)}
 .tn.active .dt{background:#00e5ff;box-shadow:0 0 8px rgba(0,229,255,.7)}
 
 #start{position:fixed;inset:0;z-index:50;background:linear-gradient(to bottom,rgba(3,3,8,0) 0%,rgba(3,3,8,0) 55%,rgba(3,3,8,.55) 80%,rgba(3,3,8,.85) 100%);display:flex;flex-direction:column;align-items:center;justify-content:flex-end;text-align:center;padding:28px 28px 50px;transition:opacity .8s}
@@ -849,35 +846,54 @@ void main(){vec2 c=gl_PointCoord-vec2(.5);float d=length(c);if(d>.5)discard;gl_F
 // 台灣歷史節點
 // ------------------------------------------------------------
 var DATA=[
- {era:'~4000 BCE',name:'南島語族的起源',shape:'canoe',color:'#9CB4A0',anim:1,
+ {era:'~4000 BCE',name:'南島語族的起源',shape:'canoe',color:'#9CB4A0',anim:1,audio:'voices/era_bce4000.wav',
   text:'距今約六千年前的史前台灣,具備農耕與精湛航海技術的先民,以台灣為起點,乘獨木舟展開跨越太平洋與印度洋的擴張,台灣被廣泛認定為「南島語族」的發源地,在人類海洋遷徙史上具備核心的歷史地位。'},
- {era:'1624',name:'大航海的交會',shape:'ship',color:'#8E9775',anim:1,
+ {era:'1624',name:'大航海的交會',shape:'ship',color:'#8E9775',anim:1,audio:'voices/era_1624.wav',
   text:'西元 1624 年荷蘭東印度公司於大員(今台南安平)建立熱蘭遮城,標誌著台灣正式捲入大航海時代的全球化貿易網,此時代的台灣成為東亞鹿皮、蔗糖等物資的國際轉運樞紐,並首次出現由羅馬拼音書寫的「新港文書」。'},
- {era:'1661',name:'鄭氏東寧的孤光',shape:'academy',color:'#B5895A',anim:0,
+ {era:'1661',name:'鄭氏東寧的孤光',shape:'academy',color:'#B5895A',anim:0,audio:'voices/era_1661.wav',
   text:'西元 1661 年鄭成功率軍擊退荷蘭政權,建立台灣史上首個漢人政權「東寧王國」,此階段的歷史重心在於軍隊屯田開墾與漢人典章制度的引入,全台首學的設立正式將儒家思想與傳統宗族文化深植於台灣社會。'},
- {era:'1887',name:'鐵路與電光之初',shape:'train',color:'#E28E8E',anim:2,
+ {era:'1887',name:'鐵路與電光之初',shape:'train',color:'#E28E8E',anim:2,audio:'voices/era_1887.wav',
   text:'西元 1887 年清法戰爭後台灣建省,首任巡撫劉銘傳啟動近代化建設,開始基隆至新竹鐵路的修築,以及電報線與電燈的架設,這是台灣從傳統農業社會步入近代工業化與基礎設施建設的啟蒙階段。'},
- {era:'1895',name:'乙未割讓的斷柱',shape:'pillar',color:'#7A6E78',anim:3,
+ {era:'1895',name:'乙未割讓的斷柱',shape:'pillar',color:'#7A6E78',anim:3,audio:'voices/era_1895.wav',
   text:'西元 1895 年甲午戰爭後《馬關條約》將台灣割讓予日本,引發台灣人民強烈的武裝抵抗(乙未戰爭),隨後展開的五十年日本殖民時期,總督府實行高壓統治與同化政策,同時也建立了現代化的戶政、公衛與水利等基礎設施。'},
- {era:'1921',name:'文化覺醒的年代',shape:'book',color:'#6D8299',anim:10,
+ {era:'1921',name:'文化覺醒的年代',shape:'book',color:'#6D8299',anim:10,audio:'voices/era_1921.wav',
   text:'西元 1921 年面對殖民體制,台灣知識份子林獻堂、蔣渭水等人成立「台灣文化協會」,歷史路線從武裝抗日轉向體制內的政治與文化啟蒙,透過發行報刊與舉辦講座,促成台灣現代公民意識與民族主體性的首次大規模覺醒。'},
- {era:'1947',name:'二二八的裂縫',shape:'tablet',color:'#9C6B6B',anim:4,
+ {era:'1947',name:'二二八的裂縫',shape:'tablet',color:'#9C6B6B',anim:4,audio:'voices/era_1947.wav',
   text:'西元 1947 年因戰後國民政府接管初期的施政失當與族群摩擦,爆發了全台性的「二二八事件」及隨後的武力鎮壓,這段沉痛的歷史造成大量本土菁英傷亡,並成為後續實施長達 38 年戒嚴與白色恐怖統治的開端。'},
- {era:'1980',name:'矽島的崛起',shape:'chip',color:'#D4A373',anim:9,
+ {era:'1980',name:'矽島的崛起',shape:'chip',color:'#D4A373',anim:9,audio:'voices/era_1980.wav',
   text:'西元 1980 年面對國際外交與經濟危機,台灣政府設立「新竹科學工業園區」,此時期歷史重點為經濟結構的重大轉型,藉由海外技術引進與人才回流,台灣開始發展半導體與資訊產業,奠定全球高科技代工重鎮的基礎。'},
- {era:'1987',name:'解嚴後的綻放',shape:'dawn',color:'#C9B26B',anim:5,
+ {era:'1987',name:'解嚴後的綻放',shape:'dawn',color:'#C9B26B',anim:5,audio:'voices/era_1987.wav',
   text:'西元 1987 年 7 月 15 日台灣正式解除長達 38 年的戒嚴令,黨禁與報禁的解除促使社會壓抑的能量全面釋放,各類社會運動蓬勃發展,政治反對勢力合法化,標誌著台灣正式邁入自由化與民主化的進程。'},
- {era:'1996',name:'首次總統直選',shape:'ballot',color:'#7AA0B8',anim:0,
+ {era:'1996',name:'首次總統直選',shape:'ballot',color:'#7AA0B8',anim:0,audio:'voices/era_1996.wav',
   text:'西元 1996 年台灣舉行史上首次總統直接選舉,儘管面臨第三次台海飛彈危機的外部軍事威嚇,大選依然順利完成,此歷史事件徹底落實了主權在民的民主原則,是台灣政治體制民主化完成的關鍵里程碑。'},
- {era:'1999',name:'九二一的搖晃',shape:'quake',color:'#8C7A6B',anim:6,
+ {era:'1999',name:'九二一的搖晃',shape:'quake',color:'#8C7A6B',anim:6,audio:'voices/era_1999.wav',
   text:'西元 1999 年 9 月 21 日台灣中部發生芮氏規模 7.3 強震,造成慘重傷亡與破壞,此事件的歷史意義不僅在於地理與社會的創傷,更在於災後展現的強大民間互助動能,促成國家級災難防救體系與建築防震法規的全面翻新。'},
- {era:'2014',name:'太陽花的春天',shape:'sunflower',color:'#E8C76C',anim:7,
+ {era:'2014',name:'太陽花的春天',shape:'sunflower',color:'#E8C76C',anim:7,audio:'voices/era_2014.wav',
   text:'西元 2014 年春季因反對立法院草率通過《海峽兩岸服務貿易協議》,爆發青年學生佔領立法院的「太陽花學運」,此時代背景反映了年輕世代對兩岸經貿過度依賴的疑慮,並深刻影響了隨後的政治版圖與公民參與模式。'},
- {era:'2020',name:'護國神山與口罩外交',shape:'guardian',color:'#9AC5D6',anim:0,
+ {era:'2020',name:'護國神山與口罩外交',shape:'guardian',color:'#9AC5D6',anim:0,audio:'voices/era_2020.wav',
   text:'西元 2020 年面對全球 COVID-19 疫情,台灣成功執行邊境管控並向國際輸出醫療物資,同時全球供應鏈的晶片短缺危機,讓國際社會強烈意識到台灣半導體產業在經濟與地緣政治上的戰略高度與不可替代性。'},
- {era:'2026',name:'AI 與共創時代',shape:'neural',color:'#A3B18A',anim:8,
+ {era:'2026',name:'AI 與共創時代',shape:'neural',color:'#A3B18A',anim:8,audio:'voices/era_2026.wav',
   text:'西元 2026 年生成式人工智慧全面普及,台灣憑藉先進製程晶片與強大的 AI 伺服器硬體生態系,成為全球算力網絡的核心支柱,此時期的歷史定位在於硬體製造與新興科技的深度融合,台灣持續以科技實力驅動全球的創新發展。'}
 ];
+// 常用對白的預錄音檔表
+var PRERECORDED_LINES = {
+  '我在,請說。': 'voices/line_wake.wav',
+  '好的,我們出發。': 'voices/line_go.wav',
+  '回到時間長河。': 'voices/line_back_river.wav',
+  '資訊卡已展開。': 'voices/line_card_open.wav',
+  '好的,關閉資訊卡。': 'voices/line_card_close.wav',
+  '現在還沒有開啟任何年代,請先選一個。': 'voices/line_no_era.wav'
+};
+function getPreRecordedUrl(text){
+  if(!text)return null;
+  // 完全相同文字
+  if(PRERECORDED_LINES[text])return PRERECORDED_LINES[text];
+  // 年代敘事
+  for(var i=0;i<DATA.length;i++){
+    if(DATA[i].text===text&&DATA[i].audio)return DATA[i].audio;
+  }
+  return null;
+}
 var NUM_NODES=DATA.length;
 // 自動偵測:本地開發用 localhost,部署站點用 HF Space
 var MYTHOS_URL=(location.hostname==='localhost'||location.hostname==='127.0.0.1')
@@ -1916,8 +1932,13 @@ function stopSpeak(){
   bubbleEl.classList.remove('show');
 }
 
+var _lastSpokenEraIdx=-1;
+var _lastSelectNodeTime=0;
 function selectNode(idx,dir){
   if(idx<0||idx>=NUM_NODES||idx===S.node)return;
+  // 防連發:短時間內的相同切換忽略 (手勢抖動 / 鏡頭重新感應)
+  if(Date.now()-_lastSelectNodeTime<500)return;
+  _lastSelectNodeTime=Date.now();
   stopSpeak();
   // ☁️ 紀錄年代造訪
   fbCall(function(fb){return fb.logEraVisit(SESSION_ID,DATA[idx].id||idx,DATA[idx].era+' '+DATA[idx].name)});
@@ -1930,7 +1951,9 @@ function selectNode(idx,dir){
   showInfo(idx);
   callMythos(idx);
   // 朗讀敘事:只在此處觸發一次,不再由 renderAi 自動觸發
-  if(voiceMode){
+  // 同一年代若上次已念過,不重念 (例如手勢重新辨識)
+  if(voiceMode && _lastSpokenEraIdx !== idx){
+    _lastSpokenEraIdx = idx;
     setTimeout(function(){
       if(S.node===idx){
         speak(DATA[idx].text);
@@ -1939,7 +1962,7 @@ function selectNode(idx,dir){
   }
   var tn=document.querySelectorAll('.tn')[idx];if(tn)tn.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});
 }
-function goRiver(){stopSpeak();S.node=-1;S.tProg=0;mat.uniforms.uAnimMode.value=0;
+function goRiver(){stopSpeak();_lastSpokenEraIdx=-1;S.node=-1;S.tProg=0;mat.uniforms.uAnimMode.value=0;
   document.querySelectorAll('.tn').forEach(function(e){e.classList.remove('active')});
   document.getElementById('river-btn').classList.add('active');
   document.getElementById('infopanel').classList.remove('show');
@@ -2208,11 +2231,27 @@ function legacySpeak(text){
 
 function speak(text,opts){
   opts=opts||{};
-  // 中斷正在播放的 intro / 上一句
   abortIntro();
   speechSynthesis.cancel();
   if(currentAudio){currentAudio.pause();currentAudio=null}
   var myGen=++speakGen;
+
+  // 優先播放預錄靜態檔 (省 Gemini quota + 音質穩定)
+  var preUrl=getPreRecordedUrl(text);
+  if(preUrl){
+    showBubble(text,Math.max(3000,text.length*240));
+    currentAudio=new Audio(preUrl);
+    currentAudio.playbackRate=SPEAK_RATE;
+    currentAudio.play().catch(function(){
+      // 靜態檔載入失敗 → fallback 到 Gemini
+      speakViaGemini(text,myGen);
+    });
+    return {onend:function(cb){if(currentAudio)currentAudio.onended=cb}};
+  }
+  return speakViaGemini(text,myGen);
+}
+
+function speakViaGemini(text,myGen){
 
   // 切句策略:省 quota 為主 — 第一塊 50-80 字 (確保 1-2 秒能上聲),其餘合成一塊
   // 100 字敘事 → 約 2 次 API 請求 (而非 5-6 次),省約 3 倍 quota
