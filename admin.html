@@ -338,8 +338,8 @@ service cloud.firestore {
           <div class="card"><div class="label">STD DEV</div><div class="value" id="stat-std">—</div><div class="note">標準差</div></div>
           <div class="card"><div class="label">MIN</div><div class="value" id="stat-min">—</div><div class="note">最短</div></div>
           <div class="card"><div class="label">MAX</div><div class="value" id="stat-max">—</div><div class="note">最長</div></div>
-          <div class="card"><div class="label">P25</div><div class="value" id="stat-p25">—</div><div class="note">第 25 百分位</div></div>
-          <div class="card"><div class="label">P75</div><div class="value" id="stat-p75">—</div><div class="note">第 75 百分位</div></div>
+          <div class="card"><div class="label">Q1</div><div class="value" id="stat-p25">—</div><div class="note">第一四分位數</div></div>
+          <div class="card"><div class="label">Q3</div><div class="value" id="stat-p75">—</div><div class="note">第三四分位數</div></div>
         </div>
       </div>
     </div>
@@ -905,7 +905,7 @@ function renderInsights(d){
   const cv = stats.mean ? (stats.std/stats.mean) : 0;
   let dc = `<p>訊息長度的描述統計顯示:平均數 M = ${sInline(fmt(stats.mean,2))}、中位數 Mdn = ${sInline(fmt(stats.median,0))}、標準差 SD = ${sInline(fmt(stats.std,2))}、全距為 ${sInline(stats.min)}–${sInline(stats.max)} 字。`;
   dc += `分布呈 <b>${skew}</b>,變異係數 CV = ${sInline(fmt(cv,2))} ${cv>1?'顯示樣本內差異極大':cv>.5?'顯示中度離散':'顯示分布相對集中'}。</p>`;
-  dc += `<p>25% 分位數 ${sInline(fmt(stats.p25,0))} 字與 75% 分位數 ${sInline(fmt(stats.p75,0))} 字的四分位距 IQR = ${fmt(stats.p75-stats.p25,0)},可作為後續篩除極端值 (< Q1-1.5IQR 或 > Q3+1.5IQR) 的依據。使用者訊息平均長度 ${sInline(uLens.length?fmt(uLens.reduce((s,v)=>s+v,0)/uLens.length,1):'0')} 字,${uLens.length&&(uLens.reduce((s,v)=>s+v,0)/uLens.length)>stats.mean?'高於整體平均,可能反映使用者深度參與':'低於整體平均,可能為短問句/回饋為主'}。</p>`;
+  dc += `<p>第一四分位數 Q1 = ${sInline(fmt(stats.p25,0))} 字、第三四分位數 Q3 = ${sInline(fmt(stats.p75,0))} 字,四分位距 IQR = ${fmt(stats.p75-stats.p25,0)},可作為後續篩除極端值 (< Q1 − 1.5 × IQR 或 > Q3 + 1.5 × IQR) 的依據。使用者訊息平均長度 ${sInline(uLens.length?fmt(uLens.reduce((s,v)=>s+v,0)/uLens.length,1):'0')} 字,${uLens.length&&(uLens.reduce((s,v)=>s+v,0)/uLens.length)>stats.mean?'高於整體平均,可能反映使用者深度參與':'低於整體平均,可能為短問句/回饋為主'}。</p>`;
   setInsight('insight-descriptive', dc);
 
   // ---- Wordcloud insight ----
@@ -996,7 +996,7 @@ function renderReport(d){
   const uStats = describe(uLens);
   const gStats = describe(gLens);
   document.getElementById('apa-table-1').innerHTML = apaTable('Table 1 · 訊息長度之描述性統計',
-    ['變項','N','M','SD','Mdn','Min','Max','P25','P75'],
+    ['變項','N','M','SD','Mdn','Min','Max','Q1','Q3'],
     [
       ['全部訊息', allMsgs.length, fmt(stats.mean,2), fmt(stats.std,2), fmt(stats.median,0), stats.min||0, stats.max||0, fmt(stats.p25,0), fmt(stats.p75,0)],
       ['使用者訊息', userMsgs.length, fmt(uStats.mean||0,2), fmt(uStats.std||0,2), fmt(uStats.median||0,0), uStats.min||0, uStats.max||0, fmt(uStats.p25||0,0), fmt(uStats.p75||0,0)],
