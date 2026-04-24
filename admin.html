@@ -391,20 +391,58 @@ function isQuestion(text) {
 function whyType(text) { return /為什麼|為何|why/i.test(text) }
 function howType(text) { return /怎麼|如何|怎樣|how/i.test(text) }
 
-// KB 原則關鍵字規則 (rough heuristic)
+// ============================================================
+// KB 12 原則關鍵字規則集 — 依 Scardamalia & Bereiter 原則設計
+// 每條規則都附完整中文原名、英文原名、偵測邏輯
+// ============================================================
 const KB_PATTERNS = [
-  {n:1, t:'真實問題', re:/真正的|真實|實際|你怎麼|你覺得|你會|從你的/},
-  {n:2, t:'想法精進', re:/如果.*加上|可以更|更完整|再加上|如果考慮|想法很|這想法|精進/},
-  {n:3, t:'想法多樣性', re:/角度|視角|另一面|另一邊|原住民|漢人|女性|勞工|多元|不同的|另外一|換個/},
-  {n:4, t:'統整提升', re:/統整|整合|更高層次|rise above|共通|貫穿|整體來看/},
-  {n:5, t:'社群共創', re:/另一位訪客|別人|其他人曾|社群|大家|一起/},
-  {n:6, t:'民主參與', re:/平等|每個人|共同|一起|我們都/},
-  {n:7, t:'對話導向', re:/為什麼|怎麼知道|還有哪些可能|你怎麼|你如何|什麼讓|你覺得/},
-  {n:8, t:'自主追求', re:/你最想|你想了解|你的興趣|你決定|你選|讓你/},
-  {n:9, t:'即時評量', re:/你剛才|你提的|很有意思|很有|這觀點|很棒/},
-  {n:10,t:'互享共榮', re:/我沒想過|謝謝你|你讓我|我學到|從你那裡/},
-  {n:11,t:'無所不在', re:/今天|現在|你的生活|現代|日常|連到/},
-  {n:12,t:'善用權威', re:/臺灣通史|被出賣的台灣|海洋台灣|史記|學者|書中|資料顯示|根據|引用|《[^》]+》/}
+  // 1. Real Ideas, Authentic Problems — 從真實問題中瞭解真正的想法
+  {n:1, t:'真實問題', en:'Authentic Problems',
+    re:/你最真實的|你真正|真實經驗|真正的好奇|你內心|你真的|真實處境|切身|切己|實際遇到|現實生活|你的疑問|困惑你的|你在意/},
+
+  // 2. Improvable Ideas — 不斷精進的想法
+  {n:2, t:'想法精進', en:'Improvable Ideas',
+    re:/如果.*加上|這想法.*更|可以再.*深入|還可以|再補充|再擴展|值得再|繼續發展|打磨|精進|完整一點|更深一層|還有可能|修正|改進|推進一步|進一步想|修飾/},
+
+  // 3. Idea Diversity — 想法的多樣性
+  {n:3, t:'想法多樣性', en:'Idea Diversity',
+    re:/換個角度|另一個角度|不同視角|從.{1,6}的立場|原住民|漢人|平埔|女性|男性|勞工|資本家|商人|農民|外省|本省|客家|左派|右派|多元|多重|另一面|反過來|相反的|另外一種|也有人認為|不同觀點/},
+
+  // 4. Rise Above — 統整有助於想法昇華
+  {n:4, t:'統整提升', en:'Rise Above',
+    re:/統整|整合.*想法|跨越|更高層次|提升到|昇華|總結.*共通|綜合.*看|把.*串起來|貫穿|共通的主題|更大的格局|俯瞰|歸納起來|彙整|融會/},
+
+  // 5. Community Knowledge, Collective Responsibility — 知識為社群共創並負有共同責任
+  {n:5, t:'社群共創', en:'Community Knowledge',
+    re:/另一位訪客|其他.{1,3}提過|有人曾經|之前.{1,4}討論|社群|大家一起|共同建構|我們都在|集體的|共享的知識|共同責任|彼此補充|他人的想法|前人的|先賢|前輩/},
+
+  // 6. Democratizing Knowledge — 知識創造為平等參與
+  {n:6, t:'民主參與', en:'Democratizing',
+    re:/不分.*都能|每個人的聲音|你的觀點.*重要|你也是|沒有標準答案|沒有對錯|每一種想法|不論.*都|你跟我.*一樣|不是權威|平等對話|你有權|一樣重要|共同參與/},
+
+  // 7. Knowledge Building Discourse — 知識翻新注重對話
+  {n:7, t:'對話導向', en:'KB Discourse',
+    re:/為什麼|怎麼會|怎麼知道|還有哪些|還有什麼|是什麼讓|如何理解|如何看待|這代表|意味著|暗示著|那麼.*呢|接下來呢|再進一步|順著這個|延伸一下|追問/},
+
+  // 8. Epistemic Agency — 認知能動性/知識的自主追求者
+  {n:8, t:'自主追求', en:'Epistemic Agency',
+    re:/你最想|你想了解|你的興趣|你決定|你選|讓你自己|由你|你主導|你來帶|你想探索|按你的節奏|你的好奇|由你決定|接下來你/},
+
+  // 9. Embedded, Concurrent, Transformative Assessment — 即時評量
+  {n:9, t:'即時評量', en:'Concurrent Assessment',
+    re:/你剛才.*想法|你提出的|你這個觀察|你的這段話|很有.*意思|很有.*深度|展現了|很有.*精神|你已經.*做到|你正在|這已經是|有 KB/},
+
+  // 10. Symmetric Knowledge Advancement — 互享共榮
+  {n:10,t:'互享共榮', en:'Symmetric Advancement',
+    re:/我沒想過|謝謝你提醒|你讓我|我也學到|從你這裡.*學|你教了我|我也在思考|這對我也是|我之前沒注意到|你點出|我也不確定|我們一起/},
+
+  // 11. Pervasive Knowledge Building — 無所不在的知識翻新
+  {n:11,t:'無所不在', en:'Pervasive KB',
+    re:/你的生活中|你日常|家族.*故事|身邊|生活經驗|學校.*外|課本之外|連結到.*現在|對應到今天|跟你的.*相關|回到你|映照到|反照/},
+
+  // 12. Constructive Uses of Authoritative Sources — 建構性地運用權威資料
+  {n:12,t:'善用權威', en:'Authoritative Sources',
+    re:/臺灣通史|被出賣的台灣|海洋台灣|福爾摩沙|史記|學者.*認為|書中.*提到|文獻.*記載|史料.*顯示|研究.*指出|《[^》]+》|這是其中一種|根據.*的說法|歷史學家/}
 ];
 
 function detectKBMoves(text) {
@@ -487,7 +525,11 @@ window.runAllAnalytics = function(sessions) {
   document.getElementById('kb-list').innerHTML = KB_PATTERNS.map(p=>`
     <div class="kb-card">
       <div class="n">${kbCounts[p.n]}</div>
-      <div class="t"><b>${p.n}. ${p.t}</b><br/><span style="color:rgba(255,255,255,.4);font-size:.75rem">次出現</span></div>
+      <div class="t">
+        <b>${p.n}. ${p.t}</b>
+        <div style="color:rgba(224,160,48,.55);font-size:.72rem;font-style:italic;margin-top:2px">${p.en}</div>
+        <span style="color:rgba(255,255,255,.4);font-size:.72rem;display:block;margin-top:4px">次出現</span>
+      </div>
     </div>
   `).join('');
 
