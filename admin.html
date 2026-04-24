@@ -164,9 +164,133 @@ details[open] summary{color:#e0a030;margin-bottom:10px}
   </div>
 </header>
 
-<div class="warn" id="warn-box" style="display:none">
-  ⚠️ 這是個人後台。Firestore 安全規則限制:只能看到「<b>你自己</b>」的對話。要看所有訪客需調整 rules(會失去隱私保護,不建議於 production 使用)。
+<!-- 管理員首次設定說明 (規則還沒加 isAdmin 時顯示) -->
+<div class="warn" id="admin-setup" style="display:none">
+  <b>⚠️ 還沒授權管理員角色</b> — 你現在看得到自己的資料,看不到其他訪客的。請完成下列一次性設定:
+  <ol style="margin-top:8px;padding-left:20px;line-height:2">
+    <li>複製你現在登入的 UID:<code style="background:rgba(0,229,255,.1);padding:2px 8px;border-radius:4px;color:#00e5ff" id="current-uid">—</code></li>
+    <li>打開 <a href="https://console.firebase.google.com/project/island-guide-9a9c5/firestore/rules" target="_blank" style="color:#00e5ff">Firestore Rules 編輯頁</a></li>
+    <li>在規則中加入 <code style="background:rgba(0,229,255,.1);padding:2px 6px;border-radius:4px">isAdmin()</code> 函式,讓你能讀所有 users</li>
+    <li>點下方按鈕產生完整新規則複製貼上</li>
+  </ol>
+  <button class="btn" onclick="showAdminRules()" style="margin-top:10px">📋 產生管理員版 Firestore Rules</button>
+  <pre id="admin-rules-output" style="display:none;margin-top:12px;padding:14px;background:rgba(0,0,0,.4);border-radius:8px;max-height:300px;overflow:auto;font-size:.78rem;color:#7cffa0;white-space:pre-wrap"></pre>
 </div>
+
+<!-- 日期篩選器 -->
+<div class="section" style="padding:18px 24px;margin-bottom:20px">
+  <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+    <span style="color:#e0a030;font-weight:600;letter-spacing:1px">📅 日期範圍</span>
+    <select id="date-preset" onchange="onPresetChange()" style="background:rgba(0,229,255,.08);border:1px solid rgba(0,229,255,.3);color:#fff;padding:7px 14px;border-radius:10px;font-size:.9rem">
+      <option value="all">全部</option>
+      <option value="today">今天</option>
+      <option value="7d">近 7 天</option>
+      <option value="30d">近 30 天</option>
+      <option value="90d">近 90 天</option>
+      <option value="custom">自訂範圍</option>
+    </select>
+    <span id="date-custom" style="display:none;gap:8px;align-items:center">
+      <input type="date" id="date-start" style="background:rgba(0,229,255,.08);border:1px solid rgba(0,229,255,.3);color:#fff;padding:6px 10px;border-radius:8px">
+      <span style="color:rgba(255,255,255,.4)">至</span>
+      <input type="date" id="date-end" style="background:rgba(0,229,255,.08);border:1px solid rgba(0,229,255,.3);color:#fff;padding:6px 10px;border-radius:8px">
+      <button class="btn" onclick="applyDateFilter()">套用</button>
+    </span>
+    <span style="margin-left:auto;color:rgba(255,255,255,.55);font-size:.88rem">
+      📈 訪客總數 <b id="user-count" style="color:#00e5ff">—</b>
+    </span>
+  </div>
+</div>
+
+<script>
+function onPresetChange(){
+  const sel = document.getElementById('date-preset');
+  document.getElementById('date-custom').style.display = sel.value==='custom'?'inline-flex':'none';
+  if (sel.value !== 'custom') applyDateFilter();
+}
+function showAdminRules(){
+  const uid = document.getElementById('current-uid').textContent;
+  const rules = `rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 👇 管理員函式:固定 UID
+    function isAdmin() {
+      return request.auth != null && request.auth.uid == '${uid}';
+    }
+
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create, update: if isOwner(userId)
+        && validProfile(request.resource.data);
+      allow delete: if false;
+
+      match /sessions/{sessionId} {
+        allow read: if isOwner(userId) || isAdmin();
+        allow create, update: if isOwner(userId);
+        allow delete: if false;
+
+        match /messages/{messageId} {
+          allow read: if isOwner(userId) || isAdmin();
+          allow create: if isOwner(userId)
+            && validMessage(request.resource.data);
+          allow update, delete: if false;
+        }
+      }
+
+      match /eraVisits/{visitId} {
+        allow read: if isOwner(userId) || isAdmin();
+        allow create: if isOwner(userId)
+          && validEraVisit(request.resource.data);
+        allow update, delete: if false;
+      }
+
+      match /counselingSessions/{sessionId} {
+        allow read: if isOwner(userId) || isAdmin();
+        allow create, update: if isOwner(userId);
+        allow delete: if false;
+
+        match /messages/{messageId} {
+          allow read: if isOwner(userId) || isAdmin();
+          allow create: if isOwner(userId)
+            && validMessage(request.resource.data);
+          allow update, delete: if false;
+        }
+      }
+    }
+
+    // 讓管理員能列出所有 users (重要!)
+    match /users/{userId} {
+      allow list: if isAdmin();
+    }
+
+    match /{document=**} { allow read, write: if false; }
+  }
+
+  function isOwner(userId) {
+    return request.auth != null && request.auth.uid == userId;
+  }
+  function validProfile(data) {
+    return data.nickname is string && data.nickname.size() >= 1 && data.nickname.size() <= 20;
+  }
+  function validMessage(data) {
+    return data.role in ['user', 'guide'] && data.text is string && data.text.size() <= 2000;
+  }
+  function validEraVisit(data) {
+    return data.eraName is string && data.eraName.size() <= 100;
+  }
+}`;
+  const pre = document.getElementById('admin-rules-output');
+  pre.textContent = rules;
+  pre.style.display = 'block';
+  navigator.clipboard.writeText(rules).then(()=>{
+    const t=document.createElement('div');
+    t.textContent='✓ 規則已複製,貼到 Firestore Rules 並 Publish';
+    t.style.cssText='position:fixed;top:20px;right:20px;background:rgba(124,255,160,.2);border:1px solid #7cffa0;color:#7cffa0;padding:10px 18px;border-radius:10px;z-index:9999';
+    document.body.appendChild(t); setTimeout(()=>t.remove(),3500);
+  }).catch(()=>{});
+}
+</script>
 
 <!-- Tabs -->
 <div class="tabs">
@@ -378,7 +502,7 @@ details[open] summary{color:#e0a030;margin-bottom:10px}
 <!-- Firebase init -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
-import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
 import { getFirestore, doc, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -392,34 +516,91 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+const provider = new GoogleAuthProvider();
 
-signInAnonymously(auth);
+window._fb = {auth, db, provider, signInWithPopup, signOut};
+
 onAuthStateChanged(auth, async user => {
-  if (!user) { document.getElementById('auth-status').textContent = '⚠️ 未登入'; return; }
-  document.getElementById('auth-status').textContent = '✓ uid ' + user.uid.slice(0,8) + '…';
-  document.getElementById('warn-box').style.display = 'block';
-  await loadAll(user.uid);
+  const statusEl = document.getElementById('auth-status');
+  if (!user) {
+    statusEl.innerHTML = '<button class="btn amber" id="login-btn">🔐 Google 管理員登入</button>';
+    document.getElementById('login-btn').addEventListener('click', async () => {
+      try { await signInWithPopup(auth, provider); } catch(e) { alert('登入失敗: '+e.message); }
+    });
+    return;
+  }
+  statusEl.innerHTML = `✓ ${user.displayName||'管理員'} <span style="color:rgba(255,255,255,.3);font-size:.8rem;margin-left:8px">uid ${user.uid.slice(0,10)}…</span> <button class="btn" id="logout-btn" style="margin-left:10px">登出</button>`;
+  document.getElementById('logout-btn').addEventListener('click', () => signOut(auth));
+  document.getElementById('current-uid').textContent = user.uid;
+  await loadAll();
 });
 
-async function loadAll(uid) {
+async function loadAll() {
   try {
-    const sessions = [];
-    const chatSnap = await getDocs(query(collection(db,'users',uid,'sessions'),orderBy('lastActive','desc')));
-    for (const d of chatSnap.docs) {
-      const data = d.data();
-      const msgs = await getDocs(query(collection(db,'users',uid,'sessions',d.id,'messages'),orderBy('timestamp','asc')));
-      sessions.push({id:d.id,...data,messages:msgs.docs.map(m=>m.data()),type:'chat'});
+    // 取所有 users (需 isAdmin 規則)
+    const usersSnap = await getDocs(collection(db,'users'));
+    const allSessions = [];
+    let userCount = 0;
+    for (const u of usersSnap.docs) {
+      userCount++;
+      const uid = u.id;
+      const profile = u.data();
+      // sessions 主 collection
+      try {
+        const chatSnap = await getDocs(query(collection(db,'users',uid,'sessions'),orderBy('lastActive','desc')));
+        for (const d of chatSnap.docs) {
+          const data = d.data();
+          const msgs = await getDocs(query(collection(db,'users',uid,'sessions',d.id,'messages'),orderBy('timestamp','asc')));
+          allSessions.push({id:d.id,...data,messages:msgs.docs.map(m=>m.data()),type:'chat',uid,nickname:profile.nickname||'(匿名)'});
+        }
+      } catch(e) { /* ignore per-user errors */ }
+      try {
+        const counselSnap = await getDocs(query(collection(db,'users',uid,'counselingSessions'),orderBy('lastActive','desc')));
+        for (const d of counselSnap.docs) {
+          const data = d.data();
+          const msgs = await getDocs(query(collection(db,'users',uid,'counselingSessions',d.id,'messages'),orderBy('timestamp','asc')));
+          allSessions.push({id:d.id,...data,messages:msgs.docs.map(m=>m.data()),type:'counseling',uid,nickname:profile.nickname||'(匿名)'});
+        }
+      } catch(e) {}
     }
-    const counselSnap = await getDocs(query(collection(db,'users',uid,'counselingSessions'),orderBy('lastActive','desc')));
-    for (const d of counselSnap.docs) {
-      const data = d.data();
-      const msgs = await getDocs(query(collection(db,'users',uid,'counselingSessions',d.id,'messages'),orderBy('timestamp','asc')));
-      sessions.push({id:d.id,...data,messages:msgs.docs.map(m=>m.data()),type:'counseling'});
+    document.getElementById('user-count').textContent = userCount;
+    window._allRaw = allSessions;
+    applyDateFilter();
+  } catch(e) {
+    console.error(e);
+    if (e.code === 'permission-denied' || /permission/.test(e.message)) {
+      document.getElementById('admin-setup').style.display = 'block';
+    } else {
+      alert('載入失敗: '+e.message);
     }
-    window._all = sessions;
-    window.runAllAnalytics(sessions);
-  } catch(e) { console.error(e); alert('載入失敗: '+e.message); }
+  }
 }
+
+window.applyDateFilter = function(){
+  const all = window._allRaw||[];
+  const preset = document.getElementById('date-preset')?.value || 'all';
+  const startStr = document.getElementById('date-start')?.value;
+  const endStr = document.getElementById('date-end')?.value;
+  let start=null, end=null;
+  const now = new Date();
+  if (preset === '7d') start = new Date(now - 7*86400e3);
+  else if (preset === '30d') start = new Date(now - 30*86400e3);
+  else if (preset === '90d') start = new Date(now - 90*86400e3);
+  else if (preset === 'today') { start = new Date(now); start.setHours(0,0,0,0); }
+  else if (preset === 'custom') {
+    if (startStr) start = new Date(startStr);
+    if (endStr) { end = new Date(endStr); end.setHours(23,59,59,999); }
+  }
+  const filtered = all.filter(s => {
+    const d = s.startedAt?.toDate?.() || s.lastActive?.toDate?.();
+    if (!d) return preset === 'all';
+    if (start && d < start) return false;
+    if (end && d > end) return false;
+    return true;
+  });
+  window._all = filtered;
+  window.runAllAnalytics(filtered);
+};
 </script>
 
 <script>
@@ -489,58 +670,37 @@ function whyType(text) { return /為什麼|為何|why/i.test(text) }
 function howType(text) { return /怎麼|如何|怎樣|how/i.test(text) }
 
 // ============================================================
-// KB 12 原則關鍵字規則集 — 依 Scardamalia & Bereiter 原則設計
-// 每條規則都附完整中文原名、英文原名、偵測邏輯
+// KB 12 原則關鍵字規則集 — Scardamalia & Bereiter (2014)
+// full: 完整中文名 / en: 英文原名 / short: 簡稱 / re: 偵測正則
 // ============================================================
 const KB_PATTERNS = [
-  // 1. Real Ideas, Authentic Problems — 從真實問題中瞭解真正的想法
-  {n:1, t:'真實問題', en:'Authentic Problems',
+  {n:1, short:'真實問題', full:'從真實問題中瞭解真正的想法', en:'Real Ideas, Authentic Problems',
     re:/你最真實的|你真正|真實經驗|真正的好奇|你內心|你真的|真實處境|切身|切己|實際遇到|現實生活|你的疑問|困惑你的|你在意/},
-
-  // 2. Improvable Ideas — 不斷精進的想法
-  {n:2, t:'想法精進', en:'Improvable Ideas',
+  {n:2, short:'想法精進', full:'不斷精進的想法', en:'Improvable Ideas',
     re:/如果.*加上|這想法.*更|可以再.*深入|還可以|再補充|再擴展|值得再|繼續發展|打磨|精進|完整一點|更深一層|還有可能|修正|改進|推進一步|進一步想|修飾/},
-
-  // 3. Idea Diversity — 想法的多樣性
-  {n:3, t:'想法多樣性', en:'Idea Diversity',
+  {n:3, short:'想法多樣性', full:'想法的多樣性', en:'Idea Diversity',
     re:/換個角度|另一個角度|不同視角|從.{1,6}的立場|原住民|漢人|平埔|女性|男性|勞工|資本家|商人|農民|外省|本省|客家|左派|右派|多元|多重|另一面|反過來|相反的|另外一種|也有人認為|不同觀點/},
-
-  // 4. Rise Above — 統整有助於想法昇華
-  {n:4, t:'統整提升', en:'Rise Above',
+  {n:4, short:'統整提升', full:'統整有助於想法昇華', en:'Rise Above',
     re:/統整|整合.*想法|跨越|更高層次|提升到|昇華|總結.*共通|綜合.*看|把.*串起來|貫穿|共通的主題|更大的格局|俯瞰|歸納起來|彙整|融會/},
-
-  // 5. Community Knowledge, Collective Responsibility — 知識為社群共創並負有共同責任
-  {n:5, t:'社群共創', en:'Community Knowledge',
+  {n:5, short:'社群共創', full:'知識為社群共創並負有共同責任', en:'Community Knowledge, Collective Responsibility',
     re:/另一位訪客|其他.{1,3}提過|有人曾經|之前.{1,4}討論|社群|大家一起|共同建構|我們都在|集體的|共享的知識|共同責任|彼此補充|他人的想法|前人的|先賢|前輩/},
-
-  // 6. Democratizing Knowledge — 知識創造為平等參與
-  {n:6, t:'民主參與', en:'Democratizing',
+  {n:6, short:'民主參與', full:'知識創造為平等參與,成員的貢獻無法切割', en:'Democratizing Knowledge',
     re:/不分.*都能|每個人的聲音|你的觀點.*重要|你也是|沒有標準答案|沒有對錯|每一種想法|不論.*都|你跟我.*一樣|不是權威|平等對話|你有權|一樣重要|共同參與/},
-
-  // 7. Knowledge Building Discourse — 知識翻新注重對話
-  {n:7, t:'對話導向', en:'KB Discourse',
+  {n:7, short:'對話導向', full:'知識翻新注重對話', en:'Knowledge Building Discourse',
     re:/為什麼|怎麼會|怎麼知道|還有哪些|還有什麼|是什麼讓|如何理解|如何看待|這代表|意味著|暗示著|那麼.*呢|接下來呢|再進一步|順著這個|延伸一下|追問/},
-
-  // 8. Epistemic Agency — 認知能動性/知識的自主追求者
-  {n:8, t:'自主追求', en:'Epistemic Agency',
+  {n:8, short:'自主追求', full:'認知能動性 / 知識的自主追求者', en:'Epistemic Agency',
     re:/你最想|你想了解|你的興趣|你決定|你選|讓你自己|由你|你主導|你來帶|你想探索|按你的節奏|你的好奇|由你決定|接下來你/},
-
-  // 9. Embedded, Concurrent, Transformative Assessment — 即時評量
-  {n:9, t:'即時評量', en:'Concurrent Assessment',
+  {n:9, short:'即時評量', full:'內嵌的、即時的、變革性的評量', en:'Embedded, Concurrent, and Transformative Assessment',
     re:/你剛才.*想法|你提出的|你這個觀察|你的這段話|很有.*意思|很有.*深度|展現了|很有.*精神|你已經.*做到|你正在|這已經是|有 KB/},
-
-  // 10. Symmetric Knowledge Advancement — 互享共榮
-  {n:10,t:'互享共榮', en:'Symmetric Advancement',
+  {n:10,short:'互享共榮', full:'互享共榮的知識翻新過程', en:'Symmetric Knowledge Advancement',
     re:/我沒想過|謝謝你提醒|你讓我|我也學到|從你這裡.*學|你教了我|我也在思考|這對我也是|我之前沒注意到|你點出|我也不確定|我們一起/},
-
-  // 11. Pervasive Knowledge Building — 無所不在的知識翻新
-  {n:11,t:'無所不在', en:'Pervasive KB',
+  {n:11,short:'無所不在', full:'無所不在的知識翻新', en:'Pervasive Knowledge Building',
     re:/你的生活中|你日常|家族.*故事|身邊|生活經驗|學校.*外|課本之外|連結到.*現在|對應到今天|跟你的.*相關|回到你|映照到|反照/},
-
-  // 12. Constructive Uses of Authoritative Sources — 建構性地運用權威資料
-  {n:12,t:'善用權威', en:'Authoritative Sources',
+  {n:12,short:'善用權威', full:'建構性地運用權威資料', en:'Constructive Uses of Authoritative Sources',
     re:/臺灣通史|被出賣的台灣|海洋台灣|福爾摩沙|史記|學者.*認為|書中.*提到|文獻.*記載|史料.*顯示|研究.*指出|《[^》]+》|這是其中一種|根據.*的說法|歷史學家/}
 ];
+// 向後相容:保留 t 欄位對應短名
+KB_PATTERNS.forEach(p => { p.t = p.short; });
 
 function detectKBMoves(text) {
   return KB_PATTERNS.filter(p => p.re.test(text)).map(p=>p.n);
@@ -620,12 +780,13 @@ window.runAllAnalytics = function(sessions) {
   KB_PATTERNS.forEach(p=>kbCounts[p.n]=0);
   guideMsgs.forEach(m => detectKBMoves(m.text||'').forEach(n=>kbCounts[n]++));
   document.getElementById('kb-list').innerHTML = KB_PATTERNS.map(p=>`
-    <div class="kb-card">
+    <div class="kb-card" title="${p.full}">
       <div class="n">${kbCounts[p.n]}</div>
       <div class="t">
-        <b>${p.n}. ${p.t}</b>
-        <div style="color:rgba(224,160,48,.55);font-size:.72rem;font-style:italic;margin-top:2px">${p.en}</div>
-        <span style="color:rgba(255,255,255,.4);font-size:.72rem;display:block;margin-top:4px">次出現</span>
+        <b>${p.n}. ${p.short}</b>
+        <div style="color:rgba(255,255,255,.7);font-size:.8rem;margin-top:4px;line-height:1.5">${p.full}</div>
+        <div style="color:rgba(224,160,48,.6);font-size:.72rem;font-style:italic;margin-top:3px">${p.en}</div>
+        <span style="color:rgba(255,255,255,.35);font-size:.7rem;display:block;margin-top:4px">次出現</span>
       </div>
     </div>
   `).join('');
@@ -812,11 +973,11 @@ function renderReport(d){
     此「KB 密度指標」可作為後續評估對話品質的<b>操作性定義 (operational definition)</b>。</p>
   `;
   document.getElementById('apa-table-3').innerHTML = apaTable('Table 3 · KB 12 原則於島語回應中的出現頻率',
-    ['原則','中文名','英文原名','次數 (f)','佔比 (%)'],
+    ['原則','中文完整名稱','英文原名','次數 (f)','佔比 (%)'],
     KB_PATTERNS.map(p=>[
-      p.n, p.t, p.en, kbCounts[p.n]||0, pct(kbCounts[p.n]||0, kbTotal)
+      p.n, p.full, p.en, kbCounts[p.n]||0, pct(kbCounts[p.n]||0, kbTotal)
     ]),
-    'n_guide_msgs = '+guideMsgs.length+'。KB 密度 = '+fmt(kbTotal/(guideMsgs.length||1),2)+' 條 / 則回應。'
+    'n_guide_msgs = '+guideMsgs.length+'。KB 密度 = '+fmt(kbTotal/(guideMsgs.length||1),2)+' 條 / 則回應。原則名稱依 Scardamalia & Bereiter (2014)。'
   );
 
   // Table 4: Top N-grams
