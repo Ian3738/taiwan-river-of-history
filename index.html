@@ -747,8 +747,13 @@ void main(){float t=uTime;
     anim.y=sin(t*1.4+aTarget.x*.3)*.5;
     anim.x=cos(t*1.0+aTarget.z*.4)*.25;
   } else if(uAnimMode>1.5&&uAnimMode<2.5){// 火車前進 (輪子轉 + 煙飄)
-    if(aTarget.y<-2.)anim.x=sin(t*4.+aTarget.x*2.)*.15; // 輪區微震
-    if(aTarget.y>4.)anim.x-=t*.3; anim.x=mod(anim.x,14.)-7.; anim.y=aTarget.y>4.?sin(t*1.5+aRandom.x*3.)*.6:0.; // 煙左飄
+    if(aTarget.y<-2.){
+      anim.x=sin(t*4.+aTarget.x*2.)*.15;
+    }
+    if(aTarget.y>4.){
+      anim.x=mod(-t*.3+aRandom.x*14.,14.)-7.;
+      anim.y=sin(t*1.5+aRandom.x*3.)*.6;
+    }
   } else if(uAnimMode>2.5&&uAnimMode<3.5){// 斷裂顫抖
     anim.x=sin(t*12.+aRandom.x*20.)*.08;
     anim.y=cos(t*14.+aRandom.y*20.)*.05;
@@ -768,7 +773,9 @@ void main(){float t=uTime;
     float r2=length(aTarget.xy);
     if(r2>2.5){
       float br=sin(t*1.5)*.5+.5;
-      anim=normalize(vec3(aTarget.x,aTarget.y-2.,aTarget.z))*br*.5;
+      vec3 dir=vec3(aTarget.x,aTarget.y-2.,aTarget.z);
+      float dl=length(dir);
+      if(dl>.001)anim=(dir/dl)*br*.5;
     }
   } else if(uAnimMode>7.5&&uAnimMode<8.5){// 脈動 (神經網絡)
     float pulse=sin(t*2.5-length(aTarget)*.5)*.15;
@@ -781,7 +788,10 @@ void main(){float t=uTime;
     anim.x=nx-aTarget.x; anim.z=nz-aTarget.z;
     anim.x*=.25; anim.z*=.25; // 淡淡自轉
   } else if(uAnimMode>9.5&&uAnimMode<10.5){// 煙霧上升 (書+燈泡)
-    if(aTarget.y>5.){anim.y=sin(t*2.+aRandom.x*5.)*.3;anim.x=sin(t*.8+aRandom.y*3.)*.2}
+    if(aTarget.y>5.){
+      anim.y=sin(t*2.+aRandom.x*5.)*.3;
+      anim.x=sin(t*.8+aRandom.y*3.)*.2;
+    }
   }
   sP+=anim;
   vec3 burstOffset=normalize(aRandom)*uBurst*15.;
