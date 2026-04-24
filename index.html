@@ -336,17 +336,41 @@ body.named #go{border-color:rgba(0,229,255,.55);color:#00e5ff}
   padding:6px 18px;border-radius:14px;cursor:pointer}
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 
-/* 幫助彈窗共用 modal-wrap 樣式 */
-#help-modal{position:fixed;inset:0;z-index:60;background:rgba(3,3,8,.72);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:20px}
+/* 幫助彈窗 */
+#help-modal{position:fixed;inset:0;z-index:60;background:rgba(3,3,8,.8);backdrop-filter:blur(10px);display:none;align-items:center;justify-content:center;padding:20px}
 #help-modal.show{display:flex;animation:fadeIn .3s ease-out}
-.help-card{background:rgba(8,8,24,.95);border:1px solid rgba(0,229,255,.25);border-radius:20px;padding:32px 36px;max-width:560px;max-height:85vh;overflow-y:auto;position:relative;box-shadow:0 20px 60px rgba(0,0,0,.6)}
-.help-card h3{font-family:'Noto Serif TC',serif;font-size:1.5rem;color:#00e5ff;margin-bottom:18px;letter-spacing:1px;font-weight:700}
-.help-card h4{font-family:'Noto Sans TC',sans-serif;font-size:1rem;color:#e0a030;margin:16px 0 8px;letter-spacing:1px;font-weight:600}
-.help-card ul{list-style:none;padding:0;margin:0}
-.help-card li{font-size:.92rem;line-height:1.85;color:rgba(255,255,255,.82);padding:4px 0}
-.help-card li b{color:#00e5ff;font-weight:600}
-.help-card p{font-size:.92rem;line-height:1.85;color:rgba(255,255,255,.78)}
-.help-card p b{color:#00e5ff}
+.help-card{background:linear-gradient(135deg,rgba(10,10,28,.98),rgba(8,8,24,.98));border:1px solid rgba(0,229,255,.3);border-radius:22px;padding:40px 44px;max-width:820px;width:100%;max-height:88vh;overflow-y:auto;position:relative;box-shadow:0 30px 80px rgba(0,0,0,.7)}
+.help-card h3{font-family:'Noto Serif TC',serif;font-size:2rem;color:#00e5ff;margin-bottom:10px;letter-spacing:2px;font-weight:700}
+.help-intro{font-family:'Noto Serif TC',serif;font-size:1.05rem;line-height:1.8;color:rgba(255,255,255,.78);margin-bottom:30px;padding-bottom:20px;border-bottom:1px solid rgba(0,229,255,.1)}
+.help-intro b{color:#e0a030;font-weight:600}
+
+.help-section{margin-bottom:28px}
+.help-section h4{font-family:'Noto Sans TC',sans-serif;font-size:1.25rem;color:#e0a030;margin:0 0 16px;letter-spacing:1.5px;font-weight:700;display:flex;align-items:center;gap:12px}
+.help-section h4 .h-ic{font-size:1.55rem;line-height:1}
+.help-section h4 .h-note{font-size:.85rem;color:rgba(255,255,255,.45);font-weight:400;letter-spacing:0}
+
+.gcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:14px}
+.gcard{background:rgba(0,229,255,.05);border:1px solid rgba(0,229,255,.18);border-radius:14px;padding:18px 16px;text-align:center;transition:all .2s}
+.gcard:hover{background:rgba(0,229,255,.1);border-color:rgba(0,229,255,.45);transform:translateY(-2px)}
+.gcard .gicon{font-size:2.2rem;margin-bottom:10px;filter:drop-shadow(0 2px 8px rgba(0,229,255,.3))}
+.gcard b{display:block;font-family:'Noto Sans TC',sans-serif;font-size:1.02rem;color:#00e5ff;font-weight:600;letter-spacing:1px;margin-bottom:5px}
+.gcard span{display:block;font-family:'Noto Sans TC',sans-serif;font-size:.88rem;color:rgba(255,255,255,.72);line-height:1.55}
+
+.help-tip{background:rgba(224,160,48,.08);border-left:3px solid rgba(224,160,48,.5);padding:10px 16px;margin:12px 0 0;font-size:.92rem;line-height:1.7;color:rgba(255,255,255,.75);border-radius:6px}
+.help-p{font-family:'Noto Serif TC',serif;font-size:1rem;line-height:1.95;color:rgba(255,255,255,.85);margin:0}
+.help-p b{color:#00e5ff;font-weight:600}
+
+@media(max-width:768px){
+  .help-card{padding:28px 22px;max-height:92vh}
+  .help-card h3{font-size:1.5rem}
+  .help-intro{font-size:.95rem}
+  .help-section h4{font-size:1.05rem}
+  .gcards{grid-template-columns:repeat(2,1fr);gap:10px}
+  .gcard{padding:14px 10px}
+  .gcard .gicon{font-size:1.8rem}
+  .gcard b{font-size:.9rem}
+  .gcard span{font-size:.78rem}
+}
 
 /* ========== 閒置提示 ========== */
 #idle-hint{position:fixed;bottom:180px;left:50%;transform:translateX(-50%) translateY(20px);z-index:7;
@@ -570,37 +594,44 @@ body.chat-open #chat-panel{transform:translateX(0)}
 <div id="help-modal">
   <div class="help-card">
     <button class="help-close" id="help-close">×</button>
-    <h3>🌊 怎麼玩這座島嶼?</h3>
+    <h3>🌊 怎麼和這座島嶼互動?</h3>
+    <p class="help-intro">總共四種操作方式,你可以混合使用。最推薦的是 <b>🎤 語音</b> + <b>🤚 手勢</b>,像在和真人對話。</p>
+
     <div class="help-section">
-      <h4>🎤 語音操控</h4>
-      <ul>
-        <li><b>「島語」</b> — 喚醒我</li>
-        <li><b>「帶我去太陽花」</b>「<b>念給我聽</b>」「<b>打開資訊卡</b>」</li>
-        <li><b>「1624」「解嚴」「護國神山」</b> — 直接跳到該年代</li>
-        <li><b>「回到長河」</b> — 離開目前年代</li>
-      </ul>
+      <h4><span class="h-ic">🎤</span>語音操控</h4>
+      <div class="gcards">
+        <div class="gcard"><div class="gicon">👂</div><b>說「島語」</b><span>喚醒我</span></div>
+        <div class="gcard"><div class="gicon">🏝️</div><b>說「太陽花」</b><span>跳到該年代</span></div>
+        <div class="gcard"><div class="gicon">📖</div><b>說「念給我聽」</b><span>朗讀這段歷史</span></div>
+        <div class="gcard"><div class="gicon">↩️</div><b>說「回到長河」</b><span>離開目前年代</span></div>
+      </div>
+      <p class="help-tip">💡 喚醒後 30 秒內都可以下指令,不用每次重喊「島語」</p>
     </div>
+
     <div class="help-section">
-      <h4>🖐 手勢操控(需鏡頭)</h4>
-      <ul>
-        <li><b>食指撥動</b> — 切換年代</li>
-        <li><b>食指指向滑動</b> — 旋轉粒子圖形</li>
-        <li><b>指尖懸停資訊卡 1 秒</b> — 放大/縮小</li>
-        <li><b>握拳 1 秒</b> — 回到長河</li>
-      </ul>
+      <h4><span class="h-ic">🤚</span>手勢操控<span class="h-note">(需允許鏡頭)</span></h4>
+      <div class="gcards">
+        <div class="gcard"><div class="gicon">👆</div><b>食指撥動</b><span>左右切換年代</span></div>
+        <div class="gcard"><div class="gicon">☝️</div><b>食指指向轉動</b><span>旋轉中央粒子</span></div>
+        <div class="gcard"><div class="gicon">🫵</div><b>指尖懸停卡片</b><span>停留 1 秒 → 放大/縮小</span></div>
+        <div class="gcard"><div class="gicon">✊</div><b>握拳 1 秒</b><span>回到時間長河</span></div>
+      </div>
+      <p class="help-tip">💡 手勢需要光線充足、手在鏡頭前約 30-60 公分</p>
     </div>
+
     <div class="help-section">
-      <h4>📱 觸控與鍵盤</h4>
-      <ul>
-        <li><b>點選年代</b> 或 <b>左右滑動</b> — 切換</li>
-        <li><b>← →</b> 鍵 — 切換年代</li>
-        <li><b>Esc</b> — 回到長河</li>
-        <li><b>1-9</b> — 直接跳到對應年代</li>
-      </ul>
+      <h4><span class="h-ic">📱</span>觸控/滑鼠/鍵盤</h4>
+      <div class="gcards">
+        <div class="gcard"><div class="gicon">👉</div><b>點選或左右滑</b><span>切換年代</span></div>
+        <div class="gcard"><div class="gicon">⌨️</div><b>← → 方向鍵</b><span>切換年代</span></div>
+        <div class="gcard"><div class="gicon">🔢</div><b>數字鍵 1-9</b><span>直接跳到該年代</span></div>
+        <div class="gcard"><div class="gicon">⎋</div><b>Esc 鍵</b><span>回到時間長河</span></div>
+      </div>
     </div>
+
     <div class="help-section">
-      <h4>💬 跟島語對話</h4>
-      <p>點右下角 💬 按鈕,或說「<b>我想跟你聊聊</b>」。島語是一位 KB(知識翻新)風格的夥伴,會主動提問、鼓勵你從多重視角思考台灣歷史。</p>
+      <h4><span class="h-ic">💬</span>深度對話</h4>
+      <p class="help-p">點右下角 <b>💬 對話按鈕</b> 可以開啟側邊對話面板,或點右上 <b>💭 諮商室</b> 進入專屬的深度諮商頁面。島語會用<b>知識翻新式的反問</b>陪你從多重視角重新認識台灣歷史。</p>
     </div>
   </div>
 </div>
