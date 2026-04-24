@@ -1482,6 +1482,14 @@ function selectNode(idx,dir){
   document.getElementById('river-btn').classList.remove('active');
   showInfo(idx);
   callMythos(idx);
+  // 朗讀敘事:只在此處觸發一次,不再由 renderAi 自動觸發
+  if(voiceMode){
+    setTimeout(function(){
+      if(S.node===idx){
+        speak(DATA[idx].text);
+      }
+    },900);
+  }
   var tn=document.querySelectorAll('.tn')[idx];if(tn)tn.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});
 }
 function goRiver(){stopSpeak();S.node=-1;S.tProg=0;
@@ -2218,21 +2226,7 @@ document.addEventListener('click',onFirstInteraction,{capture:true});
 document.addEventListener('keydown',onFirstInteraction,{capture:true});
 
 // 包裝 renderAi:當資訊卡有新敘事時,如果語音模式開著就主動朗讀
-var origRenderAi=renderAi;
-renderAi=function(idx){
-  origRenderAi(idx);
-  var r=aiCache[idx];
-  // 只有「剛收到新結果」才念一次 — 用 r.spoken 標記避免重複
-  if(voiceMode&&r&&!r.pending&&!r.error&&r.narrative&&!r.spoken){
-    r.spoken=true;
-    setTimeout(function(){
-      // 保護:若 cache 已被替換 (使用者捏合/切年代),不念舊敘事
-      if(S.node===idx&&aiCache[idx]===r){
-        speak(r.narrative);
-      }
-    },400);
-  }
-};
+// renderAi 只負責畫面,不再觸發朗讀 (朗讀統一由 selectNode 觸發)
 
 // =========================================================
 // 💬 對話面板 — 與島語進行 KB 對話
