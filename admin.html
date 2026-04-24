@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>島語語料後台 · Admin</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E📊%3C/text%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&family=Noto+Serif+TC:wght@400;600&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Noto Sans TC',sans-serif;background:#0a0a12;color:#d4d4dc;
+  min-height:100vh;padding:24px;line-height:1.6;font-size:15px}
+header{display:flex;justify-content:space-between;align-items:center;
+  border-bottom:1px solid rgba(0,229,255,.15);padding-bottom:20px;margin-bottom:32px}
+h1{font-family:'Noto Serif TC',serif;font-size:1.6rem;color:#00e5ff;letter-spacing:2px}
+.sub{font-size:.75rem;color:rgba(255,255,255,.4);letter-spacing:2px;font-family:'Orbitron',monospace}
+.auth-status{font-size:.85rem;color:rgba(124,255,160,.8)}
+
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-bottom:32px}
+.card{background:rgba(18,18,28,.7);border:1px solid rgba(0,229,255,.12);border-radius:14px;padding:22px}
+.card .label{font-family:'Orbitron',monospace;font-size:.7rem;letter-spacing:2px;
+  color:rgba(0,229,255,.6);margin-bottom:10px;font-weight:600}
+.card .value{font-family:'Noto Serif TC',serif;font-size:2rem;color:#f0f0f5;font-weight:600;letter-spacing:1px}
+.card .note{font-size:.8rem;color:rgba(255,255,255,.45);margin-top:6px}
+
+.section{margin-bottom:40px}
+.section h2{font-family:'Noto Serif TC',serif;font-size:1.25rem;color:#e0a030;margin-bottom:16px;letter-spacing:1.5px}
+
+table{width:100%;border-collapse:collapse;background:rgba(18,18,28,.5);border-radius:10px;overflow:hidden}
+th{background:rgba(0,229,255,.08);color:#00e5ff;text-align:left;padding:12px 16px;font-size:.85rem;letter-spacing:1px;font-weight:500}
+td{padding:11px 16px;border-top:1px solid rgba(255,255,255,.04);font-size:.92rem}
+tr:hover td{background:rgba(0,229,255,.03)}
+.tag{display:inline-block;padding:2px 8px;border-radius:8px;background:rgba(224,160,48,.15);
+  color:#e0a030;font-size:.7rem;letter-spacing:1px;font-family:'Noto Sans TC',sans-serif}
+
+.bar-row{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.bar-row .label{min-width:180px;font-size:.88rem;color:#f0f0f5}
+.bar{flex:1;height:22px;background:rgba(255,255,255,.04);border-radius:4px;overflow:hidden;position:relative}
+.bar-fill{height:100%;background:linear-gradient(90deg,#00e5ff,#e0a030);border-radius:4px;transition:width .6s}
+.bar-row .count{min-width:40px;text-align:right;font-family:'Orbitron',monospace;font-size:.8rem;color:rgba(0,229,255,.85)}
+
+details{background:rgba(18,18,28,.5);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:14px 18px;margin-bottom:10px}
+details summary{cursor:pointer;font-size:.95rem;color:#f0f0f5;font-weight:500}
+details summary:hover{color:#00e5ff}
+details[open] summary{color:#e0a030;margin-bottom:10px}
+.msg-row{padding:8px 0;border-top:1px solid rgba(255,255,255,.04);font-size:.88rem;line-height:1.75}
+.msg-row .who{font-weight:600;color:#00e5ff;margin-right:8px}
+.msg-row.guide .who{color:#e0a030}
+
+.loading{text-align:center;padding:40px;color:rgba(255,255,255,.4);font-style:italic}
+.warn{background:rgba(255,100,100,.08);border:1px solid rgba(255,100,100,.3);
+  color:#ff8080;padding:16px;border-radius:10px;margin-bottom:20px;font-size:.88rem}
+.btn{background:rgba(0,229,255,.12);border:1px solid rgba(0,229,255,.4);color:#00e5ff;
+  padding:8px 18px;border-radius:18px;cursor:pointer;font-family:'Noto Sans TC';font-size:.88rem;letter-spacing:1px}
+.btn:hover{background:rgba(0,229,255,.25)}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>📊 島語語料分析後台</h1>
+    <div class="sub">LANGUAGE CORPUS · KB ANALYTICS</div>
+  </div>
+  <div>
+    <span class="auth-status" id="auth-status">載入中…</span>
+    <button class="btn" id="refresh-btn" style="margin-left:12px">🔄 重新整理</button>
+    <button class="btn" id="export-csv-btn" style="margin-left:6px">📥 匯出 CSV</button>
+  </div>
+</header>
+
+<div class="warn" id="warn-box" style="display:none">
+  ⚠️ 這是你(帳號擁有者)的個人分析後台。Firestore 安全規則限制,只能看到「<b>你自己</b>」的對話。若要看所有訪客的對話,需把安全規則改開讀取(會失去隱私保護)。
+</div>
+
+<!-- 統計卡片 -->
+<section class="section">
+  <div class="cards" id="stat-cards">
+    <div class="card"><div class="label">TOTAL SESSIONS</div><div class="value" id="stat-sessions">—</div><div class="note">對話場次</div></div>
+    <div class="card"><div class="label">TOTAL MESSAGES</div><div class="value" id="stat-msgs">—</div><div class="note">訊息總量</div></div>
+    <div class="card"><div class="label">USER MESSAGES</div><div class="value" id="stat-user">—</div><div class="note">使用者提問/回應</div></div>
+    <div class="card"><div class="label">AVG LEN</div><div class="value" id="stat-avg">—</div><div class="note">每則訊息平均字數</div></div>
+  </div>
+</section>
+
+<!-- 年代熱度 -->
+<section class="section">
+  <h2>🔥 年代熱度(依被討論次數排序)</h2>
+  <div id="era-bars" class="loading">載入中…</div>
+</section>
+
+<!-- Session 清單 -->
+<section class="section">
+  <h2>💬 歷次對話</h2>
+  <div id="session-list" class="loading">載入中…</div>
+</section>
+
+<!-- Firebase init + data -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+import { getFirestore, doc, getDoc, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCSy_3ouSo5bWndt4ohXsognLH2ISwS8W0",
+  authDomain: "island-guide-9a9c5.firebaseapp.com",
+  projectId: "island-guide-9a9c5",
+  storageBucket: "island-guide-9a9c5.firebasestorage.app",
+  messagingSenderId: "994147306661",
+  appId: "1:994147306661:web:cee4dca1dc338f5334514c"
+};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+signInAnonymously(auth);
+onAuthStateChanged(auth, async user => {
+  if (!user) { document.getElementById('auth-status').textContent = '⚠️ 未登入'; return; }
+  document.getElementById('auth-status').textContent = '✓ 已登入 · uid ' + user.uid.slice(0,8) + '…';
+  document.getElementById('warn-box').style.display = 'block';
+  await loadAll(user.uid);
+});
+
+async function loadAll(uid) {
+  try {
+    // 1. 對話 sessions (原 chat panel 和諮商都算)
+    const chatSnap = await getDocs(query(collection(db,'users',uid,'sessions'),orderBy('lastActive','desc')));
+    const counselSnap = await getDocs(query(collection(db,'users',uid,'counselingSessions'),orderBy('lastActive','desc')));
+
+    const allSessions = [];
+    for (const d of chatSnap.docs) {
+      const data = d.data();
+      const msgs = await getDocs(query(collection(db,'users',uid,'sessions',d.id,'messages'),orderBy('timestamp','asc')));
+      allSessions.push({id:d.id, ...data, messages: msgs.docs.map(m=>m.data()), type: 'chat'});
+    }
+    for (const d of counselSnap.docs) {
+      const data = d.data();
+      const msgs = await getDocs(query(collection(db,'users',uid,'counselingSessions',d.id,'messages'),orderBy('timestamp','asc')));
+      allSessions.push({id:d.id, ...data, messages: msgs.docs.map(m=>m.data()), type: 'counseling'});
+    }
+
+    renderStats(allSessions);
+    renderEraBars(allSessions);
+    renderSessionList(allSessions);
+    window._allSessions = allSessions; // for CSV export
+  } catch(e) {
+    console.error(e);
+    alert('載入失敗: ' + e.message);
+  }
+}
+
+function renderStats(sessions) {
+  const allMsgs = sessions.flatMap(s => s.messages);
+  const userMsgs = allMsgs.filter(m => m.role === 'user');
+  const avgLen = allMsgs.length ? Math.round(allMsgs.reduce((s,m)=>s+(m.text||'').length,0)/allMsgs.length) : 0;
+  document.getElementById('stat-sessions').textContent = sessions.length;
+  document.getElementById('stat-msgs').textContent = allMsgs.length;
+  document.getElementById('stat-user').textContent = userMsgs.length;
+  document.getElementById('stat-avg').textContent = avgLen + ' 字';
+}
+
+function renderEraBars(sessions) {
+  const counts = {};
+  sessions.forEach(s => {
+    const era = s.era || s.lastEra || '(未標記)';
+    counts[era] = (counts[era] || 0) + (s.messages?.length || 0);
+  });
+  const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,20);
+  const max = sorted[0]?.[1] || 1;
+  const html = sorted.map(([era, count]) => `
+    <div class="bar-row">
+      <div class="label">${era}</div>
+      <div class="bar"><div class="bar-fill" style="width:${count/max*100}%"></div></div>
+      <div class="count">${count}</div>
+    </div>
+  `).join('');
+  document.getElementById('era-bars').innerHTML = html || '<p class="loading">尚無資料</p>';
+  document.getElementById('era-bars').classList.remove('loading');
+}
+
+function renderSessionList(sessions) {
+  const html = sessions.map(s => {
+    const d = s.startedAt?.toDate ? s.startedAt.toDate() : null;
+    const dateStr = d ? d.toLocaleString('zh-TW') : '—';
+    const msgHtml = (s.messages || []).map(m => `
+      <div class="msg-row ${m.role}">
+        <span class="who">${m.role === 'user' ? '訪客' : '🌊 島語'}</span>${escapeHtml(m.text||'')}
+      </div>
+    `).join('');
+    return `
+      <details>
+        <summary>
+          <span class="tag">${s.type === 'counseling' ? '諮商' : '對話'}</span>
+          ${s.era || s.lastEra || '(自由對話)'}
+          · ${s.messages?.length || 0} 則
+          · ${dateStr}
+        </summary>
+        ${msgHtml || '<p style="color:rgba(255,255,255,.4)">(無訊息)</p>'}
+      </details>
+    `;
+  }).join('');
+  document.getElementById('session-list').innerHTML = html || '<p class="loading">尚無對話。到 <a href="./counseling.html" style="color:#00e5ff">諮商室</a> 開始第一場吧。</p>';
+  document.getElementById('session-list').classList.remove('loading');
+}
+
+function escapeHtml(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+
+document.getElementById('refresh-btn').addEventListener('click', () => location.reload());
+
+document.getElementById('export-csv-btn').addEventListener('click', () => {
+  if (!window._allSessions) return;
+  const rows = [['session_id','type','era','role','text','timestamp']];
+  window._allSessions.forEach(s => {
+    (s.messages || []).forEach(m => {
+      const t = m.timestamp?.toDate ? m.timestamp.toDate().toISOString() : '';
+      rows.push([s.id, s.type, (s.era||s.lastEra||''), m.role, (m.text||'').replace(/\n/g,' '), t]);
+    });
+  });
+  const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob(['\uFEFF' + csv], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `island-guide-corpus-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+});
+</script>
+
+</body>
+</html>

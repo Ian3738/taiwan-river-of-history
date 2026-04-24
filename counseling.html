@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>島語諮商室 · Counseling Room</title>
+<meta name="description" content="與島語深度對話,以知識翻新 12 原則陪你從歷史反思自己。">
+<meta property="og:title" content="島語諮商室 · 與 AI 深度對話台灣歷史">
+<meta property="og:description" content="選一張歷史唱片,開啟一場知識翻新式的對話。">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E💭%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Noto+Sans+TC:wght@300;400;500;600;700&family=Noto+Serif+TC:wght@300;400;500;700&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html{font-size:16px}
+body{font-family:'Noto Sans TC',sans-serif;
+  background:linear-gradient(135deg,#1a1612 0%,#2b1e18 50%,#1a1612 100%);
+  color:#f5ede0;min-height:100vh;overflow-x:hidden;line-height:1.6}
+body::before{content:'';position:fixed;inset:0;background:
+  radial-gradient(ellipse at 20% 20%,rgba(224,160,48,.08) 0%,transparent 50%),
+  radial-gradient(ellipse at 80% 80%,rgba(180,100,80,.06) 0%,transparent 50%);
+  pointer-events:none;z-index:0}
+
+/* ====== Header ====== */
+header{position:sticky;top:0;z-index:10;backdrop-filter:blur(14px);
+  background:rgba(20,16,12,.75);border-bottom:1px solid rgba(224,160,48,.18);
+  padding:14px 28px;display:flex;justify-content:space-between;align-items:center}
+.brand{display:flex;align-items:center;gap:12px}
+.brand .logo{width:36px;height:36px;border-radius:50%;
+  background:radial-gradient(circle at 30% 30%,#e0a030,#7a4a1a);
+  box-shadow:0 0 16px rgba(224,160,48,.5),inset 0 0 10px rgba(0,0,0,.3);
+  display:flex;align-items:center;justify-content:center;font-size:1rem}
+.brand h1{font-family:'Fraunces',serif;font-size:1.3rem;font-weight:600;color:#f0e0c0;letter-spacing:2px}
+.brand .sub{font-size:.72rem;color:rgba(224,160,48,.7);letter-spacing:3px;font-family:'Orbitron',monospace}
+.nav{display:flex;gap:14px;align-items:center}
+.nav a,.nav button{background:transparent;border:1px solid rgba(224,160,48,.25);
+  color:rgba(245,237,224,.85);font-family:'Noto Sans TC',sans-serif;font-size:.9rem;
+  padding:8px 18px;border-radius:20px;cursor:pointer;text-decoration:none;
+  transition:all .2s;letter-spacing:1px}
+.nav a:hover,.nav button:hover{border-color:rgba(224,160,48,.6);background:rgba(224,160,48,.08);color:#e0a030}
+
+/* ====== Main container ====== */
+main{position:relative;z-index:1;max-width:1280px;margin:0 auto;padding:60px 28px 80px}
+.section-title{font-family:'Fraunces',serif;font-size:2.2rem;font-weight:500;
+  color:#f0e0c0;margin-bottom:8px;letter-spacing:1.5px}
+.section-sub{font-size:1rem;color:rgba(245,237,224,.65);margin-bottom:48px;letter-spacing:1px;line-height:1.8}
+.section-sub b{color:#e0a030;font-weight:500}
+
+/* ====== Vinyl carousel ====== */
+#vinyl-view{display:block}
+#vinyl-view.hidden{display:none}
+.vinyl-hint{font-family:'Noto Serif TC',serif;font-size:1.15rem;color:rgba(245,237,224,.8);
+  margin-bottom:24px;letter-spacing:1px;font-style:italic}
+.vinyl-rack{display:flex;gap:32px;overflow-x:auto;padding:20px 10px 40px;
+  scroll-snap-type:x mandatory;scrollbar-width:thin;scrollbar-color:rgba(224,160,48,.3) transparent}
+.vinyl-rack::-webkit-scrollbar{height:6px}
+.vinyl-rack::-webkit-scrollbar-thumb{background:rgba(224,160,48,.3);border-radius:3px}
+.vinyl{flex-shrink:0;width:260px;scroll-snap-align:center;cursor:pointer;
+  transition:transform .3s cubic-bezier(.4,0,.2,1)}
+.vinyl:hover{transform:translateY(-8px)}
+.vinyl:hover .disc{transform:rotate(360deg) translateX(40%)}
+.vinyl-inner{position:relative;width:260px;height:260px}
+.sleeve{position:absolute;inset:0;border-radius:6px;overflow:hidden;
+  box-shadow:0 12px 40px rgba(0,0,0,.45),0 0 0 1px rgba(224,160,48,.12);
+  background:linear-gradient(135deg,var(--sleeve-a,#8E9775),var(--sleeve-b,#5a6147));
+  display:flex;flex-direction:column;justify-content:space-between;padding:20px 22px}
+.sleeve .era{font-family:'Orbitron',monospace;font-size:.78rem;letter-spacing:3px;
+  color:rgba(255,255,255,.9);font-weight:600}
+.sleeve .icon{font-size:4rem;text-align:center;filter:drop-shadow(0 2px 8px rgba(0,0,0,.3))}
+.sleeve .name{font-family:'Fraunces',serif;font-size:1.35rem;font-weight:500;
+  color:#fff;letter-spacing:1.5px;line-height:1.3}
+.sleeve::before{content:'';position:absolute;top:12px;right:12px;
+  font-family:'Orbitron',monospace;font-size:.55rem;letter-spacing:2px;
+  color:rgba(255,255,255,.4);content:'SIDE A · TAIWAN'}
+.disc{position:absolute;top:10px;right:-100px;width:240px;height:240px;
+  border-radius:50%;background:radial-gradient(circle,#222 0%,#111 45%,#000 46%,#1a1a1a 85%);
+  box-shadow:0 8px 24px rgba(0,0,0,.6),inset 0 0 20px rgba(255,255,255,.05);
+  transition:transform 1.2s cubic-bezier(.4,0,.2,1);z-index:-1;transform:translateX(0)}
+.disc::before{content:'';position:absolute;inset:50%;width:80px;height:80px;
+  margin:-40px 0 0 -40px;border-radius:50%;
+  background:radial-gradient(circle,var(--sleeve-a,#8E9775),var(--sleeve-b,#5a6147));
+  box-shadow:0 0 0 2px #000}
+.disc::after{content:'';position:absolute;inset:50%;width:6px;height:6px;
+  margin:-3px 0 0 -3px;background:#000;border-radius:50%}
+
+.vinyl-mode-row{display:flex;gap:16px;margin-top:40px;flex-wrap:wrap}
+.mode-card{flex:1;min-width:260px;background:rgba(40,30,22,.55);border:1px solid rgba(224,160,48,.18);
+  border-radius:14px;padding:24px 28px;cursor:pointer;transition:all .25s}
+.mode-card:hover{border-color:rgba(224,160,48,.5);background:rgba(50,38,28,.7);transform:translateY(-3px)}
+.mode-card .ic{font-size:2rem;margin-bottom:10px}
+.mode-card h3{font-family:'Fraunces',serif;font-size:1.25rem;color:#f0e0c0;margin-bottom:6px;font-weight:500}
+.mode-card p{font-size:.9rem;color:rgba(245,237,224,.65);line-height:1.7}
+
+/* ====== Chat view ====== */
+#chat-view{display:none;max-width:860px;margin:0 auto}
+#chat-view.active{display:block;animation:fadeUp .5s ease-out}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+.chat-head{display:flex;align-items:center;gap:20px;padding:24px 0;margin-bottom:20px;
+  border-bottom:1px solid rgba(224,160,48,.18)}
+.chat-head .now-playing{display:flex;align-items:center;gap:14px}
+.now-disc{width:56px;height:56px;border-radius:50%;background:radial-gradient(circle,#222,#000);
+  position:relative;animation:spin 8s linear infinite;flex-shrink:0;
+  box-shadow:0 4px 12px rgba(0,0,0,.4)}
+.now-disc::before{content:'';position:absolute;inset:50%;width:18px;height:18px;margin:-9px 0 0 -9px;
+  border-radius:50%;background:var(--sleeve-a,#e0a030)}
+.now-disc::after{content:'';position:absolute;inset:50%;width:4px;height:4px;margin:-2px 0 0 -2px;
+  background:#000;border-radius:50%}
+@keyframes spin{to{transform:rotate(360deg)}}
+.now-info{flex:1}
+.now-info .label{font-family:'Orbitron',monospace;font-size:.65rem;letter-spacing:3px;
+  color:rgba(224,160,48,.7);margin-bottom:4px}
+.now-info .title{font-family:'Fraunces',serif;font-size:1.4rem;color:#f0e0c0;font-weight:500}
+.chat-head button{background:transparent;border:1px solid rgba(224,160,48,.25);
+  color:rgba(245,237,224,.85);padding:8px 16px;border-radius:18px;cursor:pointer;
+  font-size:.88rem;letter-spacing:1px;transition:all .2s}
+.chat-head button:hover{border-color:rgba(224,160,48,.5);color:#e0a030}
+
+.stats-bar{display:flex;gap:20px;font-size:.8rem;color:rgba(245,237,224,.55);
+  margin-bottom:20px;letter-spacing:.5px}
+.stats-bar b{color:#e0a030;font-weight:600}
+
+/* Messages */
+.messages{display:flex;flex-direction:column;gap:18px;min-height:400px;padding:12px 0 24px}
+.message{max-width:82%;padding:18px 22px;border-radius:18px;
+  font-family:'Noto Serif TC',serif;font-size:1.08rem;line-height:1.95;letter-spacing:.4px;
+  animation:fadeUp .4s ease-out}
+.message.user{align-self:flex-end;background:linear-gradient(135deg,rgba(224,160,48,.18),rgba(180,100,50,.12));
+  border:1px solid rgba(224,160,48,.3);color:#f5ede0;border-bottom-right-radius:6px}
+.message.guide{align-self:flex-start;background:rgba(40,30,22,.6);border:1px solid rgba(245,237,224,.1);
+  color:rgba(245,237,224,.95);border-bottom-left-radius:6px}
+.message .who{font-family:'Noto Sans TC',sans-serif;font-size:.72rem;font-weight:600;
+  letter-spacing:2px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.message.guide .who{color:#e0a030}
+.message.user .who{color:rgba(224,160,48,.85);justify-content:flex-end}
+.message.thinking{opacity:.7;font-style:italic}
+.message.thinking::after{content:'...';animation:dots 1.5s infinite}
+@keyframes dots{0%,20%{opacity:.3}50%{opacity:1}100%{opacity:.3}}
+
+/* Suggestion cards */
+.suggest-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:12px;margin:20px 0}
+.suggest{background:rgba(40,30,22,.4);border:1px solid rgba(224,160,48,.15);
+  border-radius:12px;padding:14px 18px;cursor:pointer;transition:all .2s;text-align:left}
+.suggest:hover{border-color:rgba(224,160,48,.4);background:rgba(50,38,28,.6)}
+.suggest .sic{font-size:1.2rem;margin-bottom:4px}
+.suggest .st{font-family:'Noto Serif TC',serif;font-size:.92rem;color:rgba(245,237,224,.88);line-height:1.5}
+
+/* Input */
+.input-bar{position:sticky;bottom:20px;background:rgba(30,22,16,.92);
+  backdrop-filter:blur(14px);border:1px solid rgba(224,160,48,.25);
+  border-radius:24px;padding:14px 16px;display:flex;gap:10px;align-items:flex-end;
+  box-shadow:0 8px 30px rgba(0,0,0,.4);margin-top:20px}
+#mic-btn{flex-shrink:0;width:44px;height:44px;border-radius:50%;
+  background:rgba(224,160,48,.15);border:1px solid rgba(224,160,48,.4);
+  color:#e0a030;font-size:1.2rem;cursor:pointer;transition:all .2s}
+#mic-btn:hover{background:rgba(224,160,48,.25)}
+#mic-btn.recording{background:rgba(255,100,100,.2);border-color:#ff6464;color:#ff6464;
+  animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{50%{transform:scale(1.1)}}
+#text-input{flex:1;background:transparent;border:none;color:#f5ede0;
+  font-family:'Noto Serif TC',serif;font-size:1.05rem;padding:10px 6px;
+  outline:none;resize:none;max-height:120px;line-height:1.6}
+#text-input::placeholder{color:rgba(245,237,224,.4)}
+#send-btn{flex-shrink:0;padding:11px 20px;border-radius:20px;
+  background:rgba(224,160,48,.2);border:1px solid rgba(224,160,48,.5);
+  color:#e0a030;font-family:'Noto Sans TC',sans-serif;font-size:.92rem;
+  letter-spacing:1px;cursor:pointer;transition:all .2s;font-weight:500}
+#send-btn:hover{background:rgba(224,160,48,.35)}
+#send-btn:disabled{opacity:.4;cursor:not-allowed}
+
+.action-row{display:flex;gap:10px;margin-top:12px;justify-content:flex-end}
+.action-row button{background:transparent;border:1px solid rgba(245,237,224,.15);
+  color:rgba(245,237,224,.7);font-size:.82rem;padding:6px 14px;border-radius:16px;cursor:pointer;
+  font-family:'Noto Sans TC',sans-serif;letter-spacing:.5px;transition:all .2s}
+.action-row button:hover{border-color:rgba(224,160,48,.4);color:#e0a030}
+
+/* Transcript listening */
+#live-transcript{position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:rgba(30,22,16,.92);backdrop-filter:blur(10px);
+  border:1px solid rgba(124,255,160,.35);border-radius:16px;padding:10px 18px;
+  font-size:.88rem;color:#7cffa0;opacity:0;transition:all .3s;max-width:80vw;z-index:50;
+  font-family:'Noto Sans TC',sans-serif;letter-spacing:.3px;pointer-events:none}
+#live-transcript.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* Summary modal */
+.modal-backdrop{position:fixed;inset:0;background:rgba(10,8,6,.85);backdrop-filter:blur(6px);
+  z-index:100;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-backdrop.show{display:flex;animation:fadeUp .3s}
+.modal-content{background:linear-gradient(135deg,#2b1e18,#1a1612);
+  border:1px solid rgba(224,160,48,.3);border-radius:20px;padding:36px 40px;
+  max-width:600px;max-height:85vh;overflow-y:auto;position:relative;
+  box-shadow:0 20px 60px rgba(0,0,0,.7)}
+.modal-content h2{font-family:'Fraunces',serif;font-size:1.6rem;color:#f0e0c0;margin-bottom:12px;letter-spacing:1.5px}
+.modal-content .summary-text{font-family:'Noto Serif TC',serif;font-size:1rem;line-height:2;
+  color:rgba(245,237,224,.88);margin-bottom:20px;white-space:pre-wrap}
+.modal-close{position:absolute;top:18px;right:22px;background:transparent;border:none;
+  color:rgba(245,237,224,.5);font-size:1.8rem;cursor:pointer;line-height:1}
+.modal-close:hover{color:#e0a030}
+
+/* Responsive */
+@media(max-width:768px){
+  header{padding:12px 18px}
+  .brand h1{font-size:1.05rem}
+  .brand .sub{font-size:.6rem}
+  main{padding:32px 18px 60px}
+  .section-title{font-size:1.5rem}
+  .vinyl{width:200px}
+  .vinyl-inner{width:200px;height:200px}
+  .sleeve .name{font-size:1.1rem}
+  .sleeve .icon{font-size:3rem}
+  .message{max-width:92%;font-size:.98rem;padding:14px 18px}
+  .chat-head .now-info .title{font-size:1.1rem}
+  .input-bar{margin:16px -8px 0}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="logo">💭</div>
+    <div>
+      <h1>島語諮商室</h1>
+      <div class="sub">COUNSELING ROOM</div>
+    </div>
+  </div>
+  <nav class="nav">
+    <a href="./">返回展覽 ←</a>
+    <button id="history-btn" title="過往對話">📜 歷史</button>
+  </nav>
+</header>
+
+<main>
+  <!-- 唱片選擇視圖 -->
+  <section id="vinyl-view">
+    <h2 class="section-title">選一張歷史唱片</h2>
+    <p class="section-sub">每一張都是一個台灣歷史時刻。點選後,<b>島語</b>會以該年代為起點,以知識翻新 (Knowledge Building) 式的反問陪你對話。</p>
+    <div class="vinyl-hint">♬ 向右滑動瀏覽,點選你想深談的年代</div>
+    <div class="vinyl-rack" id="vinyl-rack"></div>
+
+    <h2 class="section-title" style="margin-top:60px;font-size:1.5rem">或用別的方式開始</h2>
+    <div class="vinyl-mode-row">
+      <div class="mode-card" data-mode="free">
+        <div class="ic">💭</div>
+        <h3>自由對話</h3>
+        <p>不指定年代,今天想聊什麼都可以 — 從你的家族故事、身分認同、到對未來的想像。</p>
+      </div>
+      <div class="mode-card" data-mode="resume">
+        <div class="ic">📖</div>
+        <h3>繼續上次</h3>
+        <p>島語記得你上次聊到哪裡。讓我們接著深入。</p>
+      </div>
+      <div class="mode-card" data-mode="reflection">
+        <div class="ic">🌊</div>
+        <h3>今日反思</h3>
+        <p>島語會從 14 個年代隨機選一個,以全新角度提問,帶你做 10 分鐘的深度反思。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 對話視圖 -->
+  <section id="chat-view">
+    <div class="chat-head">
+      <div class="now-playing">
+        <div class="now-disc" id="now-disc"></div>
+        <div class="now-info">
+          <div class="label" id="now-label">NOW PLAYING</div>
+          <div class="title" id="now-title">—</div>
+        </div>
+      </div>
+      <button id="back-to-vinyl">← 換一張唱片</button>
+    </div>
+    <div class="stats-bar" id="stats-bar">
+      訊息 <b id="stat-msg">0</b> · 對話時長 <b id="stat-time">0 分鐘</b>
+    </div>
+    <div class="messages" id="messages"></div>
+    <div class="suggest-cards" id="suggest-cards"></div>
+    <div class="action-row">
+      <button id="summary-btn">✨ 產生對話摘要</button>
+      <button id="export-btn">📥 匯出逐字稿</button>
+    </div>
+    <div class="input-bar">
+      <button id="mic-btn" title="語音輸入">🎤</button>
+      <textarea id="text-input" rows="1" placeholder="在這裡打字,或按麥克風用說的…"></textarea>
+      <button id="send-btn">送出</button>
+    </div>
+  </section>
+</main>
+
+<div id="live-transcript"></div>
+
+<!-- 摘要 Modal -->
+<div class="modal-backdrop" id="summary-modal">
+  <div class="modal-content">
+    <button class="modal-close" data-close="summary-modal">×</button>
+    <h2>✨ 今日對話摘要</h2>
+    <div class="summary-text" id="summary-text">正在整理…</div>
+    <div class="action-row">
+      <button onclick="copyToClipboard(document.getElementById('summary-text').textContent)">複製</button>
+    </div>
+  </div>
+</div>
+
+<!-- 歷史 Modal -->
+<div class="modal-backdrop" id="history-modal">
+  <div class="modal-content">
+    <button class="modal-close" data-close="history-modal">×</button>
+    <h2>📜 過往對話</h2>
+    <div id="history-list">載入中…</div>
+  </div>
+</div>
+
+<!-- Firebase init -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+import { getFirestore, doc, setDoc, addDoc, collection, serverTimestamp, getDoc, getDocs, query, orderBy, limit, where } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCSy_3ouSo5bWndt4ohXsognLH2ISwS8W0",
+  authDomain: "island-guide-9a9c5.firebaseapp.com",
+  projectId: "island-guide-9a9c5",
+  storageBucket: "island-guide-9a9c5.firebasestorage.app",
+  messagingSenderId: "994147306661",
+  appId: "1:994147306661:web:cee4dca1dc338f5334514c"
+};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+let resolveReady;
+window.fbReady = new Promise(r => resolveReady = r);
+
+signInAnonymously(auth).catch(e => {console.warn(e);resolveReady(null)});
+onAuthStateChanged(auth, async user => {
+  if (!user) return;
+  // 讀取既有 profile
+  let profile = null;
+  try { const snap = await getDoc(doc(db, 'users', user.uid)); if (snap.exists()) profile = snap.data(); } catch(e){}
+  window.fb = {
+    uid: user.uid,
+    profile,
+    async saveCounselMessage(sessionId, role, text, era){
+      await addDoc(collection(db,'users',user.uid,'counselingSessions',sessionId,'messages'),{
+        role,text,era:era||null,timestamp:serverTimestamp()
+      });
+      await setDoc(doc(db,'users',user.uid,'counselingSessions',sessionId),{
+        lastActive:serverTimestamp(),lastEra:era||null
+      },{merge:true});
+    },
+    async startCounselSession(sessionId,era,mode){
+      await setDoc(doc(db,'users',user.uid,'counselingSessions',sessionId),{
+        startedAt:serverTimestamp(),lastActive:serverTimestamp(),era:era||null,mode:mode||'era'
+      },{merge:true});
+    },
+    async loadRecentSessions(n=10){
+      const q=query(collection(db,'users',user.uid,'counselingSessions'),orderBy('lastActive','desc'),limit(n));
+      const snap=await getDocs(q);
+      const out=[];snap.forEach(d=>out.push({id:d.id,...d.data()}));return out;
+    },
+    async loadSessionMessages(sessionId){
+      const q=query(collection(db,'users',user.uid,'counselingSessions',sessionId,'messages'),orderBy('timestamp','asc'));
+      const snap=await getDocs(q);
+      const out=[];snap.forEach(d=>out.push(d.data()));return out;
+    },
+    async saveSummary(sessionId,summary){
+      await setDoc(doc(db,'users',user.uid,'counselingSessions',sessionId),{summary,summaryAt:serverTimestamp()},{merge:true});
+    }
+  };
+  resolveReady(window.fb);
+  // 同步 nickname
+  if(profile&&profile.nickname&&!localStorage.getItem('mythos_nickname')){
+    localStorage.setItem('mythos_nickname',profile.nickname);
+  }
+});
+</script>
+
+<script>
+// ============================================================
+// 常數、狀態、DATA
+// ============================================================
+const DATA = [
+ {era:'~4000 BCE',name:'南島語族的起源',icon:'🛶',colorA:'#9CB4A0',colorB:'#5a6a5e'},
+ {era:'1624',name:'大航海的交會',icon:'⛵',colorA:'#8E9775',colorB:'#5a6147'},
+ {era:'1661',name:'鄭氏東寧的孤光',icon:'🏯',colorA:'#B5895A',colorB:'#6e5435'},
+ {era:'1887',name:'鐵路與電光之初',icon:'🚂',colorA:'#E28E8E',colorB:'#8e5252'},
+ {era:'1895',name:'乙未割讓的斷柱',icon:'🏛️',colorA:'#7A6E78',colorB:'#494249'},
+ {era:'1921',name:'文化覺醒的年代',icon:'📖',colorA:'#6D8299',colorB:'#3f4c5a'},
+ {era:'1947',name:'二二八的裂縫',icon:'🕯️',colorA:'#9C6B6B',colorB:'#5e3f3f'},
+ {era:'1980',name:'矽島的崛起',icon:'💾',colorA:'#D4A373',colorB:'#7f6044'},
+ {era:'1987',name:'解嚴後的綻放',icon:'🕊️',colorA:'#C9B26B',colorB:'#786a40'},
+ {era:'1996',name:'首次總統直選',icon:'🗳️',colorA:'#7AA0B8',colorB:'#486072'},
+ {era:'1999',name:'九二一的搖晃',icon:'🌋',colorA:'#8C7A6B',colorB:'#544940'},
+ {era:'2014',name:'太陽花的春天',icon:'🌻',colorA:'#E8C76C',colorB:'#8b7840'},
+ {era:'2020',name:'護國神山與口罩外交',icon:'⛰️',colorA:'#9AC5D6',colorB:'#5b7680'},
+ {era:'2026',name:'AI 與共創時代',icon:'🧠',colorA:'#A3B18A',colorB:'#626a53'}
+];
+
+const MYTHOS_URL = (location.hostname==='localhost'||location.hostname==='127.0.0.1')
+  ? 'http://localhost:8000'
+  : 'https://ian3738-island-guide-server.hf.space';
+
+const nickname = localStorage.getItem('mythos_nickname') || '朋友';
+let SESSION_ID = 's_' + Date.now() + '_' + Math.random().toString(36).slice(2,8);
+let currentEra = null;
+let currentMode = 'era';
+let messageCount = 0;
+let sessionStartTime = Date.now();
+
+// ============================================================
+// Render vinyl rack
+// ============================================================
+const rack = document.getElementById('vinyl-rack');
+DATA.forEach((d,i) => {
+  const el = document.createElement('div');
+  el.className = 'vinyl';
+  el.innerHTML = `
+    <div class="vinyl-inner">
+      <div class="disc"></div>
+      <div class="sleeve" style="--sleeve-a:${d.colorA};--sleeve-b:${d.colorB}">
+        <div class="era">${d.era}</div>
+        <div class="icon">${d.icon}</div>
+        <div class="name">${d.name}</div>
+      </div>
+    </div>
+  `;
+  el.addEventListener('click', () => startEraSession(i));
+  rack.appendChild(el);
+});
+
+document.querySelectorAll('.mode-card').forEach(card => {
+  card.addEventListener('click', () => {
+    const mode = card.dataset.mode;
+    if (mode==='resume') resumePreviousSession();
+    else if (mode==='free') startFreeSession();
+    else if (mode==='reflection') startReflectionSession();
+  });
+});
+
+// ============================================================
+// 開啟對話
+// ============================================================
+async function startEraSession(idx){
+  const d = DATA[idx];
+  currentEra = d.era + ' ' + d.name;
+  currentMode = 'era';
+  switchToChatView(d);
+  await window.fbReady.then(fb => fb?.startCounselSession(SESSION_ID, currentEra, 'era'));
+  const greet = `${nickname}，歡迎。我們現在來聊 ${d.era} 年，「${d.name}」。我先問你一個開放的問題:當你想到這個年代，第一個浮現的畫面或感受是什麼？不用正確答案，就是你最直接的直覺。`;
+  addMessage('guide', greet);
+  speak(greet);
+  showSuggestions([
+    {ic:'💭',t:'我不太熟這段歷史,能先給我一個切入點嗎?'},
+    {ic:'🔍',t:'這個年代最被忽略的一面是什麼?'},
+    {ic:'🌏',t:'如果從原住民/女性/勞工的視角看會怎樣?'},
+    {ic:'🪞',t:'這段歷史和我現在的生活有什麼連結?'}
+  ]);
+}
+
+async function startFreeSession(){
+  currentEra = null;
+  currentMode = 'free';
+  switchToChatView({era:'FREE',name:'自由對話',icon:'💭',colorA:'#e0a030',colorB:'#7a4a1a'});
+  await window.fbReady.then(fb => fb?.startCounselSession(SESSION_ID, null, 'free'));
+  const greet = `${nickname}，這裡是一個完全自由的對話空間。沒有設定主題，我想聽你想聊的。或許可以從這些問題開始——你最近在想什麼跟台灣有關的事？或者，你想重新認識自己家族的什麼故事？`;
+  addMessage('guide', greet);
+  speak(greet);
+  showSuggestions([
+    {ic:'👨‍👩‍👧',t:'聊聊我的家族從哪裡來'},
+    {ic:'🏝️',t:'我覺得台灣人的認同是什麼?'},
+    {ic:'📚',t:'有什麼歷史書/紀錄片推薦?'},
+    {ic:'🌱',t:'我想更認識原住民文化'}
+  ]);
+}
+
+async function startReflectionSession(){
+  const idx = Math.floor(Math.random()*DATA.length);
+  const d = DATA[idx];
+  currentEra = d.era + ' ' + d.name;
+  currentMode = 'reflection';
+  switchToChatView(d);
+  await window.fbReady.then(fb => fb?.startCounselSession(SESSION_ID, currentEra, 'reflection'));
+  const reflectionPrompts = [
+    `${nickname}，今天我們做一個 10 分鐘的深度反思。我想讓你想像——如果你生活在 ${d.era} 年的台灣，作為一個${['平民','女性','原住民','商人','學者'][Math.floor(Math.random()*5)]}，你的一天會是什麼樣子？慢慢想，不急。`,
+    `${nickname}，讓我們慢下來。${d.era}「${d.name}」這段歷史裡，有哪個被歷史課本輕輕帶過、但你覺得應該被認真談的細節？`,
+    `${nickname}，一個開放的問題:${d.era} 那個時代的決定，如何仍在影響今天的你？`,
+  ];
+  const greet = reflectionPrompts[Math.floor(Math.random()*reflectionPrompts.length)];
+  addMessage('guide', greet);
+  speak(greet);
+}
+
+async function resumePreviousSession(){
+  const fb = await window.fbReady;
+  if (!fb) { alert('雲端尚未連線'); return; }
+  const sessions = await fb.loadRecentSessions(1);
+  if (sessions.length === 0) {
+    alert('還沒有過往對話,先從唱片開始吧！');
+    return;
+  }
+  const last = sessions[0];
+  SESSION_ID = last.id;
+  currentEra = last.lastEra || last.era || null;
+  currentMode = last.mode || 'era';
+  const dataMatch = DATA.find(d => currentEra && currentEra.includes(d.era));
+  switchToChatView(dataMatch || {era:'續聊',name:currentEra||'自由對話',icon:'📖',colorA:'#e0a030',colorB:'#7a4a1a'});
+  const msgs = await fb.loadSessionMessages(last.id);
+  msgs.forEach(m => addMessage(m.role, m.text, true));
+  const greet = `${nickname}，上次我們聊到${msgs.length}則訊息。要繼續剛才那個思路嗎？或者想換個角度？`;
+  addMessage('guide', greet);
+  speak(greet);
+}
+
+// ============================================================
+// UI helpers
+// ============================================================
+function switchToChatView(d){
+  document.getElementById('vinyl-view').classList.add('hidden');
+  document.getElementById('chat-view').classList.add('active');
+  document.getElementById('now-title').textContent = d.era + ' · ' + d.name;
+  const disc = document.getElementById('now-disc');
+  disc.style.setProperty('--sleeve-a', d.colorA);
+  // 清空舊訊息
+  document.getElementById('messages').innerHTML = '';
+  document.getElementById('suggest-cards').innerHTML = '';
+  messageCount = 0;
+  sessionStartTime = Date.now();
+  updateStats();
+  // 每 30 秒更新時長
+  setInterval(updateStats, 30000);
+}
+
+function updateStats(){
+  document.getElementById('stat-msg').textContent = messageCount;
+  const mins = Math.floor((Date.now()-sessionStartTime)/60000);
+  document.getElementById('stat-time').textContent = mins + ' 分鐘';
+}
+
+function addMessage(role, text, silent){
+  const el = document.createElement('div');
+  el.className = 'message ' + role;
+  el.innerHTML = `<div class="who">${role==='user'?nickname:'🌊 島語'}</div>${escapeHtml(text)}`;
+  document.getElementById('messages').appendChild(el);
+  el.scrollIntoView({behavior:'smooth',block:'end'});
+  messageCount++;
+  if (!silent) updateStats();
+  return el;
+}
+
+function escapeHtml(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML.replace(/\n/g,'<br>')}
+
+function showSuggestions(arr){
+  const box = document.getElementById('suggest-cards');
+  box.innerHTML = '';
+  arr.forEach(s => {
+    const el = document.createElement('button');
+    el.className = 'suggest';
+    el.innerHTML = `<div class="sic">${s.ic}</div><div class="st">${s.t}</div>`;
+    el.addEventListener('click', () => {
+      document.getElementById('text-input').value = s.t;
+      sendMessage();
+    });
+    box.appendChild(el);
+  });
+}
+
+// ============================================================
+// Send message
+// ============================================================
+let sending = false;
+async function sendMessage(){
+  if (sending) return;
+  const input = document.getElementById('text-input');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  input.style.height = 'auto';
+  document.getElementById('suggest-cards').innerHTML = ''; // 清掉引導卡
+  sending = true;
+  addMessage('user', text);
+  window.fbReady.then(fb => fb?.saveCounselMessage(SESSION_ID, 'user', text, currentEra));
+
+  const thinking = addMessage('guide','');
+  thinking.classList.add('thinking');
+  thinking.innerHTML = '<div class="who">🌊 島語</div><i>正在沉思</i>';
+
+  try {
+    const res = await fetch(MYTHOS_URL + '/chat', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        session_id: SESSION_ID,
+        nickname,
+        message: text,
+        current_era: currentEra || '(自由對話)'
+      })
+    });
+    const d = await res.json();
+    const reply = d.reply || '(我這次沒能回應你)';
+    thinking.classList.remove('thinking');
+    thinking.innerHTML = `<div class="who">🌊 島語</div>${escapeHtml(reply)}`;
+    window.fbReady.then(fb => fb?.saveCounselMessage(SESSION_ID, 'guide', reply, currentEra));
+    speak(reply);
+  } catch(e){
+    thinking.classList.remove('thinking');
+    thinking.innerHTML = '<div class="who">⚠️</div>連線失敗,稍後再試。';
+  } finally {
+    sending = false;
+  }
+}
+
+document.getElementById('send-btn').addEventListener('click', sendMessage);
+document.getElementById('text-input').addEventListener('keydown', e => {
+  if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+});
+// 自動增高 textarea
+document.getElementById('text-input').addEventListener('input', function(){
+  this.style.height = 'auto';
+  this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+});
+
+// ============================================================
+// 語音輸入
+// ============================================================
+let rec = null, recActive = false;
+document.getElementById('mic-btn').addEventListener('click', function(){
+  const btn = this;
+  if (recActive) {
+    rec?.stop(); recActive = false; btn.classList.remove('recording');
+    document.getElementById('live-transcript').classList.remove('show');
+    return;
+  }
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { alert('此瀏覽器不支援語音輸入'); return; }
+  rec = new SR();
+  rec.lang = 'zh-TW'; rec.continuous = true; rec.interimResults = true;
+  let buffer = '';
+  rec.onresult = ev => {
+    let fin='', inter='';
+    for (let i=0;i<ev.results.length;i++){
+      const t=ev.results[i][0].transcript;
+      if (ev.results[i].isFinal) fin += t; else inter += t;
+    }
+    buffer = fin;
+    const lt = document.getElementById('live-transcript');
+    lt.textContent = '🎤 ' + (fin || inter);
+    lt.classList.add('show');
+  };
+  rec.onerror = () => { recActive = false; btn.classList.remove('recording'); };
+  rec.onend = () => {
+    if (buffer) {
+      document.getElementById('text-input').value = buffer;
+      sendMessage();
+    }
+    buffer = '';
+    document.getElementById('live-transcript').classList.remove('show');
+  };
+  try { rec.start(); recActive = true; btn.classList.add('recording'); } catch(e){}
+});
+
+// ============================================================
+// TTS (Gemini via backend)
+// ============================================================
+let currentAudio = null, speakGen = 0;
+async function speak(text){
+  try {
+    speakGen++;
+    const myGen = speakGen;
+    if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+    const res = await fetch(MYTHOS_URL + '/tts', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({text})
+    });
+    if (!res.ok) throw new Error('tts failed');
+    if (myGen !== speakGen) return;
+    const blob = await res.blob();
+    if (myGen !== speakGen) return;
+    const url = URL.createObjectURL(blob);
+    currentAudio = new Audio(url);
+    currentAudio.playbackRate = 1.1;
+    currentAudio.play().catch(() => {});
+  } catch(e){ console.warn('[TTS]',e); }
+}
+
+// ============================================================
+// 匯出、摘要、歷史
+// ============================================================
+document.getElementById('export-btn').addEventListener('click', () => {
+  const msgs = Array.from(document.querySelectorAll('.message')).map(el => {
+    const who = el.querySelector('.who').textContent;
+    const text = el.textContent.replace(who, '').trim();
+    return `【${who}】\n${text}\n`;
+  }).join('\n');
+  const blob = new Blob([
+    `島語諮商室 · 對話逐字稿\n使用者: ${nickname}\n年代: ${currentEra||'(自由對話)'}\n日期: ${new Date().toLocaleString('zh-TW')}\n\n────────────\n\n${msgs}`
+  ], {type:'text/plain;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `島語對話_${new Date().toISOString().slice(0,10)}.txt`;
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+document.getElementById('summary-btn').addEventListener('click', async () => {
+  const modal = document.getElementById('summary-modal');
+  const txt = document.getElementById('summary-text');
+  modal.classList.add('show');
+  txt.textContent = '正在整理你們的對話…';
+  const msgs = Array.from(document.querySelectorAll('.message')).map(el => {
+    const who = el.querySelector('.who').textContent;
+    const text = el.textContent.replace(who, '').trim();
+    return `${who}: ${text}`;
+  }).join('\n');
+  try {
+    const res = await fetch(MYTHOS_URL + '/summarize', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({transcript: msgs, nickname, era: currentEra})
+    });
+    const d = await res.json();
+    txt.textContent = d.summary || '(無法產生摘要)';
+    window.fbReady.then(fb => fb?.saveSummary(SESSION_ID, d.summary));
+  } catch(e) {
+    txt.textContent = '⚠️ 摘要失敗: ' + e.message;
+  }
+});
+
+document.getElementById('history-btn').addEventListener('click', async () => {
+  const modal = document.getElementById('history-modal');
+  const list = document.getElementById('history-list');
+  modal.classList.add('show');
+  list.innerHTML = '載入中…';
+  const fb = await window.fbReady;
+  if (!fb) { list.innerHTML = '⚠️ 雲端未連線'; return; }
+  const sessions = await fb.loadRecentSessions(20);
+  if (sessions.length === 0) { list.innerHTML = '<p style="color:rgba(245,237,224,.6)">還沒有過往對話。</p>'; return; }
+  list.innerHTML = sessions.map(s => {
+    const d = s.startedAt?.toDate ? s.startedAt.toDate() : new Date();
+    return `<div style="padding:14px;border-bottom:1px solid rgba(224,160,48,.15);cursor:pointer" onclick="window._resumeSession('${s.id}','${s.era||''}','${s.mode||'era'}')">
+      <div style="font-family:'Fraunces',serif;font-size:1.05rem;color:#f0e0c0">${s.era||'自由對話'}</div>
+      <div style="font-size:.78rem;color:rgba(245,237,224,.55);margin-top:4px">${d.toLocaleString('zh-TW')} · ${s.mode==='reflection'?'反思':s.mode==='free'?'自由':'年代'}</div>
+    </div>`;
+  }).join('');
+});
+
+window._resumeSession = async (sid, era, mode) => {
+  SESSION_ID = sid; currentEra = era; currentMode = mode;
+  const dataMatch = DATA.find(d => era && era.includes(d.era));
+  switchToChatView(dataMatch || {era:era||'續聊',name:'',icon:'📖',colorA:'#e0a030',colorB:'#7a4a1a'});
+  const fb = await window.fbReady;
+  const msgs = await fb.loadSessionMessages(sid);
+  msgs.forEach(m => addMessage(m.role, m.text, true));
+  document.getElementById('history-modal').classList.remove('show');
+};
+
+// Modal 關閉
+document.querySelectorAll('.modal-close').forEach(btn => {
+  btn.addEventListener('click', () => document.getElementById(btn.dataset.close).classList.remove('show'));
+});
+document.querySelectorAll('.modal-backdrop').forEach(m => {
+  m.addEventListener('click', e => { if (e.target===m) m.classList.remove('show'); });
+});
+
+// 返回唱片視圖
+document.getElementById('back-to-vinyl').addEventListener('click', () => {
+  document.getElementById('chat-view').classList.remove('active');
+  document.getElementById('vinyl-view').classList.remove('hidden');
+  SESSION_ID = 's_' + Date.now() + '_' + Math.random().toString(36).slice(2,8);
+});
+
+function copyToClipboard(text){
+  navigator.clipboard.writeText(text).then(() => alert('已複製'));
+}
+window.copyToClipboard = copyToClipboard;
+</script>
+
+</body>
+</html>
